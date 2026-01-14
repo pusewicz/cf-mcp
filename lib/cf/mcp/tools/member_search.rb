@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
 require "mcp"
+require_relative "response_helpers"
 
 module CF
   module MCP
     module Tools
       class MemberSearch < ::MCP::Tool
+        extend ResponseHelpers
+
         tool_name "cf_member_search"
         description "Search Cute Framework structs by member name or type"
 
@@ -61,14 +64,6 @@ module CF
           lines << "**Tip:** Use `cf_get_details` with a struct name for full documentation."
 
           text_response(lines.join("\n"))
-        end
-
-        def self.text_response(text)
-          ::MCP::Tool::Response.new([{type: "text", text: text}])
-        end
-
-        def self.error_response(message)
-          ::MCP::Tool::Response.new([{type: "text", text: "Error: #{message}"}], error: true)
         end
       end
     end

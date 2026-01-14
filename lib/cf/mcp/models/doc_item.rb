@@ -129,6 +129,23 @@ module CF
 
         def to_text(detailed: false, index: nil)
           lines = []
+          lines.concat(build_header_lines)
+          lines.concat(build_description_lines)
+
+          if detailed
+            lines.concat(build_type_specific_lines)
+            lines.concat(build_remarks_lines)
+            lines.concat(build_example_lines)
+            lines.concat(build_related_lines(index))
+          end
+
+          lines.join("\n")
+        end
+
+        protected
+
+        def build_header_lines
+          lines = []
           lines << "# #{name}"
           lines << ""
           lines << "- **Type:** #{type}"
@@ -140,35 +157,43 @@ module CF
             lines << "- **Implementation:** #{urls[:impl_raw]}"
           end
           lines << ""
+          lines
+        end
+
+        def build_description_lines
+          lines = []
           lines << "## Description"
           lines << brief if brief
           lines << ""
-
-          if detailed
-            if remarks && !remarks.empty?
-              lines << "## Remarks"
-              lines << remarks
-              lines << ""
-            end
-
-            if example && !example.empty?
-              lines << "## Example"
-              lines << example_brief if example_brief
-              lines << "```c"
-              lines << example
-              lines << "```"
-              lines << ""
-            end
-
-            if related && !related.empty?
-              lines << "## Related"
-              lines << format_related_items(index)
-              lines << ""
-            end
-          end
-
-          lines.join("\n")
+          lines
         end
+
+        def build_type_specific_lines
+          [] # Override in subclasses
+        end
+
+        def build_remarks_lines
+          return [] unless remarks && !remarks.empty?
+          ["## Remarks", remarks, ""]
+        end
+
+        def build_example_lines
+          return [] unless example && !example.empty?
+          lines = ["## Example"]
+          lines << example_brief if example_brief
+          lines << "```c"
+          lines << example
+          lines << "```"
+          lines << ""
+          lines
+        end
+
+        def build_related_lines(index)
+          return [] unless related && !related.empty?
+          ["## Related", format_related_items(index), ""]
+        end
+
+        public
 
         def format_related_items(index)
           return related.join(", ") unless index

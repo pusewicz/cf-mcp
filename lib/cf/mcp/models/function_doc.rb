@@ -38,71 +38,48 @@ module CF
 
         def to_text(detailed: false, index: nil)
           lines = []
-          lines << "# #{name}"
-          lines << ""
-          lines << "- **Type:** function"
-          lines << "- **Category:** #{category}" if category
-          if source_file
-            urls = source_urls
-            lines << "- **Source:** [include/#{source_file}](#{urls[:blob]})"
-            lines << "- **Raw:** #{urls[:raw]}"
-            lines << "- **Implementation:** #{urls[:impl_raw]}"
-          end
-          lines << ""
-
-          if signature
-            lines << "## Signature"
-            lines << "```c"
-            lines << signature
-            lines << "```"
-            lines << ""
-          end
-
-          lines << "## Description"
-          lines << brief if brief
-          lines << ""
+          lines.concat(build_header_lines)
+          lines.concat(build_signature_lines)
+          lines.concat(build_description_lines)
 
           if detailed
-            if parameters && !parameters.empty?
-              lines << "## Parameters"
-              lines << ""
-              lines << "| Parameter | Description |"
-              lines << "| --- | --- |"
-              parameters.each do |param|
-                lines << "| `#{param.name}` | #{param.description} |"
-              end
-              lines << ""
-            end
-
-            if return_value && !return_value.empty?
-              lines << "## Return Value"
-              lines << return_value
-              lines << ""
-            end
-
-            if remarks && !remarks.empty?
-              lines << "## Remarks"
-              lines << remarks
-              lines << ""
-            end
-
-            if example && !example.empty?
-              lines << "## Example"
-              lines << example_brief if example_brief
-              lines << "```c"
-              lines << example
-              lines << "```"
-              lines << ""
-            end
-
-            if related && !related.empty?
-              lines << "## Related"
-              lines << format_related_items(index)
-              lines << ""
-            end
+            lines.concat(build_type_specific_lines)
+            lines.concat(build_remarks_lines)
+            lines.concat(build_example_lines)
+            lines.concat(build_related_lines(index))
           end
 
           lines.join("\n")
+        end
+
+        protected
+
+        def build_signature_lines
+          return [] unless signature
+          ["## Signature", "```c", signature, "```", ""]
+        end
+
+        def build_type_specific_lines
+          lines = []
+
+          if parameters && !parameters.empty?
+            lines << "## Parameters"
+            lines << ""
+            lines << "| Parameter | Description |"
+            lines << "| --- | --- |"
+            parameters.each do |param|
+              lines << "| `#{param.name}` | #{param.description} |"
+            end
+            lines << ""
+          end
+
+          if return_value && !return_value.empty?
+            lines << "## Return Value"
+            lines << return_value
+            lines << ""
+          end
+
+          lines
         end
       end
     end

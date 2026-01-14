@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
 require "mcp"
+require_relative "response_helpers"
 
 module CF
   module MCP
     module Tools
       class ListCategory < ::MCP::Tool
+        extend ResponseHelpers
+
         tool_name "cf_list_category"
         description "List all items in a specific category, or list all available categories"
 
@@ -62,14 +65,6 @@ module CF
               text_response("Items in '#{category}':\n\n#{formatted}#{topic_suggestion}\n\n**Tip:** Use `cf_get_details` with an exact name to get full documentation.")
             end
           end
-        end
-
-        def self.text_response(text)
-          ::MCP::Tool::Response.new([{type: "text", text: text}])
-        end
-
-        def self.error_response(message)
-          ::MCP::Tool::Response.new([{type: "text", text: "Error: #{message}"}], error: true)
         end
       end
     end

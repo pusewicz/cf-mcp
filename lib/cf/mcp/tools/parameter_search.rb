@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
 require "mcp"
+require_relative "response_helpers"
 
 module CF
   module MCP
     module Tools
       class ParameterSearch < ::MCP::Tool
+        extend ResponseHelpers
+
         tool_name "cf_parameter_search"
         description "Find Cute Framework functions by parameter or return type"
 
@@ -87,14 +90,6 @@ module CF
           lines << "**Tip:** Use `cf_get_details` with a function name for full documentation."
 
           text_response(lines.join("\n"))
-        end
-
-        def self.text_response(text)
-          ::MCP::Tool::Response.new([{type: "text", text: text}])
-        end
-
-        def self.error_response(message)
-          ::MCP::Tool::Response.new([{type: "text", text: "Error: #{message}"}], error: true)
         end
       end
     end

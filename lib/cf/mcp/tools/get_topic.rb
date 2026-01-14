@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
 require "mcp"
+require_relative "response_helpers"
 
 module CF
   module MCP
     module Tools
       class GetTopic < ::MCP::Tool
+        extend ResponseHelpers
+
         tool_name "cf_get_topic"
         description "Get the full content of a Cute Framework topic guide document"
 
@@ -38,14 +41,6 @@ module CF
           else
             text_response(topic.to_text(detailed: true, index: index))
           end
-        end
-
-        def self.text_response(text)
-          ::MCP::Tool::Response.new([{type: "text", text: text}])
-        end
-
-        def self.error_response(message)
-          ::MCP::Tool::Response.new([{type: "text", text: "Error: #{message}"}], error: true)
         end
       end
     end

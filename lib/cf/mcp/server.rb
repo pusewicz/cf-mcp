@@ -91,85 +91,22 @@ module CF
       # Build a rack app with automatic header downloading and indexing
       # This is the shared entry point for both config.ru and CLI
       def self.build_rack_app(root: nil, download: false)
-        require_relative "parser"
-        require_relative "topic_parser"
-        require_relative "index"
-        require_relative "downloader"
+        require_relative "index_builder"
 
-        headers_path = resolve_headers_path(root: root, download: download)
+        builder = IndexBuilder.new(root: root, download: download)
 
-        unless File.directory?(headers_path)
-          raise "Headers directory not found: #{headers_path}. Use root: or download: true"
+        unless builder.valid?
+          raise "Headers directory not found: #{builder.headers_path}. Use root: or download: true"
         end
 
-        warn "Parsing headers from: #{headers_path}"
-        index = build_index(headers_path)
+        warn "Parsing headers from: #{builder.headers_path}"
+        index = builder.build do |event, path, count|
+          warn "Indexed #{count} topics from: #{path}" if event == :topics_indexed
+        end
         warn "Indexed #{index.stats[:total]} items (#{index.stats[:functions]} functions, #{index.stats[:structs]} structs, #{index.stats[:enums]} enums)"
 
         new(index).rack_app
       end
-
-      def self.resolve_headers_path(root:, download:)
-        return root if root
-        return ENV["CF_HEADERS_PATH"] if ENV["CF_HEADERS_PATH"]
-
-        if download
-          warn "Downloading Cute Framework headers from GitHub..."
-          downloader = Downloader.new
-          path = downloader.download_and_extract
-          warn "Downloaded headers to: #{path}"
-          return path
-        end
-
-        File.expand_path("~/Work/GitHub/pusewicz/cute_framework/include")
-      end
-
-      def self.build_index(headers_path)
-        parser = Parser.new
-        index = Index.new
-
-        parser.parse_directory(headers_path).each do |item|
-          index.add(item)
-        end
-
-        # Parse topics if available
-        topics_path = find_topics_path(headers_path)
-        if topics_path && File.directory?(topics_path)
-          topic_parser = TopicParser.new
-          topic_parser.parse_directory(topics_path).each do |topic|
-            refine_topic_references(topic, index)
-            index.add(topic)
-          end
-          warn "Indexed #{index.stats[:topics]} topics from: #{topics_path}"
-        end
-
-        index
-      end
-
-      def self.find_topics_path(headers_path)
-        base = File.dirname(headers_path)
-        topics_path = File.join(base, "docs", "topics")
-        return topics_path if File.directory?(topics_path)
-
-        topics_path = File.join(base, "topics")
-        return topics_path if File.directory?(topics_path)
-
-        nil
-      end
-
-      def self.refine_topic_references(topic, index)
-        topic.struct_references.dup.each do |ref|
-          item = index.find(ref)
-          next unless item
-
-          if item.type == :enum
-            topic.struct_references.delete(ref)
-            topic.enum_references << ref unless topic.enum_references.include?(ref)
-          end
-        end
-      end
-
-      private_class_method :resolve_headers_path, :build_index, :find_topics_path, :refine_topic_references
 
       def initialize(index)
         @index = index

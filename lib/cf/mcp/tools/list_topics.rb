@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
 require "mcp"
+require_relative "response_helpers"
 
 module CF
   module MCP
     module Tools
       class ListTopics < ::MCP::Tool
+        extend ResponseHelpers
+
         tool_name "cf_list_topics"
         description "List all Cute Framework topic guides, optionally filtered by category or in recommended reading order"
 
@@ -50,14 +53,6 @@ module CF
         end
 
         CATEGORY_TIP = "Use `cf_list_topics` without a category to see all available topics."
-
-        def self.text_response(text)
-          ::MCP::Tool::Response.new([{type: "text", text: text}])
-        end
-
-        def self.error_response(message)
-          ::MCP::Tool::Response.new([{type: "text", text: "Error: #{message}"}], error: true)
-        end
       end
     end
   end

@@ -9,6 +9,7 @@ lib/cf/mcp.rb
 lib/cf/mcp/cli.rb
 lib/cf/mcp/downloader.rb
 lib/cf/mcp/index.rb
+lib/cf/mcp/index_builder.rb
 lib/cf/mcp/models/doc_item.rb
 lib/cf/mcp/models/enum_doc.rb
 lib/cf/mcp/models/function_doc.rb
@@ -26,8 +27,10 @@ lib/cf/mcp/tools/list_category.rb
 lib/cf/mcp/tools/list_topics.rb
 lib/cf/mcp/tools/member_search.rb
 lib/cf/mcp/tools/parameter_search.rb
+lib/cf/mcp/tools/response_helpers.rb
 lib/cf/mcp/tools/search_enums.rb
 lib/cf/mcp/tools/search_functions.rb
+lib/cf/mcp/tools/search_result_formatter.rb
 lib/cf/mcp/tools/search_structs.rb
 lib/cf/mcp/tools/search_tool.rb
 lib/cf/mcp/topic_parser.rb

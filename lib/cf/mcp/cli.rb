@@ -1,17 +1,12 @@
 # frozen_string_literal: true
 
 require "optparse"
-require_relative "parser"
-require_relative "topic_parser"
-require_relative "index"
+require_relative "index_builder"
 require_relative "server"
-require_relative "downloader"
 
 module CF
   module MCP
     class CLI
-      DEFAULT_HEADERS_PATH = File.expand_path("~/Work/GitHub/pusewicz/cute_framework/include")
-
       def initialize(args)
         @args = args
         @options = parse_args
@@ -90,17 +85,19 @@ module CF
       end
 
       def run_server(mode)
-        headers_path = resolve_headers_path
+        builder = IndexBuilder.new(root: @options[:root], download: @options[:download])
 
-        unless File.directory?(headers_path)
-          warn "Error: Headers directory not found: #{headers_path}"
+        unless builder.valid?
+          warn "Error: Headers directory not found: #{builder.headers_path}"
           warn "Use --root to specify the path to Cute Framework headers"
           warn "Or use --download to fetch headers from GitHub"
           exit 1
         end
 
-        warn "Parsing headers from: #{headers_path}"
-        index = build_index(headers_path)
+        warn "Parsing headers from: #{builder.headers_path}"
+        index = builder.build do |event, path, count|
+          warn "Indexed #{count} topics from: #{path}" if event == :topics_indexed
+        end
         warn "Indexed #{index.stats[:total]} items (#{index.stats[:functions]} functions, #{index.stats[:structs]} structs, #{index.stats[:enums]} enums)"
 
         server = Server.new(index)
@@ -122,69 +119,6 @@ module CF
         warn "Web interface available at http://localhost:#{port}/"
         warn "MCP endpoint available at http://localhost:#{port}/http"
         Rackup::Server.start(app: app, Host: host, Port: port, Logger: $stderr)
-      end
-
-      def resolve_headers_path
-        return @options[:root] if @options[:root]
-        return ENV["CF_HEADERS_PATH"] if ENV["CF_HEADERS_PATH"]
-
-        if @options[:download]
-          warn "Downloading Cute Framework headers from GitHub..."
-          downloader = Downloader.new
-          path = downloader.download_and_extract
-          warn "Downloaded headers to: #{path}"
-          return path
-        end
-
-        DEFAULT_HEADERS_PATH
-      end
-
-      def build_index(headers_path)
-        parser = Parser.new
-        index = Index.new
-
-        parser.parse_directory(headers_path).each do |item|
-          index.add(item)
-        end
-
-        # Parse topics if available
-        topics_path = find_topics_path(headers_path)
-        if topics_path && File.directory?(topics_path)
-          topic_parser = TopicParser.new
-          topic_parser.parse_directory(topics_path).each do |topic|
-            refine_topic_references(topic, index)
-            index.add(topic)
-          end
-          warn "Indexed #{index.stats[:topics]} topics from: #{topics_path}"
-        end
-
-        index
-      end
-
-      def find_topics_path(headers_path)
-        # If headers_path is .../cute_framework/include, topics is at .../cute_framework/docs/topics
-        base = File.dirname(headers_path)
-        topics_path = File.join(base, "docs", "topics")
-        return topics_path if File.directory?(topics_path)
-
-        # Alternative: topics directly under headers parent
-        topics_path = File.join(base, "topics")
-        return topics_path if File.directory?(topics_path)
-
-        nil
-      end
-
-      def refine_topic_references(topic, index)
-        # Move items from struct_references to enum_references if they're actually enums
-        topic.struct_references.dup.each do |ref|
-          item = index.find(ref)
-          next unless item
-
-          if item.type == :enum
-            topic.struct_references.delete(ref)
-            topic.enum_references << ref unless topic.enum_references.include?(ref)
-          end
-        end
       end
     end
   end

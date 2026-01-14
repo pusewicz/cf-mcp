@@ -24,58 +24,21 @@ module CF
           ).compact
         end
 
-        def to_text(detailed: false, index: nil)
+        protected
+
+        def build_type_specific_lines
+          return [] unless entries && !entries.empty?
+
           lines = []
-          lines << "# #{name}"
+          lines << "## Values"
           lines << ""
-          lines << "- **Type:** enum"
-          lines << "- **Category:** #{category}" if category
-          if source_file
-            urls = source_urls
-            lines << "- **Source:** [include/#{source_file}](#{urls[:blob]})"
-            lines << "- **Raw:** #{urls[:raw]}"
-            lines << "- **Implementation:** #{urls[:impl_raw]}"
+          lines << "| Name | Value | Description |"
+          lines << "| --- | --- | --- |"
+          entries.each do |entry|
+            lines << "| `#{entry.name}` | #{entry.value} | #{entry.description} |"
           end
           lines << ""
-          lines << "## Description"
-          lines << brief if brief
-          lines << ""
-
-          if detailed
-            if entries && !entries.empty?
-              lines << "## Values"
-              lines << ""
-              lines << "| Name | Value | Description |"
-              lines << "| --- | --- | --- |"
-              entries.each do |entry|
-                lines << "| `#{entry.name}` | #{entry.value} | #{entry.description} |"
-              end
-              lines << ""
-            end
-
-            if remarks && !remarks.empty?
-              lines << "## Remarks"
-              lines << remarks
-              lines << ""
-            end
-
-            if example && !example.empty?
-              lines << "## Example"
-              lines << example_brief if example_brief
-              lines << "```c"
-              lines << example
-              lines << "```"
-              lines << ""
-            end
-
-            if related && !related.empty?
-              lines << "## Related"
-              lines << format_related_items(index)
-              lines << ""
-            end
-          end
-
-          lines.join("\n")
+          lines
         end
       end
     end

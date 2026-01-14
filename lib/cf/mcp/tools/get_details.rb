@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
 require "mcp"
+require_relative "response_helpers"
 
 module CF
   module MCP
     module Tools
       class GetDetails < ::MCP::Tool
+        extend ResponseHelpers
+
         tool_name "cf_get_details"
         description "Get detailed documentation for a specific Cute Framework item by exact name"
 
@@ -49,14 +52,6 @@ module CF
 
             text_response(output)
           end
-        end
-
-        def self.text_response(text)
-          ::MCP::Tool::Response.new([{type: "text", text: text}])
-        end
-
-        def self.error_response(message)
-          ::MCP::Tool::Response.new([{type: "text", text: "Error: #{message}"}], error: true)
         end
       end
     end

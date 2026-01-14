@@ -1,11 +1,16 @@
 # frozen_string_literal: true
 
 require "mcp"
+require_relative "response_helpers"
+require_relative "search_result_formatter"
 
 module CF
   module MCP
     module Tools
       class SearchTool < ::MCP::Tool
+        extend ResponseHelpers
+        extend SearchResultFormatter
+
         tool_name "cf_search"
         description "Search Cute Framework documentation across all types (functions, structs, enums, topics)"
 
@@ -28,29 +33,15 @@ module CF
 
           results = index.search(query, type: type, category: category, limit: limit)
 
-          if results.empty?
-            text_response("No results found for '#{query}'")
-          else
-            formatted = results.map(&:to_summary).join("\n")
-            header = if results.size >= limit
-              "Found #{results.size} result(s) (limit reached, more may exist):"
-            else
-              "Found #{results.size} result(s):"
-            end
-
-            footer = "\n\n#{DETAILS_TIP}"
-            footer += "\nTo find more results, narrow your search with `type` or `category` filters." if results.size >= limit
-
-            text_response("#{header}\n\n#{formatted}#{footer}")
-          end
-        end
-
-        def self.text_response(text)
-          ::MCP::Tool::Response.new([{type: "text", text: text}])
-        end
-
-        def self.error_response(message)
-          ::MCP::Tool::Response.new([{type: "text", text: "Error: #{message}"}], error: true)
+          text = format_search_results(
+            results,
+            query: query,
+            type_label: "result(s)",
+            limit: limit,
+            details_tip: DETAILS_TIP,
+            filter_suggestion: "To find more results, narrow your search with `type` or `category` filters."
+          )
+          text_response(text)
         end
       end
     end

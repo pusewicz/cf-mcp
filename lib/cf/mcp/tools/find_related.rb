@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
 require "mcp"
+require_relative "response_helpers"
 
 module CF
   module MCP
     module Tools
       class FindRelated < ::MCP::Tool
+        extend ResponseHelpers
+
         tool_name "cf_find_related"
         description "Find all items related to a given Cute Framework item (bidirectional relationship search)"
 
@@ -62,14 +65,6 @@ module CF
           end
 
           text_response(lines.join("\n"))
-        end
-
-        def self.text_response(text)
-          ::MCP::Tool::Response.new([{type: "text", text: text}])
-        end
-
-        def self.error_response(message)
-          ::MCP::Tool::Response.new([{type: "text", text: "Error: #{message}"}], error: true)
         end
       end
     end

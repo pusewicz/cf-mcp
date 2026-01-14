@@ -69,30 +69,11 @@
   </div>
 
   <h2>Tool Explorer</h2>
-  <div class="explorer">
-    <form id="tool-explorer-form" onsubmit="return handleSubmit(event)">
-      <div class="form-group">
-        <label class="form-label" for="tool-select">Select Tool</label>
-        <select id="tool-select" class="form-select" onchange="renderToolForm()">
-        </select>
-      </div>
-      <div id="tool-form"></div>
-      <button id="execute-btn" type="submit" class="btn-execute">Execute</button>
-    </form>
-    <div id="tool-result" class="result-area"></div>
-  </div>
+  <div id="tool-explorer-root"></div>
 
   <h2>Topics Explorer</h2>
   <p>Browse tutorial guides and documentation topics for Cute Framework.</p>
-  <div class="explorer">
-    <div class="form-group">
-      <label class="form-label" for="topic-select">Select Topic</label>
-      <select id="topic-select" class="form-select" onchange="loadTopic()">
-        <option value="">-- Select a topic --</option>
-      </select>
-    </div>
-    <div id="topic-result" class="result-area"></div>
-  </div>
+  <div id="topics-explorer-root"></div>
 
   <h2>Links</h2>
   <ul>
@@ -101,7 +82,7 @@
     <li><a href="https://modelcontextprotocol.io">Model Context Protocol</a></li>
   </ul>
 
-  <script>
+  <script type="module">
 <%= js_content %>
   </script>
 </body>

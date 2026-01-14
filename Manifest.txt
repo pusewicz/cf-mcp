@@ -13,6 +13,7 @@ lib/cf/mcp/models/function_doc.rb
 lib/cf/mcp/models/struct_doc.rb
 lib/cf/mcp/parser.rb
 lib/cf/mcp/server.rb
+lib/cf/mcp/templates/index.erb
 lib/cf/mcp/tools/get_details.rb
 lib/cf/mcp/tools/list_category.rb
 lib/cf/mcp/tools/search_enums.rb

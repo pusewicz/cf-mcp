@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CF::MCP - Cute Framework MCP Server</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: #0d1117;
+      color: #c9d1d9;
+    }
+    h1 { color: #58a6ff; margin-bottom: 0.5rem; }
+    h2 { color: #58a6ff; margin-top: 2rem; border-bottom: 1px solid #30363d; padding-bottom: 0.5rem; }
+    a { color: #58a6ff; }
+    code {
+      background: #161b22;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+    pre {
+      background: #161b22;
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      border: 1px solid #30363d;
+    }
+    pre code { background: none; padding: 0; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .stat {
+      background: #161b22;
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+      border: 1px solid #30363d;
+    }
+    .stat-value { font-size: 2rem; font-weight: bold; color: #58a6ff; }
+    .stat-label { color: #8b949e; font-size: 0.9rem; }
+    .endpoint {
+      background: #161b22;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 0.5rem 0;
+      border: 1px solid #30363d;
+    }
+    .endpoint-path { font-weight: bold; color: #7ee787; }
+    .endpoint-desc { color: #8b949e; margin-top: 0.25rem; }
+    .tools { margin: 1rem 0; }
+    .tool {
+      background: #161b22;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin: 0.5rem 0;
+      border: 1px solid #30363d;
+    }
+    .tool-name { font-weight: bold; color: #ffa657; }
+    .tool-desc { color: #8b949e; font-size: 0.9rem; }
+    .explorer {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-label {
+      display: block;
+      margin-bottom: 0.25rem;
+      color: #c9d1d9;
+      font-size: 0.9rem;
+    }
+    .form-label .required {
+      color: #f85149;
+    }
+    .form-input, .form-select {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #c9d1d9;
+      font-size: 0.9rem;
+    }
+    .form-input:focus, .form-select:focus {
+      outline: none;
+      border-color: #58a6ff;
+      box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.3);
+    }
+    .form-input::placeholder {
+      color: #6e7681;
+    }
+    .form-hint {
+      font-size: 0.8rem;
+      color: #6e7681;
+      margin-top: 0.25rem;
+    }
+    .btn-execute {
+      background: #238636;
+      color: #fff;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .btn-execute:hover {
+      background: #2ea043;
+    }
+    .btn-execute:disabled {
+      background: #21262d;
+      color: #6e7681;
+      cursor: not-allowed;
+    }
+    .result-area {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 1rem;
+      margin-top: 1rem;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.85rem;
+      max-height: 400px;
+      overflow-y: auto;
+      display: none;
+    }
+    .result-area.visible {
+      display: block;
+    }
+    .result-area.error {
+      border-color: #f85149;
+      color: #f85149;
+    }
+    .result-area.success {
+      border-color: #238636;
+    }
+    .loading {
+      color: #6e7681;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <h1>CF::MCP <small style="font-size: 0.5em; color: #8b949e;">v<%= version %></small></h1>
+  <p>MCP (Model Context Protocol) server for the <a href="https://github.com/RandyGaul/cute_framework">Cute Framework</a>, a C/C++ 2D game framework.</p>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value"><%= stats[:total] %></div>
+      <div class="stat-label">Total Items</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value"><%= stats[:functions] %></div>
+      <div class="stat-label">Functions</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value"><%= stats[:structs] %></div>
+      <div class="stat-label">Structs</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value"><%= stats[:enums] %></div>
+      <div class="stat-label">Enums</div>
+    </div>
+  </div>
+
+  <h2>Endpoints</h2>
+  <div class="endpoint">
+    <div class="endpoint-path">/ or /sse</div>
+    <div class="endpoint-desc">Streamable HTTP (stateful) - for Claude Desktop and Claude Code</div>
+  </div>
+  <div class="endpoint">
+    <div class="endpoint-path">/http</div>
+    <div class="endpoint-desc">Streamable HTTP (stateless) - for simple integrations</div>
+  </div>
+
+  <h2>Claude Desktop Setup</h2>
+  <p>Remote MCP servers require a <strong>Pro, Max, Team, or Enterprise</strong> plan.</p>
+  <ol>
+    <li>Open Claude Desktop</li>
+    <li>Go to <strong>Settings &rarr; Connectors</strong></li>
+    <li>Add this URL as a remote MCP server:</li>
+  </ol>
+  <pre><code>https://cf-mcp.fly.dev/</code></pre>
+
+  <h2>Claude Code CLI Setup</h2>
+  <pre><code>claude mcp add --transport http cf-mcp https://cf-mcp.fly.dev/http</code></pre>
+
+  <h2>Available Tools</h2>
+  <div class="tools">
+    <% tools.each do |tool| %>
+    <div class="tool">
+      <div class="tool-name"><%= h(tool[:name]) %></div>
+      <div class="tool-desc"><%= h(tool[:description]) %></div>
+    </div>
+    <% end %>
+  </div>
+
+  <h2>Tool Explorer</h2>
+  <div class="explorer">
+    <form id="tool-explorer-form" onsubmit="return handleSubmit(event)">
+      <div class="form-group">
+        <label class="form-label" for="tool-select">Select Tool</label>
+        <select id="tool-select" class="form-select" onchange="renderToolForm()">
+        </select>
+      </div>
+      <div id="tool-form"></div>
+      <button id="execute-btn" type="submit" class="btn-execute">Execute</button>
+    </form>
+    <div id="tool-result" class="result-area"></div>
+  </div>
+
+  <h2>Links</h2>
+  <ul>
+    <li><a href="https://github.com/pusewicz/cf-mcp">CF::MCP on GitHub</a></li>
+    <li><a href="https://github.com/RandyGaul/cute_framework">Cute Framework</a></li>
+    <li><a href="https://modelcontextprotocol.io">Model Context Protocol</a></li>
+  </ul>
+
+  <script>
+    const TOOLS = <%= tool_schemas_json %>;
+    const CATEGORIES = <%= categories_json %>;
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      const select = document.getElementById('tool-select');
+      TOOLS.forEach(tool => {
+        const option = document.createElement('option');
+        option.value = tool.name;
+        option.textContent = tool.name;
+        select.appendChild(option);
+      });
+      renderToolForm();
+    });
+
+    function renderToolForm() {
+      const toolName = document.getElementById('tool-select').value;
+      const tool = TOOLS.find(t => t.name === toolName);
+      if (!tool) return;
+
+      const schema = tool.inputSchema || {};
+      const properties = schema.properties || {};
+      const required = schema.required || [];
+      const formContainer = document.getElementById('tool-form');
+
+      let html = '';
+      for (const [propName, propDef] of Object.entries(properties)) {
+        const isRequired = required.includes(propName);
+        const requiredMark = isRequired ? '<span class="required">*</span>' : '';
+        const description = propDef.description || '';
+
+        html += '<div class="form-group">';
+        html += '<label class="form-label" for="field-' + propName + '">' + propName + ' ' + requiredMark + '</label>';
+
+        if (propDef.enum) {
+          // Render as select for enum types
+          html += '<select id="field-' + propName + '" class="form-select" data-type="' + propDef.type + '"' + (isRequired ? ' required' : '') + '>';
+          html += '<option value="">-- Select --</option>';
+          propDef.enum.forEach(val => {
+            html += '<option value="' + val + '">' + val + '</option>';
+          });
+          html += '</select>';
+        } else if (propDef.type === 'integer') {
+          let attrs = '';
+          if (propName === 'limit') {
+            attrs = ' min="1" max="20" value="20"';
+          }
+          html += '<input type="number" id="field-' + propName + '" class="form-input" data-type="integer" placeholder="' + description.replace(/"/g, '&quot;') + '"' + attrs + (isRequired ? ' required' : '') + '>';
+        } else if (propName === 'category') {
+          // Render category as a dropdown with prepopulated list
+          html += '<select id="field-' + propName + '" class="form-select" data-type="string"' + (isRequired ? ' required' : '') + '>';
+          html += '<option value="">-- All Categories --</option>';
+          CATEGORIES.forEach(cat => {
+            html += '<option value="' + cat + '">' + cat + '</option>';
+          });
+          html += '</select>';
+        } else {
+          html += '<input type="text" id="field-' + propName + '" class="form-input" data-type="string" placeholder="' + description.replace(/"/g, '&quot;') + '"' + (isRequired ? ' required' : '') + '>';
+        }
+
+        if (description) {
+          html += '<div class="form-hint">' + description + '</div>';
+        }
+        html += '</div>';
+      }
+
+      formContainer.innerHTML = html;
+      document.getElementById('tool-result').className = 'result-area';
+      document.getElementById('tool-result').textContent = '';
+    }
+
+    function collectFormArguments() {
+      const args = {};
+      const inputs = document.querySelectorAll('#tool-form input, #tool-form select');
+
+      inputs.forEach(input => {
+        const name = input.id.replace('field-', '');
+        const value = input.value.trim();
+        const type = input.dataset.type;
+
+        if (value === '') return; // Skip empty optional fields
+
+        if (type === 'integer') {
+          args[name] = parseInt(value, 10);
+        } else {
+          args[name] = value;
+        }
+      });
+
+      return args;
+    }
+
+    function handleSubmit(event) {
+      event.preventDefault();
+      executeTool();
+      return false;
+    }
+
+    async function executeTool() {
+      const toolName = document.getElementById('tool-select').value;
+      const args = collectFormArguments();
+      const resultArea = document.getElementById('tool-result');
+      const executeBtn = document.getElementById('execute-btn');
+
+      // Show loading state
+      resultArea.className = 'result-area visible';
+      resultArea.innerHTML = '<span class="loading">Executing...</span>';
+      executeBtn.disabled = true;
+
+      try {
+        const response = await fetch('/http', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json, text/event-stream'
+          },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: Date.now(),
+            method: 'tools/call',
+            params: { name: toolName, arguments: args }
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          resultArea.className = 'result-area visible error';
+          resultArea.textContent = 'Error: ' + (data.error.message || JSON.stringify(data.error));
+        } else if (data.result && data.result.content) {
+          const content = data.result.content[0];
+          const isError = data.result.isError;
+          resultArea.className = 'result-area visible' + (isError ? ' error' : ' success');
+          resultArea.textContent = content.text || JSON.stringify(content);
+        } else {
+          resultArea.className = 'result-area visible';
+          resultArea.textContent = JSON.stringify(data, null, 2);
+        }
+      } catch (err) {
+        resultArea.className = 'result-area visible error';
+        resultArea.textContent = 'Network error: ' + err.message;
+      } finally {
+        executeBtn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

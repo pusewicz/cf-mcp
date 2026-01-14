@@ -24,6 +24,8 @@ module CF
           run_server(:http)
         when :sse
           run_server(:sse)
+        when :combined
+          run_combined_server
         when :help
           puts @option_parser
         else
@@ -49,6 +51,7 @@ module CF
           opts.separator "  stdio    Run in STDIO mode (for CLI integration)"
           opts.separator "  http     Run as HTTP server (stateless)"
           opts.separator "  sse      Run as SSE server (stateful with real-time updates)"
+          opts.separator "  combined Run as combined server (SSE + HTTP with web interface)"
           opts.separator ""
           opts.separator "Options:"
 
@@ -79,7 +82,7 @@ module CF
         # Parse command from remaining args
         if options[:command].nil? && !@args.empty?
           command = @args.shift.to_sym
-          options[:command] = command if [:stdio, :http, :sse].include?(command)
+          options[:command] = command if [:stdio, :http, :sse, :combined].include?(command)
         end
 
         options[:command] ||= :help
@@ -112,6 +115,32 @@ module CF
           port = @options[:port] || 9393
           server.run_sse(port: port)
         end
+      end
+
+      def run_combined_server
+        require "rack"
+        require "rackup"
+
+        headers_path = resolve_headers_path
+
+        unless File.directory?(headers_path)
+          warn "Error: Headers directory not found: #{headers_path}"
+          warn "Use --root to specify the path to Cute Framework headers"
+          warn "Or use --download to fetch headers from GitHub"
+          exit 1
+        end
+
+        warn "Parsing headers from: #{headers_path}"
+        index = build_index(headers_path)
+        warn "Indexed #{index.stats[:total]} items (#{index.stats[:functions]} functions, #{index.stats[:structs]} structs, #{index.stats[:enums]} enums)"
+
+        port = @options[:port] || 9292
+        server = CombinedServer.new(index)
+        app = server.rack_app
+
+        warn "Starting combined server on port #{port}..."
+        warn "Web interface available at http://localhost:#{port}/"
+        Rackup::Server.start(app: app, Port: port, Logger: $stderr)
       end
 
       def resolve_headers_path

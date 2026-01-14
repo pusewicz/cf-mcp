@@ -1,3 +1,4 @@
+CHANGELOG.md
 LICENSE.txt
 Manifest.txt
 README.md

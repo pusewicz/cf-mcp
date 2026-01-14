@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.3] - 2026-01-14
+
+### Added
+
+- Claude Code slash commands for version bumping and releases
+- Documentation for changelog and slash commands in CLAUDE.md
+
+### Changed
+
+- Include CHANGELOG.md in gem manifest
+
+## [0.9.2] - 2026-01-14
+
+### Added
+
+- Changelog display in the web UI
+
 ## [0.9.1] - 2026-01-14
 
 ### Changed
@@ -88,6 +105,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `cf_list_category` - List items by category
   - `cf_get_details` - Get full documentation by name
 
+[0.9.3]: https://github.com/pusewicz/cf-mcp/compare/v0.9.2...v0.9.3
+[0.9.2]: https://github.com/pusewicz/cf-mcp/compare/v0.9.1...v0.9.2
 [0.9.1]: https://github.com/pusewicz/cf-mcp/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/pusewicz/cf-mcp/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/pusewicz/cf-mcp/compare/v0.7.0...v0.8.0

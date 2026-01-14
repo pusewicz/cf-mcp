@@ -1,1 +1,1 @@
-web: bundle exec rackup -p ${PORT:-8080} -o 0.0.0.0
+web: bundle exec cf-mcp combined --download --port ${PORT:-8080}

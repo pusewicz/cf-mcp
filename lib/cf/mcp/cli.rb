@@ -41,6 +41,7 @@ module CF
         options = {
           command: nil,
           port: nil,
+          host: "0.0.0.0",
           root: nil,
           download: false
         }
@@ -62,6 +63,10 @@ module CF
 
           opts.on("-p", "--port PORT", Integer, "Port for HTTP/SSE server (default: 9292 for HTTP, 9393 for SSE)") do |port|
             options[:port] = port
+          end
+
+          opts.on("-H", "--host HOST", "Host to bind to (default: 0.0.0.0)") do |host|
+            options[:host] = host
           end
 
           opts.on("-d", "--download", "Download Cute Framework headers from GitHub") do
@@ -136,12 +141,13 @@ module CF
         warn "Indexed #{index.stats[:total]} items (#{index.stats[:functions]} functions, #{index.stats[:structs]} structs, #{index.stats[:enums]} enums)"
 
         port = @options[:port] || 9292
+        host = @options[:host]
         server = CombinedServer.new(index)
         app = server.rack_app
 
-        warn "Starting combined server on port #{port}..."
+        warn "Starting combined server on #{host}:#{port}..."
         warn "Web interface available at http://localhost:#{port}/"
-        Rackup::Server.start(app: app, Port: port, Logger: $stderr)
+        Rackup::Server.start(app: app, Host: host, Port: port, Logger: $stderr)
       end
 
       def resolve_headers_path

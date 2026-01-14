@@ -18,11 +18,15 @@ module CF
       def parse_file(path)
         content = File.read(path)
         source_file = File.basename(path)
+        line_offsets = build_line_offsets(content)
         items = []
 
-        # Find all documentation blocks
+        # Find all documentation blocks with their positions
         content.scan(%r{(/\*\*.*?\*/)(.*?)(?=/\*\*|\z)}m) do |doc_block, following_content|
-          item = parse_doc_block(doc_block, following_content.strip, source_file)
+          # Get the position of the match to calculate line number
+          match_position = Regexp.last_match.begin(0)
+          source_line = line_for_position(match_position, line_offsets)
+          item = parse_doc_block(doc_block, following_content.strip, source_file, source_line)
           items << item if item
         end
 
@@ -39,7 +43,22 @@ module CF
 
       private
 
-      def parse_doc_block(doc_block, following_content, source_file)
+      # Build an array of byte positions where each line starts
+      def build_line_offsets(content)
+        offsets = [0]
+        content.each_char.with_index do |char, index|
+          offsets << index + 1 if char == "\n"
+        end
+        offsets
+      end
+
+      # Convert a byte position to a 1-based line number
+      def line_for_position(position, line_offsets)
+        # Binary search to find the line containing this position
+        line_offsets.bsearch_index { |offset| offset > position } || line_offsets.size
+      end
+
+      def parse_doc_block(doc_block, following_content, source_file, source_line = nil)
         tags = extract_tags(doc_block)
         return nil if tags.empty?
 
@@ -48,11 +67,11 @@ module CF
 
         case type
         when :function
-          parse_function(tags, following_content, source_file)
+          parse_function(tags, following_content, source_file, source_line)
         when :struct
-          parse_struct(tags, following_content, source_file)
+          parse_struct(tags, following_content, source_file, source_line)
         when :enum
-          parse_enum(tags, following_content, source_file)
+          parse_enum(tags, following_content, source_file, source_line)
         end
       end
 
@@ -113,7 +132,7 @@ module CF
         nil
       end
 
-      def parse_function(tags, following_content, source_file)
+      def parse_function(tags, following_content, source_file, source_line = nil)
         # Extract signature from following content
         signature = extract_signature(following_content)
 
@@ -125,13 +144,14 @@ module CF
           example: tags[:example],
           related: tags[:related] || [],
           source_file: source_file,
+          source_line: source_line,
           signature: signature,
           parameters: (tags[:params] || []).map { |p| Models::FunctionDoc::Parameter.new(p[:name], p[:description]) },
           return_value: tags[:return]
         )
       end
 
-      def parse_struct(tags, following_content, source_file)
+      def parse_struct(tags, following_content, source_file, source_line = nil)
         # Extract members from the struct body
         members = extract_members(following_content)
 
@@ -143,11 +163,12 @@ module CF
           example: tags[:example],
           related: tags[:related] || [],
           source_file: source_file,
+          source_line: source_line,
           members: members
         )
       end
 
-      def parse_enum(tags, following_content, source_file)
+      def parse_enum(tags, following_content, source_file, source_line = nil)
         # Extract enum entries from the #define macro
         entries = extract_enum_entries(following_content)
 
@@ -159,6 +180,7 @@ module CF
           example: tags[:example],
           related: tags[:related] || [],
           source_file: source_file,
+          source_line: source_line,
           entries: entries
         )
       end

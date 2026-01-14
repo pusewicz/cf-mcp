@@ -40,9 +40,14 @@ module CF
           lines = []
           lines << "# #{name}"
           lines << ""
-          lines << "**Type:** function"
-          lines << "**Category:** #{category}" if category
-          lines << "**Source:** #{source_file}" if source_file
+          lines << "- **Type:** function"
+          lines << "- **Category:** #{category}" if category
+          if source_file
+            urls = source_urls
+            lines << "- **Source:** [include/#{source_file}](#{urls[:blob]})"
+            lines << "- **Raw:** #{urls[:raw]}"
+            lines << "- **Implementation:** #{urls[:impl_raw]}"
+          end
           lines << ""
 
           if signature

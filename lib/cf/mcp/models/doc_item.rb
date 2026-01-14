@@ -4,8 +4,11 @@ module CF
   module MCP
     module Models
       class DocItem
+        GITHUB_REPO = "https://github.com/RandyGaul/cute_framework"
+        GITHUB_RAW_BASE = "https://raw.githubusercontent.com/RandyGaul/cute_framework/refs/heads/master"
+
         attr_accessor :name, :type, :category, :brief, :remarks, :example,
-          :example_brief, :related, :source_file
+          :example_brief, :related, :source_file, :source_line
 
         def initialize(
           name: nil,
@@ -16,7 +19,8 @@ module CF
           example: nil,
           example_brief: nil,
           related: [],
-          source_file: nil
+          source_file: nil,
+          source_line: nil
         )
           @name = name
           @type = type
@@ -27,6 +31,7 @@ module CF
           @example_brief = example_brief
           @related = related || []
           @source_file = source_file
+          @source_line = source_line
         end
 
         def matches?(query)
@@ -71,6 +76,21 @@ module CF
           score
         end
 
+        def source_urls
+          return nil unless source_file
+          # Header file URLs (include/cute_xxx.h)
+          header_path = "include/#{source_file}"
+          raw = "#{GITHUB_RAW_BASE}/#{header_path}"
+          blob = "#{GITHUB_REPO}/blob/master/#{header_path}"
+          blob += "#L#{source_line}" if source_line
+
+          # Implementation file URL (src/cute_xxx.cpp)
+          impl_file = source_file.sub(/\.h$/, ".cpp")
+          impl_raw = "#{GITHUB_RAW_BASE}/src/#{impl_file}"
+
+          {raw: raw, blob: blob, impl_raw: impl_raw}
+        end
+
         def to_h
           {
             name: name,
@@ -81,7 +101,8 @@ module CF
             example: example,
             example_brief: example_brief,
             related: related,
-            source_file: source_file
+            source_file: source_file,
+            source_line: source_line
           }.compact
         end
 
@@ -93,9 +114,14 @@ module CF
           lines = []
           lines << "# #{name}"
           lines << ""
-          lines << "**Type:** #{type}"
-          lines << "**Category:** #{category}" if category
-          lines << "**Source:** #{source_file}" if source_file
+          lines << "- **Type:** #{type}"
+          lines << "- **Category:** #{category}" if category
+          if source_file
+            urls = source_urls
+            lines << "- **Source:** [include/#{source_file}](#{urls[:blob]})"
+            lines << "- **Raw:** #{urls[:raw]}"
+            lines << "- **Implementation:** #{urls[:impl_raw]}"
+          end
           lines << ""
           lines << "## Description"
           lines << brief if brief

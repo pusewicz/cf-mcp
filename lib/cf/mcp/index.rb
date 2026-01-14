@@ -49,9 +49,11 @@ module CF
           results = results.select { |item| item.category == category }
         end
 
-        # Filter by query
+        # Filter by query and sort by relevance
         if query && !query.empty?
-          results = results.select { |item| item.matches?(query) }
+          results = results
+            .select { |item| item.matches?(query) }
+            .sort_by { |item| -item.relevance_score(query) }
         end
 
         results.take(limit)

@@ -23,7 +23,7 @@ task :manifest do
   puts "Generated Manifest.txt with #{files.size} files"
 end
 
-task default: %i[test standard]
+task default: %i[test standard manifest]
 
 desc "Deploy to Fly.io (runs tests and linting first)"
 task deploy: %i[test standard] do

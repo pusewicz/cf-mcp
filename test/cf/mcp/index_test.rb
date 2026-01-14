@@ -81,4 +81,104 @@ class CF::MCP::IndexTest < Minitest::Test
     info = @index.brief_for("nonexistent")
     assert_nil info
   end
+
+  def test_search_sorts_by_relevance_exact_match_first
+    exact = CF::MCP::Models::FunctionDoc.new(name: "make_app", brief: "Exact match")
+    suffix = CF::MCP::Models::FunctionDoc.new(name: "cf_make_app", brief: "Suffix match")
+    contains = CF::MCP::Models::FunctionDoc.new(name: "cf_make_app_window", brief: "Contains match")
+
+    @index.add(contains)
+    @index.add(exact)
+    @index.add(suffix)
+
+    results = @index.search("make_app")
+
+    assert_equal 3, results.size
+    assert_equal "make_app", results[0].name
+    assert_equal "cf_make_app", results[1].name
+    assert_equal "cf_make_app_window", results[2].name
+  end
+
+  def test_search_sorts_by_relevance_prefix_before_suffix
+    prefix = CF::MCP::Models::FunctionDoc.new(name: "make_app_window", brief: "Prefix match")
+    suffix = CF::MCP::Models::FunctionDoc.new(name: "cf_make_app", brief: "Suffix match")
+
+    @index.add(suffix)
+    @index.add(prefix)
+
+    results = @index.search("make_app")
+
+    assert_equal 2, results.size
+    assert_equal "make_app_window", results[0].name
+    assert_equal "cf_make_app", results[1].name
+  end
+
+  def test_search_sorts_by_relevance_name_match_before_brief_match
+    name_match = CF::MCP::Models::FunctionDoc.new(name: "cf_make_app", brief: "Creates an app")
+    brief_match = CF::MCP::Models::FunctionDoc.new(name: "cf_destroy_app", brief: "Destroys the app made by make_app")
+
+    @index.add(brief_match)
+    @index.add(name_match)
+
+    results = @index.search("make_app")
+
+    assert_equal 2, results.size
+    assert_equal "cf_make_app", results[0].name
+    assert_equal "cf_destroy_app", results[1].name
+  end
+
+  def test_search_without_query_does_not_sort
+    func1 = CF::MCP::Models::FunctionDoc.new(name: "aaa_func", category: "test", brief: "First")
+    func2 = CF::MCP::Models::FunctionDoc.new(name: "zzz_func", category: "test", brief: "Second")
+
+    @index.add(func1)
+    @index.add(func2)
+
+    results = @index.search(nil)
+
+    assert_equal 2, results.size
+    # Order should be insertion order when no query
+    assert_equal "aaa_func", results[0].name
+    assert_equal "zzz_func", results[1].name
+  end
+
+  def test_search_with_empty_query_does_not_sort
+    func1 = CF::MCP::Models::FunctionDoc.new(name: "aaa_func", category: "test", brief: "First")
+    func2 = CF::MCP::Models::FunctionDoc.new(name: "zzz_func", category: "test", brief: "Second")
+
+    @index.add(func1)
+    @index.add(func2)
+
+    results = @index.search("")
+
+    assert_equal 2, results.size
+    assert_equal "aaa_func", results[0].name
+    assert_equal "zzz_func", results[1].name
+  end
+
+  def test_search_relevance_with_type_filter
+    func = CF::MCP::Models::FunctionDoc.new(name: "cf_make_app", brief: "Creates an app")
+    struct = CF::MCP::Models::StructDoc.new(name: "make_app_config", brief: "Config for app")
+
+    @index.add(struct)
+    @index.add(func)
+
+    results = @index.search("make_app", type: :function)
+
+    assert_equal 1, results.size
+    assert_equal "cf_make_app", results[0].name
+  end
+
+  def test_search_relevance_with_category_filter
+    app_func = CF::MCP::Models::FunctionDoc.new(name: "cf_make_app", category: "app", brief: "Creates an app")
+    other_func = CF::MCP::Models::FunctionDoc.new(name: "make_app_sprite", category: "sprite", brief: "Makes app sprite")
+
+    @index.add(other_func)
+    @index.add(app_func)
+
+    results = @index.search("make_app", category: "app")
+
+    assert_equal 1, results.size
+    assert_equal "cf_make_app", results[0].name
+  end
 end

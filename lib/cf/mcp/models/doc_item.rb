@@ -36,6 +36,41 @@ module CF
           [name, brief, remarks, category].any? { |field| field&.match?(pattern) }
         end
 
+        # Returns a relevance score for ranking search results.
+        # Higher scores indicate better matches.
+        def relevance_score(query)
+          return 0 if query.nil? || query.empty?
+
+          score = 0
+          query_downcase = query.downcase
+          name_downcase = name&.downcase || ""
+
+          # Exact name match (highest priority)
+          if name_downcase == query_downcase
+            score += 1000
+          # Name starts with query (prefix match)
+          elsif name_downcase.start_with?(query_downcase)
+            score += 500
+          # Name ends with query (suffix match, e.g., "make_app" matches "cf_make_app")
+          elsif name_downcase.end_with?(query_downcase)
+            score += 400
+          # Name contains query
+          elsif name_downcase.include?(query_downcase)
+            score += 100
+          end
+
+          # Brief contains query
+          score += 50 if brief&.downcase&.include?(query_downcase)
+
+          # Category contains query
+          score += 30 if category&.downcase&.include?(query_downcase)
+
+          # Remarks contains query
+          score += 10 if remarks&.downcase&.include?(query_downcase)
+
+          score
+        end
+
         def to_h
           {
             name: name,

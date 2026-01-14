@@ -128,4 +128,109 @@ class CF::MCP::ModelsTest < Minitest::Test
     assert_includes text, "## Related"
     assert_includes text, "`cf_sprite_play` (function) — Plays sprite animation"
   end
+
+  def test_relevance_score_exact_match
+    func = CF::MCP::Models::FunctionDoc.new(
+      name: "make_app",
+      category: "app",
+      brief: "Creates an app"
+    )
+
+    assert_equal 1000, func.relevance_score("make_app")
+    assert_equal 1000, func.relevance_score("MAKE_APP")
+  end
+
+  def test_relevance_score_prefix_match
+    func = CF::MCP::Models::FunctionDoc.new(
+      name: "make_app_window",
+      category: "app",
+      brief: "Creates an app window"
+    )
+
+    assert_equal 500, func.relevance_score("make_app")
+  end
+
+  def test_relevance_score_suffix_match
+    func = CF::MCP::Models::FunctionDoc.new(
+      name: "cf_make_app",
+      category: "app",
+      brief: "Creates an app"
+    )
+
+    assert_equal 400, func.relevance_score("make_app")
+  end
+
+  def test_relevance_score_contains_in_name
+    func = CF::MCP::Models::FunctionDoc.new(
+      name: "cf_make_app_window",
+      category: "app",
+      brief: "Creates an app window"
+    )
+
+    assert_equal 100, func.relevance_score("make_app")
+  end
+
+  def test_relevance_score_match_in_brief_only
+    func = CF::MCP::Models::FunctionDoc.new(
+      name: "cf_destroy_app",
+      category: "app",
+      brief: "Destroys the app created by make_app"
+    )
+
+    assert_equal 50, func.relevance_score("make_app")
+  end
+
+  def test_relevance_score_match_in_category_only
+    func = CF::MCP::Models::FunctionDoc.new(
+      name: "cf_create",
+      category: "window_utils",
+      brief: "Creates something"
+    )
+
+    assert_equal 30, func.relevance_score("window")
+  end
+
+  def test_relevance_score_match_in_remarks_only
+    func = CF::MCP::Models::FunctionDoc.new(
+      name: "cf_init",
+      category: "app",
+      brief: "Initializes the framework",
+      remarks: "Must be called before make_app"
+    )
+
+    assert_equal 10, func.relevance_score("make_app")
+  end
+
+  def test_relevance_score_cumulative_scoring
+    func = CF::MCP::Models::FunctionDoc.new(
+      name: "cf_make_app",
+      category: "make_app_category",
+      brief: "Creates an app using make_app pattern",
+      remarks: "See also make_app documentation"
+    )
+
+    # suffix match (400) + brief (50) + category (30) + remarks (10)
+    assert_equal 490, func.relevance_score("make_app")
+  end
+
+  def test_relevance_score_no_match
+    func = CF::MCP::Models::FunctionDoc.new(
+      name: "cf_draw_sprite",
+      category: "sprite",
+      brief: "Draws a sprite"
+    )
+
+    assert_equal 0, func.relevance_score("audio")
+  end
+
+  def test_relevance_score_empty_query
+    func = CF::MCP::Models::FunctionDoc.new(
+      name: "cf_make_app",
+      category: "app",
+      brief: "Creates an app"
+    )
+
+    assert_equal 0, func.relevance_score("")
+    assert_equal 0, func.relevance_score(nil)
+  end
 end

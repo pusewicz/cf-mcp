@@ -4,6 +4,7 @@ require "optparse"
 require_relative "parser"
 require_relative "index"
 require_relative "server"
+require_relative "downloader"
 
 module CF
   module MCP
@@ -37,7 +38,8 @@ module CF
         options = {
           command: nil,
           port: nil,
-          root: nil
+          root: nil,
+          download: false
         }
 
         @option_parser = OptionParser.new do |opts|
@@ -56,6 +58,10 @@ module CF
 
           opts.on("-p", "--port PORT", Integer, "Port for HTTP/SSE server (default: 9292 for HTTP, 9393 for SSE)") do |port|
             options[:port] = port
+          end
+
+          opts.on("-d", "--download", "Download Cute Framework headers from GitHub") do
+            options[:download] = true
           end
 
           opts.on("-h", "--help", "Show this help message") do
@@ -81,11 +87,12 @@ module CF
       end
 
       def run_server(mode)
-        headers_path = @options[:root] || ENV["CF_HEADERS_PATH"] || DEFAULT_HEADERS_PATH
+        headers_path = resolve_headers_path
 
         unless File.directory?(headers_path)
           warn "Error: Headers directory not found: #{headers_path}"
           warn "Use --root to specify the path to Cute Framework headers"
+          warn "Or use --download to fetch headers from GitHub"
           exit 1
         end
 
@@ -105,6 +112,21 @@ module CF
           port = @options[:port] || 9393
           server.run_sse(port: port)
         end
+      end
+
+      def resolve_headers_path
+        return @options[:root] if @options[:root]
+        return ENV["CF_HEADERS_PATH"] if ENV["CF_HEADERS_PATH"]
+
+        if @options[:download]
+          warn "Downloading Cute Framework headers from GitHub..."
+          downloader = Downloader.new
+          path = downloader.download_and_extract
+          warn "Downloaded headers to: #{path}"
+          return path
+        end
+
+        DEFAULT_HEADERS_PATH
       end
 
       def build_index(headers_path)

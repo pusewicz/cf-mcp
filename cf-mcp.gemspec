@@ -34,4 +34,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "mcp", "~> 0.5"
   spec.add_dependency "rack", "~> 3.0"
   spec.add_dependency "rackup", "~> 2.0"
+  spec.add_dependency "rubyzip", "~> 2.3"
 end

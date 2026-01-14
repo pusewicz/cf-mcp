@@ -17,8 +17,11 @@ lib/cf/mcp/server.rb
 lib/cf/mcp/templates/index.erb
 lib/cf/mcp/templates/script.js
 lib/cf/mcp/templates/style.css
+lib/cf/mcp/tools/find_related.rb
 lib/cf/mcp/tools/get_details.rb
 lib/cf/mcp/tools/list_category.rb
+lib/cf/mcp/tools/member_search.rb
+lib/cf/mcp/tools/parameter_search.rb
 lib/cf/mcp/tools/search_enums.rb
 lib/cf/mcp/tools/search_functions.rb
 lib/cf/mcp/tools/search_structs.rb

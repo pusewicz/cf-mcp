@@ -47,7 +47,10 @@ class CF::MCP::ServerTest < Minitest::Test
       CF::MCP::Tools::SearchStructs,
       CF::MCP::Tools::SearchEnums,
       CF::MCP::Tools::ListCategory,
-      CF::MCP::Tools::GetDetails
+      CF::MCP::Tools::GetDetails,
+      CF::MCP::Tools::FindRelated,
+      CF::MCP::Tools::ParameterSearch,
+      CF::MCP::Tools::MemberSearch
     ]
 
     assert_equal expected_tools, CF::MCP::Server::TOOLS
@@ -92,7 +95,7 @@ class CF::MCP::ServerHTTPTest < Minitest::Test
     assert_equal 200, response.status
     body = JSON.parse(response.body)
     tools = body["result"]["tools"]
-    assert_equal 6, tools.size
+    assert_equal 9, tools.size
   end
 
   def test_http_tools_call_search
@@ -284,7 +287,7 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
     refute response.key?("error")
 
     tools = response["result"]["tools"]
-    assert_equal 6, tools.size
+    assert_equal 9, tools.size
 
     tool_names = tools.map { |t| t["name"] }
     assert_includes tool_names, "cf_search"
@@ -594,7 +597,7 @@ class CF::MCP::CombinedServerTest < Minitest::Test
     assert_equal 200, response.status
     body = JSON.parse(response.body)
     tools = body["result"]["tools"]
-    assert_equal 6, tools.size
+    assert_equal 9, tools.size
   end
 
   def test_get_without_html_accept_routes_to_mcp

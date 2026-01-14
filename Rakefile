@@ -9,7 +9,7 @@ require "standard/rake"
 
 desc "Generate Manifest.txt from git ls-files"
 task :manifest do
-  ignore_patterns = %w[bin/ Gemfile .gitignore test/ .github/ .standard.yml cf-mcp.gemspec .ruby-version CLAUDE.md fly.toml Procfile Dockerfile .dockerignore]
+  ignore_patterns = %w[bin/ Gemfile .gitignore test/ .github/ .standard.yml cf-mcp.gemspec .ruby-version CLAUDE.md fly.toml Procfile Dockerfile .dockerignore .claude/]
 
   files = IO.popen(%w[git ls-files -z], chdir: __dir__, err: IO::NULL) do |ls|
     ls.readlines("\x0", chomp: true)

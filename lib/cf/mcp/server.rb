@@ -7,6 +7,9 @@ require_relative "tools/search_structs"
 require_relative "tools/search_enums"
 require_relative "tools/list_category"
 require_relative "tools/get_details"
+require_relative "tools/find_related"
+require_relative "tools/parameter_search"
+require_relative "tools/member_search"
 
 module CF
   module MCP
@@ -19,7 +22,10 @@ module CF
         Tools::SearchStructs,
         Tools::SearchEnums,
         Tools::ListCategory,
-        Tools::GetDetails
+        Tools::GetDetails,
+        Tools::FindRelated,
+        Tools::ParameterSearch,
+        Tools::MemberSearch
       ].freeze
 
       def initialize(index)

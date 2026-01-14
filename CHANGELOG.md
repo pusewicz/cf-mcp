@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.1] - 2026-01-14
+
+### Changed
+
+- Refactored tool classes to use shared `ResponseHelpers` module, removing duplicate code
+- Extracted `IndexBuilder` class to consolidate index building logic from CLI and HTTPServer
+- Extracted `SearchResultFormatter` module for consistent search result formatting
+- Simplified model `to_text()` methods using template method pattern in `DocItem` base class
+
 ## [0.12.0] - 2026-01-14
 
 ### Changed
@@ -139,6 +148,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `cf_list_category` - List items by category
   - `cf_get_details` - Get full documentation by name
 
+[0.12.1]: https://github.com/pusewicz/cf-mcp/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/pusewicz/cf-mcp/compare/v0.10.1...v0.12.0
 [0.10.1]: https://github.com/pusewicz/cf-mcp/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/pusewicz/cf-mcp/compare/v0.9.3...v0.10.0

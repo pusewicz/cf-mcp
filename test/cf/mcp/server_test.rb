@@ -52,6 +52,95 @@ class CF::MCP::ServerTest < Minitest::Test
 
     assert_equal expected_tools, CF::MCP::Server::TOOLS
   end
+
+  def test_http_app_returns_rack_app
+    app = @server.http_app
+    assert_respond_to app, :call
+  end
+end
+
+# HTTP transport integration tests
+class CF::MCP::ServerHTTPTest < Minitest::Test
+  def setup
+    @index = CF::MCP::Index.new
+    @index.add(CF::MCP::Models::FunctionDoc.new(
+      name: "cf_make_sprite",
+      category: "sprite",
+      brief: "Loads a sprite from an aseprite file.",
+      signature: "CF_Sprite cf_make_sprite(const char* path)"
+    ))
+
+    @server = CF::MCP::Server.new(@index)
+    @app = @server.http_app
+  end
+
+  def test_http_initialize_request
+    response = make_request("initialize", {
+      protocolVersion: "2024-11-05",
+      capabilities: {},
+      clientInfo: {name: "test", version: "1.0"}
+    })
+
+    assert_equal 200, response.status
+    body = JSON.parse(response.body)
+    assert_equal "cf-mcp", body["result"]["serverInfo"]["name"]
+  end
+
+  def test_http_tools_list
+    response = make_request("tools/list", {})
+
+    assert_equal 200, response.status
+    body = JSON.parse(response.body)
+    tools = body["result"]["tools"]
+    assert_equal 6, tools.size
+  end
+
+  def test_http_tools_call_search
+    response = make_request("tools/call", {
+      name: "cf_search",
+      arguments: {query: "sprite"}
+    })
+
+    assert_equal 200, response.status
+    body = JSON.parse(response.body)
+    refute body["result"]["isError"]
+    assert_includes body["result"]["content"].first["text"], "cf_make_sprite"
+  end
+
+  def test_http_requires_accept_header
+    env = Rack::MockRequest.env_for(
+      "/",
+      method: "POST",
+      input: JSON.generate({jsonrpc: "2.0", id: 1, method: "initialize", params: {}})
+    )
+    env["CONTENT_TYPE"] = "application/json"
+    # No Accept header
+
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_equal 406, response.status
+  end
+
+  private
+
+  def make_request(method, params, id: 1)
+    body = JSON.generate({
+      jsonrpc: "2.0",
+      id: id,
+      method: method,
+      params: params
+    })
+
+    env = Rack::MockRequest.env_for(
+      "/",
+      method: "POST",
+      input: body
+    )
+    env["CONTENT_TYPE"] = "application/json"
+    env["HTTP_ACCEPT"] = "application/json, text/event-stream"
+
+    Rack::MockResponse.new(*@app.call(env))
+  end
 end
 
 # Integration tests using STDIO transport simulation

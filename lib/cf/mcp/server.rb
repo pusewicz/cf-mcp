@@ -38,16 +38,21 @@ module CF
       end
 
       def run_http(port: 9292)
-        require "rack"
         require "rackup"
+
+        app = http_app
+        warn "Starting HTTP server on port #{port}..."
+        warn "Index contains #{@index.size} items"
+        Rackup::Server.start(app: app, Port: port, Logger: $stderr)
+      end
+
+      def http_app
+        require "rack"
 
         transport = ::MCP::Server::Transports::StreamableHTTPTransport.new(@server, stateless: true)
         @server.transport = transport
 
-        app = build_rack_app(transport)
-        warn "Starting HTTP server on port #{port}..."
-        warn "Index contains #{@index.size} items"
-        Rackup::Server.start(app: app, Port: port, Logger: $stderr)
+        build_rack_app(transport)
       end
 
       def run_sse(port: 9393)
@@ -68,7 +73,7 @@ module CF
       def build_rack_app(transport)
         Rack::Builder.new do
           use Rack::CommonLogger
-          run ->(env) { transport.handle_request(env) }
+          run ->(env) { transport.handle_request(Rack::Request.new(env)) }
         end
       end
     end

@@ -3,6 +3,7 @@ PATH
   specs:
     cf-mcp (0.1.0)
       mcp (~> 0.5)
+      puma (~> 6.0)
       rack (~> 3.0)
       rackup (~> 2.0)
       rubyzip (~> 2.3)
@@ -30,6 +31,7 @@ GEM
     mcp (0.5.0)
       json-schema (>= 4.1)
     minitest (5.26.2)
+    nio4r (2.7.5)
     parallel (1.27.0)
     parser (3.3.10.0)
       ast (~> 2.4.1)
@@ -42,6 +44,8 @@ GEM
       date
       stringio
     public_suffix (7.0.2)
+    puma (6.6.1)
+      nio4r (~> 2.0)
     racc (1.8.1)
     rack (3.2.4)
     rackup (2.3.1)
@@ -119,6 +123,7 @@ CHECKSUMS
   lint_roller (1.1.0) sha256=2c0c845b632a7d172cb849cc90c1bce937a28c5c8ccccb50dfd46a485003cc87
   mcp (0.5.0) sha256=0542c0df780909c387828ecdfb85db155b9c7872d16a8fc051f88ca00778cf10
   minitest (5.26.2) sha256=f021118a6185b9ba9f5af71f2ba103ad770c75afde9f2ab8da512677c550cde3
+  nio4r (2.7.5) sha256=6c90168e48fb5f8e768419c93abb94ba2b892a1d0602cb06eef16d8b7df1dca1
   parallel (1.27.0) sha256=4ac151e1806b755fb4e2dc2332cbf0e54f2e24ba821ff2d3dcf86bf6dc4ae130
   parser (3.3.10.0) sha256=ce3587fa5cc55a88c4ba5b2b37621b3329aadf5728f9eafa36bbd121462aabd6
   pp (0.6.3) sha256=2951d514450b93ccfeb1df7d021cae0da16e0a7f95ee1e2273719669d0ab9df6
@@ -126,6 +131,7 @@ CHECKSUMS
   prism (1.8.0) sha256=84453a16ef5530ea62c5f03ec16b52a459575ad4e7b9c2b360fd8ce2c39c1254
   psych (5.3.1) sha256=eb7a57cef10c9d70173ff74e739d843ac3b2c019a003de48447b2963d81b1974
   public_suffix (7.0.2) sha256=9114090c8e4e7135c1fd0e7acfea33afaab38101884320c65aaa0ffb8e26a857
+  puma (6.6.1) sha256=b9b56e4a4ea75d1bfa6d9e1972ee2c9f43d0883f011826d914e8e37b3694ea1e
   racc (1.8.1) sha256=4a7f6929691dbec8b5209a0b373bc2614882b55fc5d2e447a21aaa691303d62f
   rack (3.2.4) sha256=5d74b6f75082a643f43c1e76b419c40f0e5527fcfee1e669ac1e6b73c0ccb6f6
   rackup (2.3.1) sha256=6c79c26753778e90983761d677a48937ee3192b3ffef6bc963c0950f94688868

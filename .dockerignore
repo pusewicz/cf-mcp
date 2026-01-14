@@ -1,0 +1,13 @@
+# flyctl launch added from .gitignore
+.bundle
+.yardoc
+_yardoc
+coverage
+doc
+pkg
+spec/reports
+tmp
+
+# flyctl launch added from .ruby-lsp/.gitignore
+.ruby-lsp/**/*
+fly.toml

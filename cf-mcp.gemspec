@@ -19,19 +19,14 @@ Gem::Specification.new do |spec|
   spec.metadata["source_code_uri"] = "https://github.com/pusewicz/cf-mcp"
 
   # Specify which files should be added to the gem when it is released.
-  # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
-  gemspec = File.basename(__FILE__)
-  spec.files = IO.popen(%w[git ls-files -z], chdir: __dir__, err: IO::NULL) do |ls|
-    ls.readlines("\x0", chomp: true).reject do |f|
-      (f == gemspec) ||
-        f.start_with?(*%w[bin/ Gemfile .gitignore test/ .github/ .standard.yml])
-    end
-  end
+  # Run `rake manifest` to regenerate Manifest.txt after adding/removing files.
+  spec.files = File.read(File.join(__dir__, "Manifest.txt")).split("\n")
   spec.bindir = "exe"
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
   spec.add_dependency "mcp", "~> 0.5"
+  spec.add_dependency "puma", "~> 6.0"
   spec.add_dependency "rack", "~> 3.0"
   spec.add_dependency "rackup", "~> 2.0"
   spec.add_dependency "rubyzip", "~> 2.3"

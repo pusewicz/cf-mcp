@@ -29,6 +29,12 @@ module CF
         @items[name]
       end
 
+      def brief_for(name)
+        item = find(name)
+        return nil unless item
+        {name: item.name, type: item.type, brief: item.brief}
+      end
+
       def search(query, type: nil, category: nil, limit: 20)
         results = all_items
 

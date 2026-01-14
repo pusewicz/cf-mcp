@@ -22,16 +22,20 @@ module CF
           return error_response("Index not available") unless index
 
           if category.nil? || category.empty?
-            # List all categories with counts
+            # List all categories with counts by type
             categories = index.categories
             if categories.empty?
               text_response("No categories found")
             else
               formatted = categories.map do |cat|
-                count = index.items_in_category(cat).size
-                "- **#{cat}** (#{count} items)"
+                items = index.items_in_category(cat)
+                counts = items.group_by(&:type).transform_values(&:size)
+                type_breakdown = [:function, :struct, :enum]
+                  .filter_map { |t| "#{counts[t]} #{t}s" if counts[t]&.positive? }
+                  .join(", ")
+                "- **#{cat}** — #{items.size} items (#{type_breakdown})"
               end.join("\n")
-              text_response("Available categories:\n\n#{formatted}")
+              text_response("Available categories:\n\n#{formatted}\n\n**Tip:** Use `cf_list_category` with a category name to see all items in that category.")
             end
           else
             # List items in the specified category
@@ -46,7 +50,7 @@ module CF
               text_response("No items found in category '#{category}'#{" of type #{type}" if type}")
             else
               formatted = items.map(&:to_summary).join("\n")
-              text_response("Items in '#{category}':\n\n#{formatted}")
+              text_response("Items in '#{category}':\n\n#{formatted}\n\n**Tip:** Use `cf_get_details` with an exact name to get full documentation.")
             end
           end
         end

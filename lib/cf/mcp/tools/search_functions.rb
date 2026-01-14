@@ -19,6 +19,8 @@ module CF
           required: ["query"]
         )
 
+        DETAILS_TIP = "**Tip:** Use `cf_get_details` with an exact name to get full documentation including signature, parameters, and examples."
+
         def self.call(query:, category: nil, limit: 20, server_context: {})
           index = server_context[:index]
           return error_response("Index not available") unless index
@@ -28,8 +30,17 @@ module CF
           if results.empty?
             text_response("No functions found for '#{query}'")
           else
-            formatted = results.map { |f| "- **#{f.name}** — #{f.brief}" }.join("\n")
-            text_response("Found #{results.size} function(s):\n\n#{formatted}")
+            formatted = results.map(&:to_summary).join("\n")
+            header = if results.size >= limit
+              "Found #{results.size} function(s) (limit reached, more may exist):"
+            else
+              "Found #{results.size} function(s):"
+            end
+
+            footer = "\n\n#{DETAILS_TIP}"
+            footer += "\nTo find more results, narrow your search with a `category` filter." if results.size >= limit
+
+            text_response("#{header}\n\n#{formatted}#{footer}")
           end
         end
 

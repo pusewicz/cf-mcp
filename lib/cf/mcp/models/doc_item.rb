@@ -54,7 +54,7 @@ module CF
           "- **#{name}** `(#{type}, #{category})` — #{brief}"
         end
 
-        def to_text(detailed: false)
+        def to_text(detailed: false, index: nil)
           lines = []
           lines << "# #{name}"
           lines << ""
@@ -84,12 +84,25 @@ module CF
 
             if related && !related.empty?
               lines << "## Related"
-              lines << related.join(", ")
+              lines << format_related_items(index)
               lines << ""
             end
           end
 
           lines.join("\n")
+        end
+
+        def format_related_items(index)
+          return related.join(", ") unless index
+
+          related.map do |rel_name|
+            info = index.brief_for(rel_name)
+            if info
+              "- `#{info[:name]}` (#{info[:type]}) — #{info[:brief]}"
+            else
+              "- `#{rel_name}`"
+            end
+          end.join("\n")
         end
       end
     end

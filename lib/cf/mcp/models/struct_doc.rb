@@ -24,7 +24,7 @@ module CF
           ).compact
         end
 
-        def to_text(detailed: false)
+        def to_text(detailed: false, index: nil)
           lines = []
           lines << "# #{name}"
           lines << ""
@@ -65,7 +65,7 @@ module CF
 
             if related && !related.empty?
               lines << "## Related"
-              lines << related.join(", ")
+              lines << format_related_items(index)
               lines << ""
             end
           end

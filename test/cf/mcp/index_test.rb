@@ -67,4 +67,18 @@ class CF::MCP::IndexTest < Minitest::Test
     assert_equal 1, stats[:functions]
     assert_equal 1, stats[:structs]
   end
+
+  def test_brief_for_existing_item
+    @index.add(@func)
+
+    info = @index.brief_for("test_func")
+    assert_equal "test_func", info[:name]
+    assert_equal :function, info[:type]
+    assert_equal "A test function", info[:brief]
+  end
+
+  def test_brief_for_nonexistent_item
+    info = @index.brief_for("nonexistent")
+    assert_nil info
+  end
 end

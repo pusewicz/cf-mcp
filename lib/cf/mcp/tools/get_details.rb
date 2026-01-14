@@ -17,6 +17,8 @@ module CF
           required: ["name"]
         )
 
+        NAMING_TIP = "**Tip:** Cute Framework uses `cf_` prefix for functions and `CF_` prefix for types (structs/enums)."
+
         def self.call(name:, server_context: {})
           index = server_context[:index]
           return error_response("Index not available") unless index
@@ -27,13 +29,13 @@ module CF
             # Try a fuzzy search to suggest alternatives
             suggestions = index.search(name, limit: 5)
             if suggestions.empty?
-              text_response("Not found: '#{name}'")
+              text_response("Not found: '#{name}'\n\n#{NAMING_TIP}")
             else
-              names = suggestions.map(&:name).join(", ")
-              text_response("Not found: '#{name}'\n\nDid you mean: #{names}?")
+              formatted = suggestions.map { |s| "- `#{s.name}` (#{s.type}) — #{s.brief}" }.join("\n")
+              text_response("Not found: '#{name}'\n\n**Similar items:**\n#{formatted}\n\n#{NAMING_TIP}")
             end
           else
-            text_response(item.to_text(detailed: true))
+            text_response(item.to_text(detailed: true, index: index))
           end
         end
 

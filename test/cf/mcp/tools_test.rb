@@ -85,7 +85,8 @@ class CF::MCP::ToolsTest < Minitest::Test
     refute response.error?
     assert_includes response.content.first[:text], "cf_make_sprite"
     assert_includes response.content.first[:text], "cf_draw_sprite"
-    refute_includes response.content.first[:text], "CF_Sprite"
+    # CF_Sprite appears in function signature, so we check it's not listed as a struct result
+    refute_includes response.content.first[:text], "(struct)"
   end
 
   def test_search_structs_tool
@@ -125,7 +126,8 @@ class CF::MCP::ToolsTest < Minitest::Test
 
     refute response.error?
     assert_includes response.content.first[:text], "cf_make_sprite"
-    refute_includes response.content.first[:text], "CF_Sprite"
+    # CF_Sprite appears in function signature, so we check it's not listed as a struct result
+    refute_includes response.content.first[:text], "(struct)"
   end
 
   def test_get_details_finds_item
@@ -146,7 +148,7 @@ class CF::MCP::ToolsTest < Minitest::Test
     refute response.error?
     text = response.content.first[:text]
     assert_includes text, "Not found"
-    assert_includes text, "Did you mean"
+    assert_includes text, "Similar items"
   end
 
   def test_tools_handle_missing_index
@@ -242,7 +244,7 @@ class CF::MCP::ToolsTest < Minitest::Test
     refute response.error?
     text = response.content.first[:text]
     assert_includes text, "Not found"
-    refute_includes text, "Did you mean"
+    refute_includes text, "Similar items"
   end
 
   def test_search_functions_handles_missing_index
@@ -290,7 +292,8 @@ class CF::MCP::ToolsTest < Minitest::Test
 
     refute response.error?
     assert_includes response.content.first[:text], "cf_make_sprite"
-    refute_includes response.content.first[:text], "CF_Sprite"
+    # CF_Sprite appears in function signature, so we check it's not listed as a struct result
+    refute_includes response.content.first[:text], "(struct)"
   end
 
   def test_search_functions_with_category_filter
@@ -327,5 +330,106 @@ class CF::MCP::ToolsTest < Minitest::Test
     refute response.error?
     assert_includes response.content.first[:text], "CF_PlayDirection"
     refute_includes response.content.first[:text], "cf_make_sprite"
+  end
+
+  # Tests for improved tool responses
+
+  def test_search_tool_includes_details_tip
+    response = CF::MCP::Tools::SearchTool.call(query: "sprite", server_context: @server_context)
+
+    refute response.error?
+    assert_includes response.content.first[:text], "cf_get_details"
+    assert_includes response.content.first[:text], "Tip"
+  end
+
+  def test_search_tool_shows_truncation_when_limit_reached
+    response = CF::MCP::Tools::SearchTool.call(query: "sprite", limit: 2, server_context: @server_context)
+
+    refute response.error?
+    text = response.content.first[:text]
+    assert_includes text, "limit reached"
+    assert_includes text, "more may exist"
+    assert_includes text, "narrow your search"
+  end
+
+  def test_search_tool_no_truncation_message_when_under_limit
+    response = CF::MCP::Tools::SearchTool.call(query: "app", limit: 20, server_context: @server_context)
+
+    refute response.error?
+    text = response.content.first[:text]
+    refute_includes text, "limit reached"
+    refute_includes text, "narrow your search"
+  end
+
+  def test_search_functions_includes_signature_in_summary
+    response = CF::MCP::Tools::SearchFunctions.call(query: "make_sprite", server_context: @server_context)
+
+    refute response.error?
+    text = response.content.first[:text]
+    assert_includes text, "CF_Sprite cf_make_sprite(const char* path)"
+  end
+
+  def test_list_category_shows_type_breakdown
+    response = CF::MCP::Tools::ListCategory.call(server_context: @server_context)
+
+    refute response.error?
+    text = response.content.first[:text]
+    # sprite category has 2 functions, 1 struct, 1 enum
+    assert_includes text, "sprite"
+    assert_includes text, "functions"
+    assert_includes text, "struct"
+    assert_includes text, "enum"
+  end
+
+  def test_list_category_items_includes_tip
+    response = CF::MCP::Tools::ListCategory.call(category: "sprite", server_context: @server_context)
+
+    refute response.error?
+    assert_includes response.content.first[:text], "cf_get_details"
+    assert_includes response.content.first[:text], "Tip"
+  end
+
+  def test_get_details_includes_naming_tip_on_not_found
+    response = CF::MCP::Tools::GetDetails.call(name: "nonexistent", server_context: @server_context)
+
+    refute response.error?
+    text = response.content.first[:text]
+    assert_includes text, "cf_"
+    assert_includes text, "CF_"
+    assert_includes text, "prefix"
+  end
+
+  def test_get_details_enriches_related_items
+    response = CF::MCP::Tools::GetDetails.call(name: "cf_make_sprite", server_context: @server_context)
+
+    refute response.error?
+    text = response.content.first[:text]
+    # Related items should show type and brief
+    assert_includes text, "## Related"
+    assert_includes text, "(struct)"
+    assert_includes text, "(function)"
+  end
+
+  def test_search_functions_shows_truncation_when_limit_reached
+    response = CF::MCP::Tools::SearchFunctions.call(query: "sprite", limit: 1, server_context: @server_context)
+
+    refute response.error?
+    text = response.content.first[:text]
+    assert_includes text, "limit reached"
+    assert_includes text, "category"
+  end
+
+  def test_search_structs_includes_tip
+    response = CF::MCP::Tools::SearchStructs.call(query: "sprite", server_context: @server_context)
+
+    refute response.error?
+    assert_includes response.content.first[:text], "cf_get_details"
+  end
+
+  def test_search_enums_includes_tip
+    response = CF::MCP::Tools::SearchEnums.call(query: "direction", server_context: @server_context)
+
+    refute response.error?
+    assert_includes response.content.first[:text], "cf_get_details"
   end
 end

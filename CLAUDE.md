@@ -4,12 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CF::MCP is a Ruby gem that implements an MCP (Model Context Protocol) server for the Cute Framework, a C/C++ 2D game framework. It indexes header files and extracts documentation from comments, providing search functionality for structs, classes, functions, and other elements.
-
-The server operates in three modes:
-- **STDIO Mode**: For integration with CLI tools via standard input/output
-- **HTTP Mode**: Stateless HTTP server for simple request/response and multi-node deployments
-- **SSE Mode**: Stateful HTTP server with Server-Sent Events for real-time notifications
+CF::MCP is a Ruby gem that implements an MCP (Model Context Protocol) server for the Cute Framework, a C/C++ 2D game framework. It indexes header files, extracts documentation from comments, and provides search functionality for functions, structs, and enums.
 
 ## Commands
 
@@ -21,10 +16,10 @@ bin/setup
 rake test
 
 # Run a single test file
-ruby -Ilib:test test/cf/test_mcp.rb
+ruby -Ilib:test test/cf/mcp/parser_test.rb
 
 # Run a specific test method
-ruby -Ilib:test test/cf/test_mcp.rb --name test_that_it_has_a_version_number
+ruby -Ilib:test test/cf/mcp/parser_test.rb --name test_parse_function_doc
 
 # Lint code with Standard Ruby
 rake standard
@@ -32,7 +27,7 @@ rake standard
 # Auto-fix linting issues
 rake standard:fix
 
-# Run both tests and linting (default task)
+# Run tests, lint, and generate manifest (default task)
 rake
 
 # Start interactive console
@@ -42,16 +37,87 @@ bin/console
 bundle exec rake install
 ```
 
+## CLI Usage
+
+```bash
+# STDIO mode (for Claude Desktop integration)
+cf-mcp stdio --root ~/Work/GitHub/pusewicz/cute_framework
+
+# HTTP mode (stateless, port 9292)
+cf-mcp http --port 9292 --root /path/to/cute_framework
+
+# SSE mode (stateful with Server-Sent Events, port 9393)
+cf-mcp sse --port 9393 --root /path/to/cute_framework
+
+# Combined mode (SSE + HTTP + web UI)
+cf-mcp combined --port 9292
+
+# Download headers from GitHub automatically
+cf-mcp stdio --download
+```
+
 ## Architecture
 
-- `lib/cf/mcp.rb` - Main module entry point, defines `CF::MCP` namespace
-- `lib/cf/mcp/version.rb` - Version constant
-- `exe/cf-mcp` - CLI executable
-- `sig/cf/mcp.rbs` - RBS type signatures
+```
+lib/cf/mcp/
+├── cli.rb              # Thor-based CLI with stdio/http/sse/combined modes
+├── server.rb           # MCP server setup, Server and CombinedServer classes
+├── parser.rb           # Header file parser (extracts @function, @struct, @enum docs)
+├── index.rb            # In-memory search index with relevance scoring
+├── downloader.rb       # GitHub header downloader with ZIP extraction
+├── models/
+│   ├── doc_item.rb     # Base model with search/relevance scoring
+│   ├── function_doc.rb # FunctionDoc with signature, params, return
+│   ├── struct_doc.rb   # StructDoc with members
+│   └── enum_doc.rb     # EnumDoc with entries
+├── tools/
+│   ├── search_tool.rb      # cf_search - search all types
+│   ├── search_functions.rb # cf_search_functions
+│   ├── search_structs.rb   # cf_search_structs
+│   ├── search_enums.rb     # cf_search_enums
+│   ├── list_category.rb    # cf_list_category
+│   └── get_details.rb      # cf_get_details - full docs by name
+└── templates/          # Web UI for combined mode
+    ├── index.erb
+    ├── style.css
+    └── script.js
+```
+
+## Key Components
+
+**Parser** - Extracts documentation from C headers using comment patterns:
+- `/** ... */` doc blocks with `@function`, `@struct`, `@enum`
+- Tags: `@brief`, `@param`, `@return`, `@category`, `@remarks`, `@example`, `@related`
+- Member comments: `/* @member description */`
+- Enum entries: `/* @entry description */ CF_ENUM(NAME, value)`
+
+**Index** - In-memory search with relevance scoring:
+- Exact name match = 1000 points
+- Prefix match = 500, suffix = 400, contains = 100
+- Brief/category/remarks matches add points
+
+**Tools** - Six MCP tools for documentation access:
+- `cf_search` - Search all types with filtering
+- `cf_search_functions`, `cf_search_structs`, `cf_search_enums` - Type-specific search
+- `cf_list_category` - List items by category
+- `cf_get_details` - Full documentation by exact name
 
 ## Code Style
 
 Uses Standard Ruby for linting (configured in `.standard.yml`). Target Ruby version is 3.2+.
+
+## Testing
+
+```bash
+# Test files in test/cf/mcp/
+parser_test.rb    # Parser tests with fixtures
+index_test.rb     # Index search/relevance tests
+models_test.rb    # DocItem model tests
+server_test.rb    # Server setup tests
+tools_test.rb     # Tool response tests
+```
+
+Fixtures in `test/fixtures/sample_header.h`.
 
 ## Local Development
 
@@ -61,128 +127,13 @@ The local Cute Framework checkout is at `~/Work/GitHub/pusewicz/cute_framework`.
 cf-mcp stdio --root ~/Work/GitHub/pusewicz/cute_framework
 ```
 
-## MCP SDK Reference
+## Dependencies
 
-This project uses the `mcp` gem (Ruby MCP SDK). Key patterns:
-
-### Server Setup
-```ruby
-server = MCP::Server.new(
-  name: "cf-mcp",
-  version: CF::MCP::VERSION,
-  tools: [MyTool],
-  prompts: [MyPrompt],
-  resources: [my_resource]
-)
-```
-
-### Defining Tools (Class-based)
-```ruby
-class MyTool < MCP::Tool
-  description "Tool description"
-  input_schema(properties: { query: { type: "string" } }, required: ["query"])
-
-  def self.call(query:, server_context:)
-    MCP::Tool::Response.new([{ type: "text", text: "Result" }])
-  end
-end
-```
-
-### Defining Tools (Dynamic)
-```ruby
-server.define_tool(name: "echo", description: "Echo a message") do |args, server_context:|
-  message = args[:message]
-  MCP::Tool::Response.new([{ type: "text", text: "Echo: #{message}" }])
-end
-```
-
-### Defining Prompts
-```ruby
-class MyPrompt < MCP::Prompt
-  prompt_name "my_prompt"
-  description "Prompt description"
-  arguments [MCP::Prompt::Argument.new(name: "message", description: "Input message", required: true)]
-
-  def self.template(args, server_context:)
-    MCP::Prompt::Result.new(
-      messages: [MCP::Prompt::Message.new(role: "user", content: MCP::Content::Text.new(args[:message]))]
-    )
-  end
-end
-```
-
-### STDIO Transport
-```ruby
-transport = MCP::Server::Transports::StdioTransport.new(server)
-transport.open  # Blocks, reading JSON-RPC from stdin, writing to stdout
-```
-
-### HTTP Transport (Stateless)
-```ruby
-transport = MCP::Server::Transports::StreamableHTTPTransport.new(server, stateless: true)
-server.transport = transport
-
-app = Rack::Builder.new do
-  use Rack::CommonLogger
-  run ->(env) { transport.handle_request(env) }
-end
-
-Rackup::Server.start(app: app, Port: 9292)
-```
-
-### SSE Transport (Stateful with Server-Sent Events)
-```ruby
-transport = MCP::Server::Transports::StreamableHTTPTransport.new(server)
-server.transport = transport
-
-app = Rack::Builder.new do
-  use Rack::CommonLogger
-  use Rack::ShowExceptions
-  run ->(env) { transport.handle_request(env) }
-end
-
-Rackup::Server.start(app: app, Port: 9393)
-```
-
-### SSE Protocol Flow
-1. Client POSTs `initialize` method → Server returns `Mcp-Session-Id` header
-2. Client opens GET for SSE stream using session ID (for real-time notifications)
-3. Client sends JSON-RPC requests via POST with `Mcp-Session-Id` header
-4. Client sends DELETE to terminate session
-
-### Sending Notifications (SSE mode only)
-```ruby
-server.notify_tools_list_changed
-server.notify_prompts_list_changed
-server.notify_resources_list_changed
-```
-
-### Resources
-```ruby
-resource = MCP::Resource.new(
-  uri: "file:///path/to/doc",
-  name: "resource-name",
-  mime_type: "text/plain"
-)
-
-server = MCP::Server.new(
-  name: "cf-mcp",
-  version: CF::MCP::VERSION,
-  tools: [MyTool],
-  resources: [resource]
-)
-
-server.resources_read_handler do |params|
-  [{ uri: params[:uri], mimeType: "text/plain", text: "content" }]
-end
-```
+- `mcp` (~> 0.5) - Ruby MCP SDK
+- `rack` (~> 3.0) / `rackup` (~> 2.0) / `puma` (~> 6.0) - HTTP server
+- `rubyzip` (~> 2.3) - ZIP extraction for downloader
 
 ## References
 
-### MCP SDK Examples
-- [STDIO Server](https://raw.githubusercontent.com/modelcontextprotocol/ruby-sdk/refs/heads/main/examples/stdio_server.rb)
-- [HTTP Server](https://raw.githubusercontent.com/modelcontextprotocol/ruby-sdk/refs/heads/main/examples/http_server.rb)
-- [SSE Server](https://raw.githubusercontent.com/modelcontextprotocol/ruby-sdk/refs/heads/main/examples/streamable_http_server.rb)
-
-### Cute Framework
-- [Docs Parser (C++)](https://raw.githubusercontent.com/RandyGaul/cute_framework/refs/heads/master/samples/docs_parser.cpp) - Reference implementation for parsing Cute Framework header documentation
+- [Ruby MCP SDK](https://github.com/modelcontextprotocol/ruby-sdk)
+- [Cute Framework Docs Parser](https://raw.githubusercontent.com/RandyGaul/cute_framework/refs/heads/master/samples/docs_parser.cpp) - Reference for parsing header documentation

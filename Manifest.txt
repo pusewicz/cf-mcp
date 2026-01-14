@@ -2,6 +2,7 @@ LICENSE.txt
 Manifest.txt
 README.md
 Rakefile
+config.ru
 exe/cf-mcp
 lib/cf/mcp.rb
 lib/cf/mcp/cli.rb
@@ -14,6 +15,8 @@ lib/cf/mcp/models/struct_doc.rb
 lib/cf/mcp/parser.rb
 lib/cf/mcp/server.rb
 lib/cf/mcp/templates/index.erb
+lib/cf/mcp/templates/script.js
+lib/cf/mcp/templates/style.css
 lib/cf/mcp/tools/get_details.rb
 lib/cf/mcp/tools/list_category.rb
 lib/cf/mcp/tools/search_enums.rb

@@ -207,6 +207,8 @@ module CF
 
       # Helper class to provide a clean binding for ERB templates
       class TemplateContext
+        TEMPLATES_DIR = File.join(__dir__, "templates")
+
         attr_reader :version, :stats, :categories, :tools, :tool_schemas_json
 
         def initialize(version:, stats:, categories:, tools:, tool_schemas_json:)
@@ -219,6 +221,16 @@ module CF
 
         def categories_json
           @categories.to_json
+        end
+
+        def css_content
+          File.read(File.join(TEMPLATES_DIR, "style.css"))
+        end
+
+        def js_content
+          js = File.read(File.join(TEMPLATES_DIR, "script.js"))
+          js.sub("TOOL_SCHEMAS_PLACEHOLDER", @tool_schemas_json)
+            .sub("CATEGORIES_PLACEHOLDER", categories_json)
         end
 
         def h(text)

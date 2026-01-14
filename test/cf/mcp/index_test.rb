@@ -181,4 +181,55 @@ class CF::MCP::IndexTest < Minitest::Test
     assert_equal 1, results.size
     assert_equal "cf_make_app", results[0].name
   end
+
+  def test_search_with_multi_keyword_query
+    draw_circle = CF::MCP::Models::FunctionDoc.new(
+      name: "cf_draw_circle",
+      category: "draw",
+      brief: "Draws a circle"
+    )
+    draw_rect = CF::MCP::Models::FunctionDoc.new(
+      name: "cf_draw_rect",
+      category: "draw",
+      brief: "Draws a rectangle"
+    )
+    play_audio = CF::MCP::Models::FunctionDoc.new(
+      name: "cf_play_audio",
+      category: "audio",
+      brief: "Plays audio"
+    )
+
+    @index.add(draw_circle)
+    @index.add(draw_rect)
+    @index.add(play_audio)
+
+    # Multi-keyword query "draw circle" should match both draw functions
+    # but rank cf_draw_circle higher (matches both keywords)
+    results = @index.search("draw circle")
+
+    assert_equal 2, results.size
+    assert_equal "cf_draw_circle", results[0].name
+    assert_equal "cf_draw_rect", results[1].name
+  end
+
+  def test_search_multi_keyword_ranks_by_match_count
+    matches_both = CF::MCP::Models::FunctionDoc.new(
+      name: "cf_draw_circle",
+      category: "draw",
+      brief: "Draws a circle shape"
+    )
+    matches_one = CF::MCP::Models::FunctionDoc.new(
+      name: "cf_draw_rect",
+      category: "draw",
+      brief: "Draws a rectangle"
+    )
+
+    @index.add(matches_one)
+    @index.add(matches_both)
+
+    results = @index.search("draw circle")
+
+    # Item matching both keywords should rank higher
+    assert_equal "cf_draw_circle", results[0].name
+  end
 end

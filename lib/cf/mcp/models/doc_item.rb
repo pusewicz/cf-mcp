@@ -37,44 +37,61 @@ module CF
         def matches?(query)
           return true if query.nil? || query.empty?
 
-          pattern = Regexp.new(Regexp.escape(query), Regexp::IGNORECASE)
-          [name, brief, remarks, category].any? { |field| field&.match?(pattern) }
+          keywords = query.split(/\s+/).reject(&:empty?)
+          return true if keywords.empty?
+
+          keywords.any? do |keyword|
+            pattern = Regexp.new(Regexp.escape(keyword), Regexp::IGNORECASE)
+            [name, brief, remarks, category].any? { |field| field&.match?(pattern) }
+          end
         end
 
         # Returns a relevance score for ranking search results.
         # Higher scores indicate better matches.
+        # Supports multi-keyword queries - scores are summed across all keywords.
         def relevance_score(query)
           return 0 if query.nil? || query.empty?
 
+          keywords = query.split(/\s+/).reject(&:empty?)
+          return 0 if keywords.empty?
+
+          keywords.sum { |keyword| keyword_score(keyword) }
+        end
+
+        private
+
+        def keyword_score(keyword)
           score = 0
-          query_downcase = query.downcase
+          keyword_downcase = keyword.downcase
           name_downcase = name&.downcase || ""
 
           # Exact name match (highest priority)
-          if name_downcase == query_downcase
+          if name_downcase == keyword_downcase
             score += 1000
-          # Name starts with query (prefix match)
-          elsif name_downcase.start_with?(query_downcase)
+          # Name starts with keyword (prefix match)
+          elsif name_downcase.start_with?(keyword_downcase)
             score += 500
-          # Name ends with query (suffix match, e.g., "make_app" matches "cf_make_app")
-          elsif name_downcase.end_with?(query_downcase)
+          # Name ends with keyword (suffix match)
+          elsif name_downcase.end_with?(keyword_downcase)
             score += 400
-          # Name contains query
-          elsif name_downcase.include?(query_downcase)
+          # Name contains keyword
+          elsif name_downcase.include?(keyword_downcase)
             score += 100
           end
 
-          # Brief contains query
-          score += 50 if brief&.downcase&.include?(query_downcase)
+          # Brief contains keyword
+          score += 50 if brief&.downcase&.include?(keyword_downcase)
 
-          # Category contains query
-          score += 30 if category&.downcase&.include?(query_downcase)
+          # Category contains keyword
+          score += 30 if category&.downcase&.include?(keyword_downcase)
 
-          # Remarks contains query
-          score += 10 if remarks&.downcase&.include?(query_downcase)
+          # Remarks contains keyword
+          score += 10 if remarks&.downcase&.include?(keyword_downcase)
 
           score
         end
+
+        public
 
         def source_urls
           return nil unless source_file

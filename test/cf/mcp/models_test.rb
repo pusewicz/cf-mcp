@@ -233,4 +233,48 @@ class CF::MCP::ModelsTest < Minitest::Test
     assert_equal 0, func.relevance_score("")
     assert_equal 0, func.relevance_score(nil)
   end
+
+  def test_matches_with_multi_keyword_query
+    func = CF::MCP::Models::FunctionDoc.new(
+      name: "cf_draw_circle",
+      category: "draw",
+      brief: "Draws a circle shape"
+    )
+
+    # Matches if ANY keyword is found (OR logic)
+    assert func.matches?("draw circle")
+    assert func.matches?("circle rectangle") # matches "circle"
+    assert func.matches?("triangle square circle") # matches "circle"
+    refute func.matches?("audio sprite") # neither keyword matches
+  end
+
+  def test_relevance_score_multi_keyword
+    func = CF::MCP::Models::FunctionDoc.new(
+      name: "cf_draw_circle",
+      category: "draw",
+      brief: "Draws a circle shape"
+    )
+
+    # Single keyword score
+    single_score = func.relevance_score("circle")
+
+    # Multi-keyword query sums scores for each keyword
+    multi_score = func.relevance_score("draw circle")
+
+    assert multi_score > single_score
+  end
+
+  def test_relevance_score_more_keywords_rank_higher
+    func = CF::MCP::Models::FunctionDoc.new(
+      name: "cf_draw_circle",
+      category: "draw",
+      brief: "Draws a circle shape"
+    )
+
+    one_keyword = func.relevance_score("circle")
+    two_keywords = func.relevance_score("draw circle")
+
+    # More matching keywords = higher score
+    assert two_keywords > one_keyword
+  end
 end

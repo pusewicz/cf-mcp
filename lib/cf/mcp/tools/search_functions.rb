@@ -28,7 +28,7 @@ module CF
           if results.empty?
             text_response("No functions found for '#{query}'")
           else
-            formatted = results.map { |f| "**#{f.name}**: #{f.brief}" }.join("\n")
+            formatted = results.map { |f| "- **#{f.name}** — #{f.brief}" }.join("\n")
             text_response("Found #{results.size} function(s):\n\n#{formatted}")
           end
         end

@@ -28,7 +28,7 @@ module CF
           if results.empty?
             text_response("No enums found for '#{query}'")
           else
-            formatted = results.map { |e| "**#{e.name}**: #{e.brief}" }.join("\n")
+            formatted = results.map { |e| "- **#{e.name}** — #{e.brief}" }.join("\n")
             text_response("Found #{results.size} enum(s):\n\n#{formatted}")
           end
         end

@@ -51,7 +51,7 @@ module CF
         end
 
         def to_summary
-          "**#{name}** (#{type}, #{category}): #{brief}"
+          "- **#{name}** `(#{type}, #{category})` — #{brief}"
         end
 
         def to_text(detailed: false)

@@ -131,10 +131,8 @@
       border-radius: 6px;
       padding: 1rem;
       margin-top: 1rem;
-      white-space: pre-wrap;
       word-wrap: break-word;
-      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       max-height: 400px;
       overflow-y: auto;
       display: none;
@@ -153,7 +151,27 @@
       color: #6e7681;
       font-style: italic;
     }
+    /* Markdown content styles */
+    .result-area h1 { font-size: 1.4em; color: #58a6ff; margin: 0 0 0.5em 0; border-bottom: 1px solid #30363d; padding-bottom: 0.3em; }
+    .result-area h2 { font-size: 1.2em; color: #58a6ff; margin: 1em 0 0.5em 0; }
+    .result-area h3 { font-size: 1.1em; color: #58a6ff; margin: 1em 0 0.5em 0; }
+    .result-area p { margin: 0.5em 0; }
+    .result-area strong { color: #ffa657; }
+    .result-area code { background: #21262d; padding: 0.15em 0.3em; border-radius: 3px; font-size: 0.9em; }
+    .result-area pre { background: #21262d; padding: 0.75em; border-radius: 6px; overflow-x: auto; margin: 0.5em 0; }
+    .result-area pre code { background: none; padding: 0; }
+    .result-area table { border-collapse: collapse; width: 100%; margin: 0.5em 0; }
+    .result-area th, .result-area td { border: 1px solid #30363d; padding: 0.4em 0.6em; text-align: left; }
+    .result-area th { background: #21262d; color: #58a6ff; }
+    .result-area ul, .result-area ol { margin: 0.5em 0; padding-left: 1.5em; }
+    .result-area li { margin: 0.25em 0; }
+    .result-area a { color: #58a6ff; }
+    .result-area dl { margin: 0.5em 0; }
+    .result-area dt { color: #c9d1d9; margin-top: 0.75em; padding-bottom: 0.25em; border-bottom: 1px solid #21262d; }
+    .result-area dt:first-child { margin-top: 0; }
+    .result-area dd { margin: 0.25em 0 0 1em; color: #8b949e; }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
   <h1>CF::MCP <small style="font-size: 0.5em; color: #8b949e;">v<%= version %></small></h1>
@@ -330,6 +348,32 @@
       return false;
     }
 
+    function convertListsToDefinitionLists(container) {
+      // Convert <ul> lists that contain definition-like items to <dl>
+      // Pattern: <li><strong>name</strong> <code>(type)</code> — description</li>
+      const lists = container.querySelectorAll('ul');
+      lists.forEach(ul => {
+        const items = ul.querySelectorAll('li');
+        // Check if items match the definition pattern (contain em dash separator)
+        const isDefinitionList = Array.from(items).every(li => li.innerHTML.includes(' — '));
+        if (!isDefinitionList || items.length === 0) return;
+
+        const dl = document.createElement('dl');
+        items.forEach(li => {
+          const parts = li.innerHTML.split(' — ');
+          if (parts.length >= 2) {
+            const dt = document.createElement('dt');
+            dt.innerHTML = parts[0];
+            const dd = document.createElement('dd');
+            dd.innerHTML = parts.slice(1).join(' — '); // Handle case where description contains em dash
+            dl.appendChild(dt);
+            dl.appendChild(dd);
+          }
+        });
+        ul.replaceWith(dl);
+      });
+    }
+
     async function executeTool() {
       const toolName = document.getElementById('tool-select').value;
       const args = collectFormArguments();
@@ -365,7 +409,9 @@
           const content = data.result.content[0];
           const isError = data.result.isError;
           resultArea.className = 'result-area visible' + (isError ? ' error' : ' success');
-          resultArea.textContent = content.text || JSON.stringify(content);
+          const text = content.text || JSON.stringify(content);
+          resultArea.innerHTML = marked.parse(text);
+          convertListsToDefinitionLists(resultArea);
         } else {
           resultArea.className = 'result-area visible';
           resultArea.textContent = JSON.stringify(data, null, 2);

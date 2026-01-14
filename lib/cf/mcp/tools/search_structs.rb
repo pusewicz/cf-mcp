@@ -28,7 +28,7 @@ module CF
           if results.empty?
             text_response("No structs found for '#{query}'")
           else
-            formatted = results.map { |s| "**#{s.name}**: #{s.brief}" }.join("\n")
+            formatted = results.map { |s| "- **#{s.name}** — #{s.brief}" }.join("\n")
             text_response("Found #{results.size} struct(s):\n\n#{formatted}")
           end
         end

@@ -10,14 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `--host` CLI option for binding address (defaults to `0.0.0.0`)
+- `CombinedServer.build_rack_app` class method for shared boot logic
 
 ### Changed
 
-- Unified boot process: Procfile now uses `cf-mcp combined --download` instead of rackup
+- Unified boot process: config.ru and CLI now share the same initialization logic
+- Simplified config.ru to a single line using `CombinedServer.build_rack_app`
 
 ### Removed
 
-- `config.ru` (no longer needed, CLI handles all server modes)
+- `Procfile` (Fly.io uses config.ru directly)
 
 ## [0.10.0] - 2026-01-14
 

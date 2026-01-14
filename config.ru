@@ -19,6 +19,8 @@ end
 
 warn "Indexed #{index.stats[:total]} items (#{index.stats[:functions]} functions, #{index.stats[:structs]} structs, #{index.stats[:enums]} enums)"
 
-# Create and run the server
-server = CF::MCP::Server.new(index)
-run server.http_app
+# Create and run the combined server with both SSE and HTTP transports
+# - / and /sse - SSE transport (stateful, for Claude Desktop)
+# - /http - HTTP transport (stateless, for simple integrations)
+server = CF::MCP::CombinedServer.new(index)
+run server.rack_app

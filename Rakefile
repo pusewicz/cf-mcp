@@ -24,3 +24,8 @@ task :manifest do
 end
 
 task default: %i[test standard]
+
+desc "Deploy to Fly.io (runs tests and linting first)"
+task deploy: %i[test standard] do
+  sh "fly deploy"
+end

@@ -346,3 +346,318 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
     stdout.string.split("\n").map { |line| JSON.parse(line) }
   end
 end
+
+# Combined server tests (CORS, routing, landing page)
+class CF::MCP::CombinedServerTest < Minitest::Test
+  def setup
+    @index = CF::MCP::Index.new
+    @index.add(CF::MCP::Models::FunctionDoc.new(
+      name: "cf_make_sprite",
+      category: "sprite",
+      brief: "Loads a sprite from an aseprite file.",
+      signature: "CF_Sprite cf_make_sprite(const char* path)"
+    ))
+
+    @combined_server = CF::MCP::CombinedServer.new(@index)
+    @app = @combined_server.rack_app
+  end
+
+  # CORS Tests
+
+  def test_cors_headers_on_mcp_response
+    response = make_mcp_request("/", "initialize", {
+      protocolVersion: "2024-11-05",
+      capabilities: {},
+      clientInfo: {name: "test", version: "1.0"}
+    })
+
+    assert_equal 200, response.status
+    assert_cors_headers(response)
+  end
+
+  def test_cors_preflight_options_request
+    env = Rack::MockRequest.env_for("/", method: "OPTIONS")
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_equal 204, response.status
+    assert_cors_headers(response)
+  end
+
+  def test_cors_preflight_on_well_known_path
+    env = Rack::MockRequest.env_for(
+      "/.well-known/oauth-protected-resource",
+      method: "OPTIONS"
+    )
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_equal 204, response.status
+    assert_cors_headers(response)
+  end
+
+  def test_cors_preflight_on_sse_path
+    env = Rack::MockRequest.env_for("/sse", method: "OPTIONS")
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_equal 204, response.status
+    assert_cors_headers(response)
+  end
+
+  def test_cors_preflight_on_http_path
+    env = Rack::MockRequest.env_for("/http", method: "OPTIONS")
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_equal 204, response.status
+    assert_cors_headers(response)
+  end
+
+  # OAuth Discovery Tests
+
+  def test_well_known_oauth_protected_resource_returns_404
+    env = Rack::MockRequest.env_for("/.well-known/oauth-protected-resource")
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_equal 404, response.status
+    assert_equal "application/json", response.headers["content-type"]
+    assert_cors_headers(response)
+
+    body = JSON.parse(response.body)
+    assert_equal "Not found", body["error"]
+  end
+
+  def test_well_known_openid_configuration_returns_404
+    env = Rack::MockRequest.env_for("/.well-known/openid-configuration")
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_equal 404, response.status
+    assert_cors_headers(response)
+  end
+
+  # Landing Page Tests
+
+  def test_landing_page_for_browser_request
+    env = Rack::MockRequest.env_for("/", method: "GET")
+    env["HTTP_ACCEPT"] = "text/html,application/xhtml+xml"
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_equal 200, response.status
+    assert_equal "text/html; charset=utf-8", response.headers["content-type"]
+    assert_includes response.body, "<title>CF::MCP"
+    assert_includes response.body, "Cute Framework"
+    assert_cors_headers(response)
+  end
+
+  def test_landing_page_shows_stats
+    env = Rack::MockRequest.env_for("/", method: "GET")
+    env["HTTP_ACCEPT"] = "text/html"
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    # Should show the index stats
+    assert_includes response.body, "Total Items"
+    assert_includes response.body, "Functions"
+    assert_includes response.body, "Structs"
+    assert_includes response.body, "Enums"
+  end
+
+  def test_landing_page_shows_tools_dynamically
+    env = Rack::MockRequest.env_for("/", method: "GET")
+    env["HTTP_ACCEPT"] = "text/html"
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    # Should show all configured tools
+    CF::MCP::Server::TOOLS.each do |tool|
+      assert_includes response.body, tool.tool_name
+    end
+  end
+
+  def test_landing_page_shows_endpoints
+    env = Rack::MockRequest.env_for("/", method: "GET")
+    env["HTTP_ACCEPT"] = "text/html"
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_includes response.body, "/sse"
+    assert_includes response.body, "/http"
+  end
+
+  def test_landing_page_shows_version
+    env = Rack::MockRequest.env_for("/", method: "GET")
+    env["HTTP_ACCEPT"] = "text/html"
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_includes response.body, CF::MCP::VERSION
+  end
+
+  def test_landing_page_shows_claude_code_cli_command
+    env = Rack::MockRequest.env_for("/", method: "GET")
+    env["HTTP_ACCEPT"] = "text/html"
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_includes response.body, "claude mcp add"
+    assert_includes response.body, "--transport http"
+    assert_includes response.body, "/http"
+  end
+
+  def test_landing_page_shows_claude_desktop_setup
+    env = Rack::MockRequest.env_for("/", method: "GET")
+    env["HTTP_ACCEPT"] = "text/html"
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_includes response.body, "Claude Desktop"
+    assert_includes response.body, "Settings"
+    assert_includes response.body, "Connectors"
+  end
+
+  # Routing Tests
+
+  def test_root_path_routes_to_sse_transport_for_mcp_client
+    response = make_mcp_request("/", "initialize", {
+      protocolVersion: "2024-11-05",
+      capabilities: {},
+      clientInfo: {name: "test", version: "1.0"}
+    })
+
+    assert_equal 200, response.status
+    body = JSON.parse(response.body)
+    assert_equal "cf-mcp", body["result"]["serverInfo"]["name"]
+  end
+
+  def test_sse_path_routes_to_sse_transport
+    response = make_mcp_request("/sse", "initialize", {
+      protocolVersion: "2024-11-05",
+      capabilities: {},
+      clientInfo: {name: "test", version: "1.0"}
+    })
+
+    assert_equal 200, response.status
+    body = JSON.parse(response.body)
+    assert_equal "cf-mcp", body["result"]["serverInfo"]["name"]
+  end
+
+  def test_http_path_routes_to_http_transport
+    response = make_mcp_request("/http", "initialize", {
+      protocolVersion: "2024-11-05",
+      capabilities: {},
+      clientInfo: {name: "test", version: "1.0"}
+    })
+
+    assert_equal 200, response.status
+    body = JSON.parse(response.body)
+    assert_equal "cf-mcp", body["result"]["serverInfo"]["name"]
+  end
+
+  def test_tools_call_via_combined_server
+    # First initialize
+    make_mcp_request("/", "initialize", {
+      protocolVersion: "2024-11-05",
+      capabilities: {},
+      clientInfo: {name: "test", version: "1.0"}
+    })
+
+    # Then call a tool
+    response = make_mcp_request("/", "tools/call", {
+      name: "cf_search",
+      arguments: {query: "sprite"}
+    })
+
+    assert_equal 200, response.status
+    body = JSON.parse(response.body)
+    refute body["result"]["isError"]
+    assert_includes body["result"]["content"].first["text"], "cf_make_sprite"
+  end
+
+  def test_sse_path_with_trailing_slash
+    response = make_mcp_request("/sse/", "initialize", {
+      protocolVersion: "2024-11-05",
+      capabilities: {},
+      clientInfo: {name: "test", version: "1.0"}
+    })
+
+    assert_equal 200, response.status
+    body = JSON.parse(response.body)
+    assert_equal "cf-mcp", body["result"]["serverInfo"]["name"]
+  end
+
+  def test_http_path_with_trailing_slash
+    response = make_mcp_request("/http/", "initialize", {
+      protocolVersion: "2024-11-05",
+      capabilities: {},
+      clientInfo: {name: "test", version: "1.0"}
+    })
+
+    assert_equal 200, response.status
+    body = JSON.parse(response.body)
+    assert_equal "cf-mcp", body["result"]["serverInfo"]["name"]
+  end
+
+  def test_http_transport_tools_list
+    response = make_mcp_request("/http", "tools/list", {})
+
+    assert_equal 200, response.status
+    body = JSON.parse(response.body)
+    tools = body["result"]["tools"]
+    assert_equal 6, tools.size
+  end
+
+  def test_get_without_html_accept_routes_to_mcp
+    env = Rack::MockRequest.env_for("/", method: "GET")
+    env["HTTP_ACCEPT"] = "application/json"
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    # Should route to MCP transport, not landing page
+    # MCP transport will reject GET without proper headers
+    refute_equal "text/html; charset=utf-8", response.headers["content-type"]
+  end
+
+  def test_cors_headers_on_landing_page
+    env = Rack::MockRequest.env_for("/", method: "GET")
+    env["HTTP_ACCEPT"] = "text/html"
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_equal 200, response.status
+    assert_cors_headers(response)
+  end
+
+  def test_session_id_returned_on_stateful_initialize
+    response = make_mcp_request("/", "initialize", {
+      protocolVersion: "2024-11-05",
+      capabilities: {},
+      clientInfo: {name: "test", version: "1.0"}
+    })
+
+    assert_equal 200, response.status
+    assert response.headers["mcp-session-id"], "Expected Mcp-Session-Id header on stateful transport"
+  end
+
+  private
+
+  def make_mcp_request(path, method, params, id: 1)
+    body = JSON.generate({
+      jsonrpc: "2.0",
+      id: id,
+      method: method,
+      params: params
+    })
+
+    env = Rack::MockRequest.env_for(
+      path,
+      method: "POST",
+      input: body
+    )
+    env["CONTENT_TYPE"] = "application/json"
+    env["HTTP_ACCEPT"] = "application/json, text/event-stream"
+
+    Rack::MockResponse.new(*@app.call(env))
+  end
+
+  def assert_cors_headers(response)
+    assert_equal "*", response.headers["access-control-allow-origin"],
+      "Expected access-control-allow-origin header"
+    assert_equal "GET, POST, DELETE, OPTIONS", response.headers["access-control-allow-methods"],
+      "Expected access-control-allow-methods header"
+    assert_includes response.headers["access-control-allow-headers"], "Content-Type",
+      "Expected Content-Type in access-control-allow-headers"
+    assert_includes response.headers["access-control-allow-headers"], "Mcp-Session-Id",
+      "Expected Mcp-Session-Id in access-control-allow-headers"
+    assert_equal "Mcp-Session-Id", response.headers["access-control-expose-headers"],
+      "Expected access-control-expose-headers header"
+  end
+end

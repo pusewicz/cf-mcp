@@ -142,6 +142,24 @@ cf-mcp stdio --root ~/Work/GitHub/pusewicz/cute_framework
 - `rack` (~> 3.0) / `rackup` (~> 2.0) / `puma` (~> 6.0) - HTTP server
 - `rubyzip` (~> 2.3) - ZIP extraction for downloader
 
+## Changelog
+
+The project maintains a changelog in `CHANGELOG.md` following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format.
+
+When making changes:
+1. Add a new entry under the current version (check `lib/cf/mcp/version.rb`)
+2. Use appropriate section headers: `### Added`, `### Changed`, `### Fixed`, `### Removed`
+3. Add a comparison link at the bottom: `[X.Y.Z]: https://github.com/pusewicz/cf-mcp/compare/vPREV...vX.Y.Z`
+
+## Slash Commands
+
+Custom Claude Code commands available in `.claude/commands/`:
+
+- `/bump-version-patch` - Bump patch version (e.g., 1.2.3 -> 1.2.4)
+- `/bump-version-minor` - Bump minor version (e.g., 1.2.3 -> 1.3.0)
+- `/bump-version-major` - Bump major version (e.g., 1.2.3 -> 2.0.0)
+- `/release-gem` - Prepare a release: run tests, ensure version bump, update changelog, create PR
+
 ## References
 
 - [Ruby MCP SDK](https://github.com/modelcontextprotocol/ruby-sdk)

@@ -1,0 +1,166 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/setup"
+require "cf/mcp"
+
+# Default path to Cute Framework headers
+DEFAULT_HEADERS_PATH = File.expand_path("~/Work/GitHub/pusewicz/cute_framework/include")
+
+# Global index for easy access
+$index = nil
+$server_context = nil
+
+# Load and index Cute Framework headers
+# @param path [String] Path to headers directory (defaults to DEFAULT_HEADERS_PATH)
+# @return [CF::MCP::Index] The populated index
+def load_index(path = DEFAULT_HEADERS_PATH)
+  puts "Loading headers from: #{path}"
+  parser = CF::MCP::Parser.new
+  $index = CF::MCP::Index.new
+
+  items = parser.parse_directory(path)
+  items.each { |item| $index.add(item) }
+
+  $server_context = {index: $index}
+
+  stats = $index.stats
+  puts "Indexed #{stats[:total]} items:"
+  puts "  - #{stats[:functions]} functions"
+  puts "  - #{stats[:structs]} structs"
+  puts "  - #{stats[:enums]} enums"
+  puts "  - #{$index.categories.size} categories"
+  puts ""
+  puts "Use search('query'), find('name'), or categories() to explore."
+  $index
+end
+
+# Search the index
+# @param query [String] Search query
+# @param type [Symbol, nil] Filter by type (:function, :struct, :enum)
+# @param category [String, nil] Filter by category
+# @param limit [Integer] Max results
+# @return [Array<CF::MCP::Models::DocItem>]
+def search(query, type: nil, category: nil, limit: 10)
+  ensure_index!
+  results = $index.search(query, type: type, category: category, limit: limit)
+  results.each { |item| puts item.to_summary }
+  puts "\n#{results.size} result(s) found"
+  results
+end
+
+# Find an item by exact name
+# @param name [String] Exact name of the item
+# @return [CF::MCP::Models::DocItem, nil]
+def find(name)
+  ensure_index!
+  item = $index.find(name)
+  if item
+    puts item.to_text(detailed: true)
+  else
+    puts "Not found: #{name}"
+    suggestions = $index.search(name, limit: 5)
+    unless suggestions.empty?
+      puts "\nDid you mean:"
+      suggestions.each { |s| puts "  - #{s.name}" }
+    end
+  end
+  item
+end
+
+# List all categories
+# @return [Array<String>]
+def categories
+  ensure_index!
+  cats = $index.categories
+  cats.each do |cat|
+    count = $index.items_in_category(cat).size
+    puts "  #{cat} (#{count} items)"
+  end
+  cats
+end
+
+# List items in a category
+# @param category [String] Category name
+# @param type [Symbol, nil] Filter by type
+# @return [Array<CF::MCP::Models::DocItem>]
+def in_category(category, type: nil)
+  ensure_index!
+  items = $index.items_in_category(category)
+  items = items.select { |i| i.type == type } if type
+  items.each { |item| puts item.to_summary }
+  puts "\n#{items.size} item(s) in '#{category}'"
+  items
+end
+
+# Call an MCP tool directly
+# @param tool_name [String] Tool name (e.g., "cf_search", "cf_get_details")
+# @param args [Hash] Tool arguments
+# @return [MCP::Tool::Response]
+def call_tool(tool_name, **args)
+  ensure_index!
+  tools = {
+    "cf_search" => CF::MCP::Tools::SearchTool,
+    "cf_search_functions" => CF::MCP::Tools::SearchFunctions,
+    "cf_search_structs" => CF::MCP::Tools::SearchStructs,
+    "cf_search_enums" => CF::MCP::Tools::SearchEnums,
+    "cf_list_category" => CF::MCP::Tools::ListCategory,
+    "cf_get_details" => CF::MCP::Tools::GetDetails
+  }
+
+  tool_class = tools[tool_name]
+  unless tool_class
+    puts "Unknown tool: #{tool_name}"
+    puts "Available tools: #{tools.keys.join(", ")}"
+    return nil
+  end
+
+  tool = tool_class.new
+  response = tool.call(**args, server_context: $server_context)
+  puts response.content.first[:text]
+  response
+end
+
+# Show available helper functions
+def help
+  puts <<~HELP
+    CF::MCP Console Helpers
+    =======================
+
+    Setup:
+      load_index              Load Cute Framework headers (auto-loads on first use)
+      load_index('/path')     Load headers from custom path
+
+    Search & Browse:
+      search('sprite')                    Search all items
+      search('draw', type: :function)     Search only functions
+      search('app', category: 'app')      Search within category
+      find('cf_make_sprite')              Get details by exact name
+      categories                          List all categories
+      in_category('sprite')               List items in category
+      in_category('sprite', type: :enum)  List enums in category
+
+    MCP Tools:
+      call_tool('cf_search', query: 'sprite')
+      call_tool('cf_get_details', name: 'CF_Sprite')
+      call_tool('cf_list_category', category: 'sprite')
+
+    Direct Access:
+      $index                  The CF::MCP::Index instance
+      $index.functions        All functions
+      $index.structs          All structs
+      $index.enums            All enums
+
+  HELP
+end
+
+def ensure_index!
+  load_index if $index.nil?
+end
+
+puts "CF::MCP Console"
+puts "Type 'help' for available commands"
+puts ""
+
+require "irb"
+IRB.start(__FILE__)

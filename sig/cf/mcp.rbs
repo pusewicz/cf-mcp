@@ -1,0 +1,84 @@
+module CF
+  module MCP
+    VERSION: String
+
+    class Error < StandardError
+    end
+
+    class Parser
+      def parse_file: (String path) -> Array[Models::DocItem]
+      def parse_directory: (String path) -> Array[Models::DocItem]
+    end
+
+    class Index
+      attr_reader items: Hash[String, Models::DocItem]
+      attr_reader by_type: Hash[Symbol, Array[Models::DocItem]]
+      attr_reader by_category: Hash[String, Array[Models::DocItem]]
+
+      def add: (Models::DocItem item) -> void
+      def find: (String name) -> Models::DocItem?
+      def search: (String query, ?type: Symbol?, ?category: String?, ?limit: Integer) -> Array[Models::DocItem]
+      def functions: () -> Array[Models::DocItem]
+      def structs: () -> Array[Models::DocItem]
+      def enums: () -> Array[Models::DocItem]
+      def categories: () -> Array[String]
+      def items_in_category: (String category) -> Array[Models::DocItem]
+      def size: () -> Integer
+      def stats: () -> Hash[Symbol, Integer]
+    end
+
+    class CLI
+      def initialize: (Array[String] args) -> void
+      def run: () -> void
+    end
+
+    class Server
+      attr_reader server: untyped
+      attr_reader index: Index
+
+      def initialize: (Index index) -> void
+      def run_stdio: () -> void
+      def run_http: (?port: Integer) -> void
+      def run_sse: (?port: Integer) -> void
+    end
+
+    module Models
+      class DocItem
+        attr_accessor name: String?
+        attr_accessor type: Symbol?
+        attr_accessor category: String?
+        attr_accessor brief: String?
+        attr_accessor remarks: String?
+        attr_accessor example: String?
+        attr_accessor example_brief: String?
+        attr_accessor related: Array[String]
+        attr_accessor source_file: String?
+
+        def matches?: (String query) -> bool
+        def to_h: () -> Hash[Symbol, untyped]
+        def to_summary: () -> String
+        def to_text: (?detailed: bool) -> String
+      end
+
+      class FunctionDoc < DocItem
+        attr_accessor signature: String?
+        attr_accessor parameters: Array[Parameter]
+        attr_accessor return_value: String?
+
+        Parameter: untyped
+      end
+
+      class StructDoc < DocItem
+        attr_accessor members: Array[Member]
+
+        Member: untyped
+      end
+
+      class EnumDoc < DocItem
+        attr_accessor entries: Array[Entry]
+
+        Entry: untyped
+      end
+    end
+  end
+end

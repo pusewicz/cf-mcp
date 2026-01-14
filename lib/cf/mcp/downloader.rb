@@ -4,12 +4,13 @@ require "net/http"
 require "uri"
 require "fileutils"
 require "zip"
+require_relative "version"
 
 module CF
   module MCP
     class Downloader
       CUTE_FRAMEWORK_ZIP_URL = "https://github.com/RandyGaul/cute_framework/archive/refs/heads/master.zip"
-      DEFAULT_DOWNLOAD_DIR = File.join(Dir.tmpdir, "cf-mcp")
+      DEFAULT_DOWNLOAD_DIR = File.join(Dir.tmpdir, "cf-mcp-#{VERSION}")
 
       class DownloadError < StandardError; end
 

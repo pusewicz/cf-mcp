@@ -50,7 +50,16 @@ module CF
               text_response("No items found in category '#{category}'#{" of type #{type}" if type}")
             else
               formatted = items.map(&:to_summary).join("\n")
-              text_response("Items in '#{category}':\n\n#{formatted}\n\n**Tip:** Use `cf_get_details` with an exact name to get full documentation.")
+
+              # Suggest related topics
+              related_topics = index.topics.select { |t| t.category == category }
+              topic_suggestion = if related_topics.any?
+                "\n\n**Related Topics:**\n" + related_topics.map { |t| "- **#{t.name}** — #{t.brief}" }.join("\n")
+              else
+                ""
+              end
+
+              text_response("Items in '#{category}':\n\n#{formatted}#{topic_suggestion}\n\n**Tip:** Use `cf_get_details` with an exact name to get full documentation.")
             end
           end
         end

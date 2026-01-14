@@ -21,7 +21,9 @@ module CF
         FileUtils.mkdir_p(@download_dir)
 
         zip_path = File.join(@download_dir, "cute_framework.zip")
-        include_path = File.join(@download_dir, "include")
+        base_path = File.join(@download_dir, "cute_framework")
+        include_path = File.join(base_path, "include")
+        File.join(base_path, "docs", "topics")
 
         # Return existing path if already downloaded
         if File.directory?(include_path) && !Dir.empty?(include_path)
@@ -29,7 +31,7 @@ module CF
         end
 
         download_zip(zip_path)
-        extract_include_directory(zip_path, include_path)
+        extract_directories(zip_path, base_path)
 
         include_path
       end
@@ -60,32 +62,40 @@ module CF
         end
       end
 
-      def extract_include_directory(zip_path, destination)
-        FileUtils.rm_rf(destination)
-        FileUtils.mkdir_p(destination)
+      def extract_directories(zip_path, base_path)
+        FileUtils.rm_rf(base_path)
+        FileUtils.mkdir_p(base_path)
 
         Zip::File.open(zip_path) do |zip_file|
           # The zip contains a top-level directory like "cute_framework-master/"
-          # We want to extract only the "include/" subdirectory
-          include_prefix = nil
+          # We want to extract "include/" and "docs/topics/" subdirectories
+          top_level_prefix = nil
 
           zip_file.each do |entry|
-            # Find the include directory prefix (e.g., "cute_framework-master/include/")
-            if include_prefix.nil? && entry.name.match?(%r{^[^/]+/include/})
-              include_prefix = entry.name.match(%r{^([^/]+/include/)})[1]
+            # Find the top-level directory prefix (e.g., "cute_framework-master/")
+            if top_level_prefix.nil? && entry.name.match?(%r{^[^/]+/include/})
+              top_level_prefix = entry.name.match(%r{^([^/]+/)})[1]
+              break
             end
           end
 
-          raise DownloadError, "Could not find include directory in zip" unless include_prefix
+          raise DownloadError, "Could not find include directory in zip" unless top_level_prefix
+
+          # Directories to extract
+          extract_prefixes = [
+            "#{top_level_prefix}include/",
+            "#{top_level_prefix}docs/topics/"
+          ]
 
           zip_file.each do |entry|
-            next unless entry.name.start_with?(include_prefix)
+            extract_prefix = extract_prefixes.find { |p| entry.name.start_with?(p) }
+            next unless extract_prefix
 
-            # Calculate the relative path within include/
-            relative_path = entry.name.sub(include_prefix, "")
+            # Calculate the relative path from the top-level directory
+            relative_path = entry.name.sub(top_level_prefix, "")
             next if relative_path.empty?
 
-            target_path = File.join(destination, relative_path)
+            target_path = File.join(base_path, relative_path)
 
             if entry.directory?
               FileUtils.mkdir_p(target_path)

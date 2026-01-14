@@ -2,6 +2,7 @@
 
 require "optparse"
 require_relative "parser"
+require_relative "topic_parser"
 require_relative "index"
 require_relative "server"
 require_relative "downloader"
@@ -166,7 +167,44 @@ module CF
           index.add(item)
         end
 
+        # Parse topics if available
+        topics_path = find_topics_path(headers_path)
+        if topics_path && File.directory?(topics_path)
+          topic_parser = TopicParser.new
+          topic_parser.parse_directory(topics_path).each do |topic|
+            refine_topic_references(topic, index)
+            index.add(topic)
+          end
+          warn "Indexed #{index.stats[:topics]} topics from: #{topics_path}"
+        end
+
         index
+      end
+
+      def find_topics_path(headers_path)
+        # If headers_path is .../cute_framework/include, topics is at .../cute_framework/docs/topics
+        base = File.dirname(headers_path)
+        topics_path = File.join(base, "docs", "topics")
+        return topics_path if File.directory?(topics_path)
+
+        # Alternative: topics directly under headers parent
+        topics_path = File.join(base, "topics")
+        return topics_path if File.directory?(topics_path)
+
+        nil
+      end
+
+      def refine_topic_references(topic, index)
+        # Move items from struct_references to enum_references if they're actually enums
+        topic.struct_references.dup.each do |ref|
+          item = index.find(ref)
+          next unless item
+
+          if item.type == :enum
+            topic.struct_references.delete(ref)
+            topic.enum_references << ref unless topic.enum_references.include?(ref)
+          end
+        end
       end
     end
   end

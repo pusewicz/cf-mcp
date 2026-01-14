@@ -7,20 +7,20 @@ module CF
     module Tools
       class SearchTool < ::MCP::Tool
         tool_name "cf_search"
-        description "Search Cute Framework documentation across all types (functions, structs, enums)"
+        description "Search Cute Framework documentation across all types (functions, structs, enums, topics)"
 
         input_schema(
           type: "object",
           properties: {
             query: {type: "string", description: "Search query (searches in name, description, and remarks)"},
-            type: {type: "string", enum: ["function", "struct", "enum"], description: "Optional: filter by item type"},
+            type: {type: "string", enum: ["function", "struct", "enum", "topic"], description: "Optional: filter by item type"},
             category: {type: "string", description: "Optional: filter by category (e.g., 'app', 'sprite', 'graphics')"},
             limit: {type: "integer", description: "Maximum number of results to return (default: 20)"}
           },
           required: ["query"]
         )
 
-        DETAILS_TIP = "**Tip:** Use `cf_get_details` with an exact name to get full documentation including parameters, examples, and related items."
+        DETAILS_TIP = "**Tip:** Use `cf_get_details` for API items or `cf_get_topic` for topic guides to get full documentation."
 
         def self.call(query:, type: nil, category: nil, limit: 20, server_context: {})
           index = server_context[:index]

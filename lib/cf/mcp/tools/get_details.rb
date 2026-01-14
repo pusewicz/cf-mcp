@@ -35,7 +35,19 @@ module CF
               text_response("Not found: '#{name}'\n\n**Similar items:**\n#{formatted}\n\n#{NAMING_TIP}")
             end
           else
-            text_response(item.to_text(detailed: true, index: index))
+            output = item.to_text(detailed: true, index: index)
+
+            # Append related topics section for API items
+            if item.type != :topic
+              related_topics = index.topics_for(name)
+              if related_topics.any?
+                output += "\n\n## Related Topics\n"
+                output += related_topics.map { |t| "- **#{t.name}** — #{t.brief}" }.join("\n")
+                output += "\n\n**Tip:** Use `cf_get_topic` to read the full topic content."
+              end
+            end
+
+            text_response(output)
           end
         end
 

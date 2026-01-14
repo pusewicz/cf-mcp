@@ -3,16 +3,18 @@
 module CF
   module MCP
     class Index
-      attr_reader :items, :by_type, :by_category
+      attr_reader :items, :by_type, :by_category, :topic_references
 
       def initialize
         @items = {}
         @by_type = {
           function: [],
           struct: [],
-          enum: []
+          enum: [],
+          topic: []
         }
         @by_category = {}
+        @topic_references = {}
       end
 
       def add(item)
@@ -23,6 +25,9 @@ module CF
           @by_category[item.category] ||= []
           @by_category[item.category] << item
         end
+
+        # Build reverse reference index for topics
+        build_topic_reverse_index(item) if item.type == :topic
       end
 
       def find(name)
@@ -71,6 +76,18 @@ module CF
         @by_type[:enum]
       end
 
+      def topics
+        @by_type[:topic]
+      end
+
+      def topics_ordered
+        topics.sort_by { |t| t.reading_order || Float::INFINITY }
+      end
+
+      def topics_for(api_name)
+        (@topic_references[api_name] || []).map { |name| find(name) }.compact
+      end
+
       def categories
         @by_category.keys.sort
       end
@@ -89,6 +106,7 @@ module CF
           functions: @by_type[:function].size,
           structs: @by_type[:struct].size,
           enums: @by_type[:enum].size,
+          topics: @by_type[:topic].size,
           categories: @by_category.size
         }
       end
@@ -97,6 +115,13 @@ module CF
 
       def all_items
         @items.values
+      end
+
+      def build_topic_reverse_index(topic)
+        topic.all_api_references.each do |ref_name|
+          @topic_references[ref_name] ||= []
+          @topic_references[ref_name] << topic.name unless @topic_references[ref_name].include?(topic.name)
+        end
       end
     end
   end

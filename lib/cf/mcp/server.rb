@@ -10,6 +10,8 @@ require_relative "tools/get_details"
 require_relative "tools/find_related"
 require_relative "tools/parameter_search"
 require_relative "tools/member_search"
+require_relative "tools/list_topics"
+require_relative "tools/get_topic"
 
 module CF
   module MCP
@@ -25,7 +27,9 @@ module CF
         Tools::GetDetails,
         Tools::FindRelated,
         Tools::ParameterSearch,
-        Tools::MemberSearch
+        Tools::MemberSearch,
+        Tools::ListTopics,
+        Tools::GetTopic
       ].freeze
 
       def initialize(index)
@@ -33,10 +37,48 @@ module CF
         @server = ::MCP::Server.new(
           name: "cf-mcp",
           version: CF::MCP::VERSION,
-          tools: TOOLS
+          tools: TOOLS,
+          resources: build_topic_resources(index)
         )
         @server.server_context = {index: index}
+
+        # Register handler for reading resource content
+        @server.resources_read_handler do |params|
+          handle_resource_read(params, index)
+        end
       end
+
+      private
+
+      def build_topic_resources(index)
+        index.topics.map do |topic|
+          ::MCP::Resource.new(
+            uri: "cf://topics/#{topic.name}",
+            name: topic.name,
+            title: topic.name.tr("_", " ").split.map(&:capitalize).join(" "),
+            description: topic.brief,
+            mime_type: "text/markdown"
+          )
+        end
+      end
+
+      def handle_resource_read(params, index)
+        uri = params[:uri]
+        return [] unless uri&.start_with?("cf://topics/")
+
+        topic_name = uri.sub("cf://topics/", "")
+        topic = index.find(topic_name)
+
+        return [] unless topic&.type == :topic
+
+        [{
+          uri: uri,
+          mimeType: "text/markdown",
+          text: topic.content
+        }]
+      end
+
+      public
 
       def run_stdio
         transport = ::MCP::Server::Transports::StdioTransport.new(@server)
@@ -195,6 +237,7 @@ module CF
             version: CF::MCP::VERSION,
             stats: index.stats,
             categories: index.categories.sort,
+            topics: index.topics_ordered.map { |t| {name: t.name, brief: t.brief} },
             tools: tool_classes.map { |tool|
               name = tool.respond_to?(:tool_name) ? tool.tool_name : tool.name
               desc = tool.respond_to?(:description) ? tool.description : ""
@@ -215,18 +258,23 @@ module CF
       class TemplateContext
         TEMPLATES_DIR = File.join(__dir__, "templates")
 
-        attr_reader :version, :stats, :categories, :tools, :tool_schemas_json
+        attr_reader :version, :stats, :categories, :topics, :tools, :tool_schemas_json
 
-        def initialize(version:, stats:, categories:, tools:, tool_schemas_json:)
+        def initialize(version:, stats:, categories:, topics:, tools:, tool_schemas_json:)
           @version = version
           @stats = stats
           @categories = categories
+          @topics = topics
           @tools = tools
           @tool_schemas_json = tool_schemas_json
         end
 
         def categories_json
           @categories.to_json
+        end
+
+        def topics_json
+          @topics.to_json
         end
 
         def css_content
@@ -237,6 +285,7 @@ module CF
           js = File.read(File.join(TEMPLATES_DIR, "script.js"))
           js.sub("TOOL_SCHEMAS_PLACEHOLDER", @tool_schemas_json)
             .sub("CATEGORIES_PLACEHOLDER", categories_json)
+            .sub("TOPICS_PLACEHOLDER", topics_json)
         end
 
         def h(text)

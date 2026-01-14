@@ -35,6 +35,15 @@ bin/console
 
 # Install gem locally
 bundle exec rake install
+
+# Create git tag for current version
+rake tag
+
+# Create tag and push to origin
+rake release:tag
+
+# Release to RubyGems (creates tag, builds gem, pushes)
+rake release
 ```
 
 ## CLI Usage

@@ -29,3 +29,25 @@ desc "Deploy to Fly.io (runs tests and linting first)"
 task deploy: %i[test standard] do
   sh "fly deploy"
 end
+
+desc "Create a git tag for the current version"
+task :tag do
+  require_relative "lib/cf/mcp/version"
+  version = CF::MCP::VERSION
+  tag = "v#{version}"
+
+  if system("git", "rev-parse", tag, out: File::NULL, err: File::NULL)
+    puts "Tag #{tag} already exists"
+  else
+    sh "git", "tag", "-a", tag, "-m", "Release #{version}"
+    puts "Created tag #{tag}"
+  end
+end
+
+desc "Create and push git tag for current version"
+task "release:tag" => %i[test standard tag] do
+  require_relative "lib/cf/mcp/version"
+  tag = "v#{CF::MCP::VERSION}"
+  sh "git", "push", "origin", tag
+  puts "Pushed #{tag} to origin"
+end

@@ -10,4 +10,16 @@ tmp
 
 # flyctl launch added from .ruby-lsp/.gitignore
 .ruby-lsp/**/*
+
+# Files not included in the gem (see Rakefile manifest task)
+.claude/
+.github/
+.gitignore
+.ruby-version
+.standard.yml
+bin/
+CLAUDE.md
+Dockerfile
 fly.toml
+Procfile
+test/

@@ -281,11 +281,21 @@ module CF
           File.read(File.join(TEMPLATES_DIR, "style.css"))
         end
 
+        def changelog_content
+          changelog_path = CF::MCP.root.join("CHANGELOG.md")
+          changelog_path.exist? ? changelog_path.read : ""
+        end
+
+        def changelog_json
+          changelog_content.to_json
+        end
+
         def js_content
           js = File.read(File.join(TEMPLATES_DIR, "script.js"))
           js.sub("TOOL_SCHEMAS_PLACEHOLDER", @tool_schemas_json)
             .sub("CATEGORIES_PLACEHOLDER", categories_json)
             .sub("TOPICS_PLACEHOLDER", topics_json)
+            .sub("CHANGELOG_PLACEHOLDER", changelog_json)
         end
 
         def h(text)

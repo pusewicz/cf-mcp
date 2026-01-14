@@ -84,59 +84,10 @@ module CF
         transport = ::MCP::Server::Transports::StdioTransport.new(@server)
         transport.open
       end
-
-      def run_http(port: 9292)
-        require "rackup"
-
-        app = http_app
-        warn "Starting HTTP server on port #{port}..."
-        warn "Index contains #{@index.size} items"
-        Rackup::Server.start(app: app, Port: port, Logger: $stderr)
-      end
-
-      def http_app
-        require "rack"
-
-        transport = ::MCP::Server::Transports::StreamableHTTPTransport.new(@server, stateless: true)
-        @server.transport = transport
-
-        build_rack_app(transport)
-      end
-
-      def run_sse(port: 9393)
-        require "rack"
-        require "rackup"
-
-        transport = ::MCP::Server::Transports::StreamableHTTPTransport.new(@server)
-        @server.transport = transport
-
-        app = build_rack_app(transport)
-        warn "Starting SSE server on port #{port}..."
-        warn "Index contains #{@index.size} items"
-        Rackup::Server.start(app: app, Port: port, Logger: $stderr)
-      end
-
-      private
-
-      def build_rack_app(transport)
-        Rack::Builder.new do
-          use Rack::CommonLogger
-          run ->(env) { transport.handle_request(Rack::Request.new(env)) }
-        end
-      end
-
-      def sse_app
-        require "rack"
-
-        transport = ::MCP::Server::Transports::StreamableHTTPTransport.new(@server)
-        @server.transport = transport
-
-        build_rack_app(transport)
-      end
     end
 
-    # Combined server that exposes both SSE and HTTP transports under different paths
-    class CombinedServer
+    # HTTP server with web interface at root and MCP endpoint at /http
+    class HTTPServer
       # Build a rack app with automatic header downloading and indexing
       # This is the shared entry point for both config.ru and CLI
       def self.build_rack_app(root: nil, download: false)
@@ -227,22 +178,16 @@ module CF
       CORS_HEADERS = {
         "access-control-allow-origin" => "*",
         "access-control-allow-methods" => "GET, POST, DELETE, OPTIONS",
-        "access-control-allow-headers" => "Content-Type, Accept, Mcp-Session-Id, Last-Event-ID",
+        "access-control-allow-headers" => "Content-Type, Accept, Mcp-Session-Id",
         "access-control-expose-headers" => "Mcp-Session-Id"
       }.freeze
 
       def rack_app
         require "rack"
 
-        # Create separate server instances for each transport
-        sse_server = create_mcp_server
-        http_server = create_mcp_server
-
-        sse_transport = ::MCP::Server::Transports::StreamableHTTPTransport.new(sse_server)
-        sse_server.transport = sse_transport
-
-        http_transport = ::MCP::Server::Transports::StreamableHTTPTransport.new(http_server, stateless: true)
-        http_server.transport = http_transport
+        mcp_server = create_mcp_server
+        http_transport = ::MCP::Server::Transports::StreamableHTTPTransport.new(mcp_server, stateless: true)
+        mcp_server.transport = http_transport
 
         landing_page = build_landing_page
         index = @index
@@ -263,17 +208,16 @@ module CF
           when %r{^/\.well-known/}
             # OAuth discovery - return 404 to indicate no OAuth required
             [404, {"content-type" => "application/json"}, ['{"error":"Not found"}']]
-          when %r{^/sse(/|$)}
-            sse_transport.handle_request(request)
           when %r{^/http(/|$)}
             http_transport.handle_request(request)
           else
-            # Default route - show landing page for browsers, SSE for MCP clients
+            # Default route - show landing page for browsers
             accept = request.get_header("HTTP_ACCEPT") || ""
             if request.get? && accept.include?("text/html")
               [200, {"content-type" => "text/html; charset=utf-8"}, [landing_page.call(index, tools)]]
             else
-              sse_transport.handle_request(request)
+              # For non-browser clients at root, redirect to /http
+              [301, {"location" => "/http", "content-type" => "text/plain"}, ["Redirecting to /http"]]
             end
           end
 

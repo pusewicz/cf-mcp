@@ -22,11 +22,7 @@ module CF
         when :stdio
           run_server(:stdio)
         when :http
-          run_server(:http)
-        when :sse
-          run_server(:sse)
-        when :combined
-          run_combined_server
+          run_http_server
         when :help
           puts @option_parser
         else
@@ -51,9 +47,7 @@ module CF
           opts.separator ""
           opts.separator "Commands:"
           opts.separator "  stdio    Run in STDIO mode (for CLI integration)"
-          opts.separator "  http     Run as HTTP server (stateless)"
-          opts.separator "  sse      Run as SSE server (stateful with real-time updates)"
-          opts.separator "  combined Run as combined server (SSE + HTTP with web interface)"
+          opts.separator "  http     Run as HTTP server with web interface"
           opts.separator ""
           opts.separator "Options:"
 
@@ -61,7 +55,7 @@ module CF
             options[:root] = path
           end
 
-          opts.on("-p", "--port PORT", Integer, "Port for HTTP/SSE server (default: 9292 for HTTP, 9393 for SSE)") do |port|
+          opts.on("-p", "--port PORT", Integer, "Port for HTTP server (default: 9292)") do |port|
             options[:port] = port
           end
 
@@ -88,7 +82,7 @@ module CF
         # Parse command from remaining args
         if options[:command].nil? && !@args.empty?
           command = @args.shift.to_sym
-          options[:command] = command if [:stdio, :http, :sse, :combined].include?(command)
+          options[:command] = command if [:stdio, :http].include?(command)
         end
 
         options[:command] ||= :help
@@ -110,32 +104,23 @@ module CF
         warn "Indexed #{index.stats[:total]} items (#{index.stats[:functions]} functions, #{index.stats[:structs]} structs, #{index.stats[:enums]} enums)"
 
         server = Server.new(index)
-
-        case mode
-        when :stdio
-          server.run_stdio
-        when :http
-          port = @options[:port] || 9292
-          server.run_http(port: port)
-        when :sse
-          port = @options[:port] || 9393
-          server.run_sse(port: port)
-        end
+        server.run_stdio
       end
 
-      def run_combined_server
+      def run_http_server
         require "rackup"
 
         port = @options[:port] || 9292
         host = @options[:host]
 
-        app = CombinedServer.build_rack_app(
+        app = HTTPServer.build_rack_app(
           root: @options[:root],
           download: @options[:download]
         )
 
-        warn "Starting combined server on #{host}:#{port}..."
+        warn "Starting HTTP server on #{host}:#{port}..."
         warn "Web interface available at http://localhost:#{port}/"
+        warn "MCP endpoint available at http://localhost:#{port}/http"
         Rackup::Server.start(app: app, Host: host, Port: port, Logger: $stderr)
       end
 

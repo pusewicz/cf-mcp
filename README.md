@@ -2,11 +2,10 @@
 
 CF::MCP is an MCP server providing documentation tools for the [Cute Framework](https://github.com/RandyGaul/cute_framework), a C/C++ 2D game framework.
 
-The MCP server supports three modes of operation:
+The MCP server supports two modes of operation:
 
 - **STDIO Mode**: Communicates via standard input and output streams, suitable for integration with CLI tools and desktop applications.
-- **HTTP Mode**: Operates as a stateless HTTP server, suitable for simple request/response interactions and multi-node deployments.
-- **SSE Mode**: Operates as a stateful HTTP server with Server-Sent Events support, enabling real-time notifications and streaming responses.
+- **HTTP Mode**: Operates as an HTTP server with a web interface at the root and MCP endpoint at `/http`.
 
 ## Features
 
@@ -33,8 +32,7 @@ To start the MCP server, run the following command in your terminal:
 
 ```bash
 cf-mcp stdio --root /path/to/cute_framework_project  # STDIO mode
-cf-mcp http --root /path/to/cute_framework_project   # HTTP mode (stateless)
-cf-mcp sse --root /path/to/cute_framework_project    # SSE mode (stateful, real-time)
+cf-mcp http --root /path/to/cute_framework_project   # HTTP mode with web UI
 ```
 
 ## Development

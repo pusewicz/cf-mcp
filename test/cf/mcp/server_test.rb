@@ -57,95 +57,6 @@ class CF::MCP::ServerTest < Minitest::Test
 
     assert_equal expected_tools, CF::MCP::Server::TOOLS
   end
-
-  def test_http_app_returns_rack_app
-    app = @server.http_app
-    assert_respond_to app, :call
-  end
-end
-
-# HTTP transport integration tests
-class CF::MCP::ServerHTTPTest < Minitest::Test
-  def setup
-    @index = CF::MCP::Index.new
-    @index.add(CF::MCP::Models::FunctionDoc.new(
-      name: "cf_make_sprite",
-      category: "sprite",
-      brief: "Loads a sprite from an aseprite file.",
-      signature: "CF_Sprite cf_make_sprite(const char* path)"
-    ))
-
-    @server = CF::MCP::Server.new(@index)
-    @app = @server.http_app
-  end
-
-  def test_http_initialize_request
-    response = make_request("initialize", {
-      protocolVersion: "2024-11-05",
-      capabilities: {},
-      clientInfo: {name: "test", version: "1.0"}
-    })
-
-    assert_equal 200, response.status
-    body = JSON.parse(response.body)
-    assert_equal "cf-mcp", body["result"]["serverInfo"]["name"]
-  end
-
-  def test_http_tools_list
-    response = make_request("tools/list", {})
-
-    assert_equal 200, response.status
-    body = JSON.parse(response.body)
-    tools = body["result"]["tools"]
-    assert_equal 11, tools.size
-  end
-
-  def test_http_tools_call_search
-    response = make_request("tools/call", {
-      name: "cf_search",
-      arguments: {query: "sprite"}
-    })
-
-    assert_equal 200, response.status
-    body = JSON.parse(response.body)
-    refute body["result"]["isError"]
-    assert_includes body["result"]["content"].first["text"], "cf_make_sprite"
-  end
-
-  def test_http_requires_accept_header
-    env = Rack::MockRequest.env_for(
-      "/",
-      method: "POST",
-      input: JSON.generate({jsonrpc: "2.0", id: 1, method: "initialize", params: {}})
-    )
-    env["CONTENT_TYPE"] = "application/json"
-    # No Accept header
-
-    response = Rack::MockResponse.new(*@app.call(env))
-
-    assert_equal 406, response.status
-  end
-
-  private
-
-  def make_request(method, params, id: 1)
-    body = JSON.generate({
-      jsonrpc: "2.0",
-      id: id,
-      method: method,
-      params: params
-    })
-
-    env = Rack::MockRequest.env_for(
-      "/",
-      method: "POST",
-      input: body
-    )
-    env["CONTENT_TYPE"] = "application/json"
-    env["HTTP_ACCEPT"] = "application/json, text/event-stream"
-
-    Rack::MockResponse.new(*@app.call(env))
-  end
 end
 
 # Integration tests using STDIO transport simulation
@@ -354,8 +265,8 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
   end
 end
 
-# Combined server tests (CORS, routing, landing page)
-class CF::MCP::CombinedServerTest < Minitest::Test
+# HTTP server tests (CORS, routing, landing page)
+class CF::MCP::HTTPServerTest < Minitest::Test
   def setup
     @index = CF::MCP::Index.new
     @index.add(CF::MCP::Models::FunctionDoc.new(
@@ -365,14 +276,14 @@ class CF::MCP::CombinedServerTest < Minitest::Test
       signature: "CF_Sprite cf_make_sprite(const char* path)"
     ))
 
-    @combined_server = CF::MCP::CombinedServer.new(@index)
-    @app = @combined_server.rack_app
+    @http_server = CF::MCP::HTTPServer.new(@index)
+    @app = @http_server.rack_app
   end
 
   # CORS Tests
 
   def test_cors_headers_on_mcp_response
-    response = make_mcp_request("/", "initialize", {
+    response = make_mcp_request("/http", "initialize", {
       protocolVersion: "2024-11-05",
       capabilities: {},
       clientInfo: {name: "test", version: "1.0"}
@@ -395,14 +306,6 @@ class CF::MCP::CombinedServerTest < Minitest::Test
       "/.well-known/oauth-protected-resource",
       method: "OPTIONS"
     )
-    response = Rack::MockResponse.new(*@app.call(env))
-
-    assert_equal 204, response.status
-    assert_cors_headers(response)
-  end
-
-  def test_cors_preflight_on_sse_path
-    env = Rack::MockRequest.env_for("/sse", method: "OPTIONS")
     response = Rack::MockResponse.new(*@app.call(env))
 
     assert_equal 204, response.status
@@ -481,7 +384,6 @@ class CF::MCP::CombinedServerTest < Minitest::Test
     env["HTTP_ACCEPT"] = "text/html"
     response = Rack::MockResponse.new(*@app.call(env))
 
-    assert_includes response.body, "/sse"
     assert_includes response.body, "/http"
   end
 
@@ -515,28 +417,14 @@ class CF::MCP::CombinedServerTest < Minitest::Test
 
   # Routing Tests
 
-  def test_root_path_routes_to_sse_transport_for_mcp_client
-    response = make_mcp_request("/", "initialize", {
-      protocolVersion: "2024-11-05",
-      capabilities: {},
-      clientInfo: {name: "test", version: "1.0"}
-    })
+  def test_root_path_redirects_to_http_for_mcp_client
+    env = Rack::MockRequest.env_for("/", method: "POST")
+    env["CONTENT_TYPE"] = "application/json"
+    env["HTTP_ACCEPT"] = "application/json"
+    response = Rack::MockResponse.new(*@app.call(env))
 
-    assert_equal 200, response.status
-    body = JSON.parse(response.body)
-    assert_equal "cf-mcp", body["result"]["serverInfo"]["name"]
-  end
-
-  def test_sse_path_routes_to_sse_transport
-    response = make_mcp_request("/sse", "initialize", {
-      protocolVersion: "2024-11-05",
-      capabilities: {},
-      clientInfo: {name: "test", version: "1.0"}
-    })
-
-    assert_equal 200, response.status
-    body = JSON.parse(response.body)
-    assert_equal "cf-mcp", body["result"]["serverInfo"]["name"]
+    assert_equal 301, response.status
+    assert_equal "/http", response.headers["location"]
   end
 
   def test_http_path_routes_to_http_transport
@@ -551,16 +439,8 @@ class CF::MCP::CombinedServerTest < Minitest::Test
     assert_equal "cf-mcp", body["result"]["serverInfo"]["name"]
   end
 
-  def test_tools_call_via_combined_server
-    # First initialize
-    make_mcp_request("/", "initialize", {
-      protocolVersion: "2024-11-05",
-      capabilities: {},
-      clientInfo: {name: "test", version: "1.0"}
-    })
-
-    # Then call a tool
-    response = make_mcp_request("/", "tools/call", {
+  def test_tools_call_via_http_server
+    response = make_mcp_request("/http", "tools/call", {
       name: "cf_search",
       arguments: {query: "sprite"}
     })
@@ -569,18 +449,6 @@ class CF::MCP::CombinedServerTest < Minitest::Test
     body = JSON.parse(response.body)
     refute body["result"]["isError"]
     assert_includes body["result"]["content"].first["text"], "cf_make_sprite"
-  end
-
-  def test_sse_path_with_trailing_slash
-    response = make_mcp_request("/sse/", "initialize", {
-      protocolVersion: "2024-11-05",
-      capabilities: {},
-      clientInfo: {name: "test", version: "1.0"}
-    })
-
-    assert_equal 200, response.status
-    body = JSON.parse(response.body)
-    assert_equal "cf-mcp", body["result"]["serverInfo"]["name"]
   end
 
   def test_http_path_with_trailing_slash
@@ -604,14 +472,14 @@ class CF::MCP::CombinedServerTest < Minitest::Test
     assert_equal 11, tools.size
   end
 
-  def test_get_without_html_accept_routes_to_mcp
+  def test_get_without_html_accept_redirects_to_http
     env = Rack::MockRequest.env_for("/", method: "GET")
     env["HTTP_ACCEPT"] = "application/json"
     response = Rack::MockResponse.new(*@app.call(env))
 
-    # Should route to MCP transport, not landing page
-    # MCP transport will reject GET without proper headers
-    refute_equal "text/html; charset=utf-8", response.headers["content-type"]
+    # Should redirect to /http
+    assert_equal 301, response.status
+    assert_equal "/http", response.headers["location"]
   end
 
   def test_cors_headers_on_landing_page
@@ -623,15 +491,15 @@ class CF::MCP::CombinedServerTest < Minitest::Test
     assert_cors_headers(response)
   end
 
-  def test_session_id_returned_on_stateful_initialize
-    response = make_mcp_request("/", "initialize", {
+  def test_http_transport_is_stateless
+    response = make_mcp_request("/http", "initialize", {
       protocolVersion: "2024-11-05",
       capabilities: {},
       clientInfo: {name: "test", version: "1.0"}
     })
 
     assert_equal 200, response.status
-    assert response.headers["mcp-session-id"], "Expected Mcp-Session-Id header on stateful transport"
+    refute response.headers["mcp-session-id"], "Stateless transport should not return session ID"
   end
 
   private

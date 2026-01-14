@@ -52,14 +52,8 @@ rake release
 # STDIO mode (for Claude Desktop integration)
 cf-mcp stdio --root ~/Work/GitHub/pusewicz/cute_framework
 
-# HTTP mode (stateless, port 9292)
+# HTTP mode (web UI at /, MCP endpoint at /http, port 9292)
 cf-mcp http --port 9292 --root /path/to/cute_framework
-
-# SSE mode (stateful with Server-Sent Events, port 9393)
-cf-mcp sse --port 9393 --root /path/to/cute_framework
-
-# Combined mode (SSE + HTTP + web UI)
-cf-mcp combined --port 9292
 
 # Download headers from GitHub automatically
 cf-mcp stdio --download
@@ -69,8 +63,8 @@ cf-mcp stdio --download
 
 ```
 lib/cf/mcp/
-├── cli.rb              # Thor-based CLI with stdio/http/sse/combined modes
-├── server.rb           # MCP server setup, Server and CombinedServer classes
+├── cli.rb              # CLI with stdio/http modes
+├── server.rb           # MCP server setup, Server and HTTPServer classes
 ├── parser.rb           # Header file parser (extracts @function, @struct, @enum docs)
 ├── index.rb            # In-memory search index with relevance scoring
 ├── downloader.rb       # GitHub header downloader with ZIP extraction
@@ -86,7 +80,7 @@ lib/cf/mcp/
 │   ├── search_enums.rb     # cf_search_enums
 │   ├── list_category.rb    # cf_list_category
 │   └── get_details.rb      # cf_get_details - full docs by name
-└── templates/          # Web UI for combined mode
+└── templates/          # Web UI for HTTP mode
     ├── index.erb
     ├── style.css
     └── script.js

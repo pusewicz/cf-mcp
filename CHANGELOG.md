@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.1] - 2026-01-14
+
+### Added
+
+- `--host` CLI option for binding address (defaults to `0.0.0.0`)
+
+### Changed
+
+- Unified boot process: Procfile now uses `cf-mcp combined --download` instead of rackup
+
+### Removed
+
+- `config.ru` (no longer needed, CLI handles all server modes)
+
 ## [0.10.0] - 2026-01-14
 
 ### Added
@@ -112,6 +126,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `cf_list_category` - List items by category
   - `cf_get_details` - Get full documentation by name
 
+[0.10.1]: https://github.com/pusewicz/cf-mcp/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/pusewicz/cf-mcp/compare/v0.9.3...v0.10.0
 [0.9.3]: https://github.com/pusewicz/cf-mcp/compare/v0.9.2...v0.9.3
 [0.9.2]: https://github.com/pusewicz/cf-mcp/compare/v0.9.1...v0.9.2

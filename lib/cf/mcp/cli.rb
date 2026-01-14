@@ -124,26 +124,15 @@ module CF
       end
 
       def run_combined_server
-        require "rack"
         require "rackup"
-
-        headers_path = resolve_headers_path
-
-        unless File.directory?(headers_path)
-          warn "Error: Headers directory not found: #{headers_path}"
-          warn "Use --root to specify the path to Cute Framework headers"
-          warn "Or use --download to fetch headers from GitHub"
-          exit 1
-        end
-
-        warn "Parsing headers from: #{headers_path}"
-        index = build_index(headers_path)
-        warn "Indexed #{index.stats[:total]} items (#{index.stats[:functions]} functions, #{index.stats[:structs]} structs, #{index.stats[:enums]} enums)"
 
         port = @options[:port] || 9292
         host = @options[:host]
-        server = CombinedServer.new(index)
-        app = server.rack_app
+
+        app = CombinedServer.build_rack_app(
+          root: @options[:root],
+          download: @options[:download]
+        )
 
         warn "Starting combined server on #{host}:#{port}..."
         warn "Web interface available at http://localhost:#{port}/"

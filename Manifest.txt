@@ -3,6 +3,7 @@ LICENSE.txt
 Manifest.txt
 README.md
 Rakefile
+config.ru
 exe/cf-mcp
 lib/cf/mcp.rb
 lib/cf/mcp/cli.rb

@@ -34,8 +34,10 @@ module CF
 
       def initialize(index)
         @index = index
+        configuration = ::MCP::Configuration.new(protocol_version: "2024-11-05")
         @server = ::MCP::Server.new(
           name: "cf-mcp",
+          configuration:,
           version: CF::MCP::VERSION,
           tools: TOOLS,
           resources: build_topic_resources(index)

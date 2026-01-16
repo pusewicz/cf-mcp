@@ -136,8 +136,7 @@ module CF
         index.topics.map do |topic|
           ::MCP::Resource.new(
             uri: "cf://topics/#{topic.name}",
-            name: topic.name,
-            title: topic.name.tr("_", " ").split.map(&:capitalize).join(" "),
+            name: topic.name.tr("_", " ").split.map(&:capitalize).join(" "),
             description: topic.brief,
             mime_type: "text/markdown"
           )

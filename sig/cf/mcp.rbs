@@ -2,29 +2,77 @@ module CF
   module MCP
     VERSION: String
 
+    def self.root: () -> Pathname
+
     class Error < StandardError
     end
 
     class Parser
+      DOC_BLOCK_PATTERN: Regexp
+      TAG_PATTERN: Regexp
+      MEMBER_COMMENT_PATTERN: Regexp
+      ENTRY_COMMENT_PATTERN: Regexp
+      CF_ENUM_PATTERN: Regexp
+      SIGNATURE_CLEANUP: Regexp
+      END_MARKER_PATTERN: Regexp
+
       def parse_file: (String path) -> Array[Models::DocItem]
       def parse_directory: (String path) -> Array[Models::DocItem]
+    end
+
+    class TopicParser
+      API_LINK_PATTERN: Regexp
+      TOPIC_LINK_PATTERN: Regexp
+      SECTION_PATTERN: Regexp
+      CATEGORY_MAP: Hash[String, String]
+
+      def parse_file: (String path) -> Models::TopicDoc?
+      def parse_directory: (String path) -> Array[Models::TopicDoc]
+      def parse_reading_order: (String index_path) -> Hash[String, Integer]
     end
 
     class Index
       attr_reader items: Hash[String, Models::DocItem]
       attr_reader by_type: Hash[Symbol, Array[Models::DocItem]]
       attr_reader by_category: Hash[String, Array[Models::DocItem]]
+      attr_reader topic_references: Hash[String, Array[String]]
 
+      def initialize: () -> void
       def add: (Models::DocItem item) -> void
       def find: (String name) -> Models::DocItem?
+      def brief_for: (String name) -> Hash[Symbol, untyped]?
       def search: (String query, ?type: Symbol?, ?category: String?, ?limit: Integer) -> Array[Models::DocItem]
       def functions: () -> Array[Models::DocItem]
       def structs: () -> Array[Models::DocItem]
       def enums: () -> Array[Models::DocItem]
+      def topics: () -> Array[Models::DocItem]
+      def topics_ordered: () -> Array[Models::DocItem]
+      def topics_for: (String api_name) -> Array[Models::DocItem]
       def categories: () -> Array[String]
       def items_in_category: (String category) -> Array[Models::DocItem]
       def size: () -> Integer
       def stats: () -> Hash[Symbol, Integer]
+    end
+
+    class IndexBuilder
+      DEFAULT_HEADERS_PATH: String
+
+      attr_reader headers_path: String
+
+      def initialize: (?root: String?, ?download: bool) -> void
+      def build: () ?{ (Symbol, String, Integer) -> void } -> Index
+      def valid?: () -> bool
+    end
+
+    class Downloader
+      CUTE_FRAMEWORK_ZIP_URL: String
+      DEFAULT_DOWNLOAD_DIR: String
+
+      class DownloadError < StandardError
+      end
+
+      def initialize: (?download_dir: String) -> void
+      def download_and_extract: () -> String
     end
 
     class CLI
@@ -36,14 +84,41 @@ module CF
       attr_reader server: untyped
       attr_reader index: Index
 
+      TOOLS: Array[Class]
+      CORS_HEADERS: Hash[String, String]
+
+      def self.build_rack_app: (?root: String?, ?download: bool) -> untyped
       def initialize: (Index index) -> void
       def run_stdio: () -> void
-      def run_http: (?port: Integer) -> void
-      def run_sse: (?port: Integer) -> void
+      def rack_app: () -> untyped
+
+      class TemplateContext
+        TEMPLATES_DIR: String
+
+        attr_reader version: String
+        attr_reader stats: Hash[Symbol, Integer]
+        attr_reader categories: Array[String]
+        attr_reader topics: Array[Hash[Symbol, String?]]
+        attr_reader tools: Array[Hash[Symbol, String]]
+        attr_reader tool_schemas_json: String
+
+        def initialize: (version: String, stats: Hash[Symbol, Integer], categories: Array[String], topics: Array[Hash[Symbol, String?]], tools: Array[Hash[Symbol, String]], tool_schemas_json: String) -> void
+        def categories_json: () -> String
+        def topics_json: () -> String
+        def css_content: () -> String
+        def changelog_content: () -> String
+        def changelog_json: () -> String
+        def js_content: () -> String
+        def h: (untyped text) -> String
+        def get_binding: () -> Binding
+      end
     end
 
     module Models
       class DocItem
+        GITHUB_REPO: String
+        GITHUB_RAW_BASE: String
+
         attr_accessor name: String?
         attr_accessor type: Symbol?
         attr_accessor category: String?
@@ -53,11 +128,16 @@ module CF
         attr_accessor example_brief: String?
         attr_accessor related: Array[String]
         attr_accessor source_file: String?
+        attr_accessor source_line: Integer?
 
-        def matches?: (String query) -> bool
+        def initialize: (?name: String?, ?type: Symbol?, ?category: String?, ?brief: String?, ?remarks: String?, ?example: String?, ?example_brief: String?, ?related: Array[String], ?source_file: String?, ?source_line: Integer?) -> void
+        def matches?: (String? query) -> bool
+        def relevance_score: (String? query) -> Integer
+        def source_urls: () -> Hash[Symbol, String]?
         def to_h: () -> Hash[Symbol, untyped]
         def to_summary: () -> String
-        def to_text: (?detailed: bool) -> String
+        def to_text: (?detailed: bool, ?index: Index?) -> String
+        def format_related_items: (Index? index) -> String
       end
 
       class FunctionDoc < DocItem
@@ -65,19 +145,154 @@ module CF
         attr_accessor parameters: Array[Parameter]
         attr_accessor return_value: String?
 
-        Parameter: untyped
+        class Parameter < Data
+          attr_reader name: String
+          attr_reader description: String
+        end
+
+        def initialize: (?signature: String?, ?parameters: Array[Parameter], ?return_value: String?, **untyped) -> void
+        def to_h: () -> Hash[Symbol, untyped]
+        def to_summary: () -> String
+        def to_text: (?detailed: bool, ?index: Index?) -> String
       end
 
       class StructDoc < DocItem
         attr_accessor members: Array[Member]
 
-        Member: untyped
+        class Member < Data
+          attr_reader declaration: String
+          attr_reader description: String
+        end
+
+        def initialize: (?members: Array[Member], **untyped) -> void
+        def to_h: () -> Hash[Symbol, untyped]
       end
 
       class EnumDoc < DocItem
         attr_accessor entries: Array[Entry]
 
-        Entry: untyped
+        class Entry < Data
+          attr_reader name: String
+          attr_reader value: String
+          attr_reader description: String
+        end
+
+        def initialize: (?entries: Array[Entry], **untyped) -> void
+        def to_h: () -> Hash[Symbol, untyped]
+      end
+
+      class TopicDoc < DocItem
+        attr_accessor content: String?
+        attr_accessor sections: Array[Section]
+        attr_accessor function_references: Array[String]
+        attr_accessor struct_references: Array[String]
+        attr_accessor enum_references: Array[String]
+        attr_accessor topic_references: Array[String]
+        attr_accessor reading_order: Integer?
+
+        class Section < Data
+          attr_reader title: String
+          attr_reader content: String
+        end
+
+        def initialize: (?content: String?, ?sections: Array[Section], ?function_references: Array[String], ?struct_references: Array[String], ?enum_references: Array[String], ?topic_references: Array[String], ?reading_order: Integer?, **untyped) -> void
+        def all_api_references: () -> Array[String]
+        def to_h: () -> Hash[Symbol, untyped]
+        def to_summary: () -> String
+        def to_text: (?detailed: bool, ?index: Index?) -> String
+      end
+    end
+
+    module Tools
+      module ResponseHelpers
+        def text_response: (String text) -> untyped
+        def error_response: (String message) -> untyped
+      end
+
+      module SearchResultFormatter
+        def format_search_results: (Array[Models::DocItem] results, query: String, type_label: String, limit: Integer, details_tip: String, ?filter_suggestion: String?) -> String
+      end
+
+      class SearchTool
+        extend ResponseHelpers
+        extend SearchResultFormatter
+
+        DETAILS_TIP: String
+
+        def self.call: (query: String, ?type: String?, ?category: String?, ?limit: Integer, ?server_context: Hash[Symbol, untyped]) -> untyped
+      end
+
+      class SearchFunctions
+        extend ResponseHelpers
+        extend SearchResultFormatter
+
+        DETAILS_TIP: String
+
+        def self.call: (query: String, ?category: String?, ?limit: Integer, ?server_context: Hash[Symbol, untyped]) -> untyped
+      end
+
+      class SearchStructs
+        extend ResponseHelpers
+        extend SearchResultFormatter
+
+        DETAILS_TIP: String
+
+        def self.call: (query: String, ?category: String?, ?limit: Integer, ?server_context: Hash[Symbol, untyped]) -> untyped
+      end
+
+      class SearchEnums
+        extend ResponseHelpers
+        extend SearchResultFormatter
+
+        DETAILS_TIP: String
+
+        def self.call: (query: String, ?category: String?, ?limit: Integer, ?server_context: Hash[Symbol, untyped]) -> untyped
+      end
+
+      class ListCategory
+        extend ResponseHelpers
+
+        def self.call: (?category: String?, ?type: String?, ?server_context: Hash[Symbol, untyped]) -> untyped
+      end
+
+      class GetDetails
+        extend ResponseHelpers
+
+        NAMING_TIP: String
+
+        def self.call: (name: String, ?server_context: Hash[Symbol, untyped]) -> untyped
+      end
+
+      class FindRelated
+        extend ResponseHelpers
+
+        def self.call: (name: String, ?server_context: Hash[Symbol, untyped]) -> untyped
+      end
+
+      class ParameterSearch
+        extend ResponseHelpers
+
+        def self.call: (type: String, ?direction: String, ?server_context: Hash[Symbol, untyped]) -> untyped
+      end
+
+      class MemberSearch
+        extend ResponseHelpers
+
+        def self.call: (query: String, ?limit: Integer, ?server_context: Hash[Symbol, untyped]) -> untyped
+      end
+
+      class ListTopics
+        extend ResponseHelpers
+
+        CATEGORY_TIP: String
+
+        def self.call: (?category: String?, ?ordered: bool, ?server_context: Hash[Symbol, untyped]) -> untyped
+      end
+
+      class GetTopic
+        extend ResponseHelpers
+
+        def self.call: (name: String, ?server_context: Hash[Symbol, untyped]) -> untyped
       end
     end
   end

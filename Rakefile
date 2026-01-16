@@ -23,7 +23,12 @@ task :manifest do
   puts "Generated Manifest.txt with #{files.size} files"
 end
 
-task default: %i[test standard manifest]
+desc "Validate RBS type signatures"
+task :rbs do
+  sh "rbs", "-I", "sig", "validate"
+end
+
+task default: %i[test standard rbs manifest]
 
 desc "Deploy to Fly.io (runs tests and linting first)"
 task deploy: %i[test standard] do

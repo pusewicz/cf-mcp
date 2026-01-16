@@ -32,64 +32,13 @@ module CF
         Tools::GetTopic
       ].freeze
 
-      def initialize(index)
-        @index = index
-        configuration = ::MCP::Configuration.new(protocol_version: "2024-11-05")
-        @server = ::MCP::Server.new(
-          name: "cf-mcp",
-          configuration:,
-          version: CF::MCP::VERSION,
-          tools: TOOLS,
-          resources: build_topic_resources(index)
-        )
-        @server.server_context = {index: index}
+      CORS_HEADERS = {
+        "access-control-allow-origin" => "*",
+        "access-control-allow-methods" => "GET, POST, DELETE, OPTIONS",
+        "access-control-allow-headers" => "Content-Type, Accept, Mcp-Session-Id",
+        "access-control-expose-headers" => "Mcp-Session-Id"
+      }.freeze
 
-        # Register handler for reading resource content
-        @server.resources_read_handler do |params|
-          handle_resource_read(params, index)
-        end
-      end
-
-      private
-
-      def build_topic_resources(index)
-        index.topics.map do |topic|
-          ::MCP::Resource.new(
-            uri: "cf://topics/#{topic.name}",
-            name: topic.name,
-            title: topic.name.tr("_", " ").split.map(&:capitalize).join(" "),
-            description: topic.brief,
-            mime_type: "text/markdown"
-          )
-        end
-      end
-
-      def handle_resource_read(params, index)
-        uri = params[:uri]
-        return [] unless uri&.start_with?("cf://topics/")
-
-        topic_name = uri.sub("cf://topics/", "")
-        topic = index.find(topic_name)
-
-        return [] unless topic&.type == :topic
-
-        [{
-          uri: uri,
-          mimeType: "text/markdown",
-          text: topic.content
-        }]
-      end
-
-      public
-
-      def run_stdio
-        transport = ::MCP::Server::Transports::StdioTransport.new(@server)
-        transport.open
-      end
-    end
-
-    # HTTP server with web interface at root and MCP endpoint at /http
-    class HTTPServer
       # Build a rack app with automatic header downloading and indexing
       # This is the shared entry point for both config.ru and CLI
       def self.build_rack_app(root: nil, download: false)
@@ -112,25 +61,36 @@ module CF
 
       def initialize(index)
         @index = index
+        configuration = ::MCP::Configuration.new(protocol_version: "2024-11-05")
+        @server = ::MCP::Server.new(
+          name: "cf-mcp",
+          configuration:,
+          version: CF::MCP::VERSION,
+          tools: TOOLS,
+          resources: build_topic_resources(index)
+        )
+        @server.server_context = {index: index}
+
+        # Register handler for reading resource content
+        @server.resources_read_handler do |params|
+          handle_resource_read(params, index)
+        end
       end
 
-      CORS_HEADERS = {
-        "access-control-allow-origin" => "*",
-        "access-control-allow-methods" => "GET, POST, DELETE, OPTIONS",
-        "access-control-allow-headers" => "Content-Type, Accept, Mcp-Session-Id",
-        "access-control-expose-headers" => "Mcp-Session-Id"
-      }.freeze
+      def run_stdio
+        transport = ::MCP::Server::Transports::StdioTransport.new(@server)
+        transport.open
+      end
 
       def rack_app
         require "rack"
 
-        mcp_server = create_mcp_server
-        http_transport = ::MCP::Server::Transports::StreamableHTTPTransport.new(mcp_server, stateless: true)
-        mcp_server.transport = http_transport
+        http_transport = ::MCP::Server::Transports::StreamableHTTPTransport.new(@server, stateless: true)
+        @server.transport = http_transport
 
         landing_page = build_landing_page
         index = @index
-        tools = Server::TOOLS
+        tools = TOOLS
         cors_headers = CORS_HEADERS
 
         app = ->(env) {
@@ -172,6 +132,34 @@ module CF
 
       private
 
+      def build_topic_resources(index)
+        index.topics.map do |topic|
+          ::MCP::Resource.new(
+            uri: "cf://topics/#{topic.name}",
+            name: topic.name,
+            title: topic.name.tr("_", " ").split.map(&:capitalize).join(" "),
+            description: topic.brief,
+            mime_type: "text/markdown"
+          )
+        end
+      end
+
+      def handle_resource_read(params, index)
+        uri = params[:uri]
+        return [] unless uri&.start_with?("cf://topics/")
+
+        topic_name = uri.sub("cf://topics/", "")
+        topic = index.find(topic_name)
+
+        return [] unless topic&.type == :topic
+
+        [{
+          uri: uri,
+          mimeType: "text/markdown",
+          text: topic.content
+        }]
+      end
+
       def escape_html(text)
         text.to_s
           .gsub("&", "&amp;")
@@ -179,16 +167,6 @@ module CF
           .gsub(">", "&gt;")
           .gsub('"', "&quot;")
           .gsub("'", "&#39;")
-      end
-
-      def create_mcp_server
-        server = ::MCP::Server.new(
-          name: "cf-mcp",
-          version: CF::MCP::VERSION,
-          tools: Server::TOOLS
-        )
-        server.server_context = {index: @index}
-        server
       end
 
       def build_landing_page

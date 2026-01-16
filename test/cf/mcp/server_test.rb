@@ -266,7 +266,7 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
 end
 
 # HTTP server tests (CORS, routing, landing page)
-class CF::MCP::HTTPServerTest < Minitest::Test
+class CF::MCP::ServerHTTPTest < Minitest::Test
   def setup
     @index = CF::MCP::Index.new
     @index.add(CF::MCP::Models::FunctionDoc.new(
@@ -276,7 +276,7 @@ class CF::MCP::HTTPServerTest < Minitest::Test
       signature: "CF_Sprite cf_make_sprite(const char* path)"
     ))
 
-    @http_server = CF::MCP::HTTPServer.new(@index)
+    @http_server = CF::MCP::Server.new(@index)
     @app = @http_server.rack_app
   end
 

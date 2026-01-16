@@ -110,7 +110,7 @@ module CF
         port = @options[:port] || 9292
         host = @options[:host]
 
-        app = HTTPServer.build_rack_app(
+        app = Server.build_rack_app(
           root: @options[:root],
           download: @options[:download]
         )

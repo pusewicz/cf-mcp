@@ -102,7 +102,7 @@ module CF
               FileUtils.mkdir_p(target_path)
             else
               FileUtils.mkdir_p(File.dirname(target_path))
-              entry.extract(target_path)
+              entry.extract(relative_path, destination_directory: base_path)
             end
           end
         end

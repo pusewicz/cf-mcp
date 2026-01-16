@@ -232,4 +232,127 @@ class CF::MCP::IndexTest < Minitest::Test
     # Item matching both keywords should rank higher
     assert_equal "cf_draw_circle", results[0].name
   end
+
+  def test_enums_accessor
+    enum = CF::MCP::Models::EnumDoc.new(name: "TestEnum", brief: "Test")
+    @index.add(enum)
+
+    assert_includes @index.enums, enum
+  end
+
+  def test_topics_accessor
+    topic = CF::MCP::Models::TopicDoc.new(name: "test_topic", brief: "Test")
+    @index.add(topic)
+
+    assert_includes @index.topics, topic
+  end
+
+  def test_topics_ordered_by_reading_order
+    topic1 = CF::MCP::Models::TopicDoc.new(name: "topic_b", brief: "B", reading_order: 1)
+    topic2 = CF::MCP::Models::TopicDoc.new(name: "topic_a", brief: "A", reading_order: 0)
+    topic3 = CF::MCP::Models::TopicDoc.new(name: "topic_c", brief: "C", reading_order: nil)
+
+    @index.add(topic1)
+    @index.add(topic2)
+    @index.add(topic3)
+
+    ordered = @index.topics_ordered
+
+    assert_equal "topic_a", ordered[0].name
+    assert_equal "topic_b", ordered[1].name
+    assert_equal "topic_c", ordered[2].name
+  end
+
+  def test_topics_for_with_references
+    func = CF::MCP::Models::FunctionDoc.new(name: "cf_test", brief: "Test")
+    topic = CF::MCP::Models::TopicDoc.new(
+      name: "test_topic",
+      brief: "Test topic",
+      function_references: ["cf_test"]
+    )
+
+    @index.add(func)
+    @index.add(topic)
+
+    related_topics = @index.topics_for("cf_test")
+
+    assert_equal 1, related_topics.size
+    assert_equal "test_topic", related_topics.first.name
+  end
+
+  def test_topics_for_with_no_references
+    func = CF::MCP::Models::FunctionDoc.new(name: "cf_test", brief: "Test")
+    @index.add(func)
+
+    related_topics = @index.topics_for("cf_test")
+
+    assert_empty related_topics
+  end
+
+  def test_items_in_category
+    func = CF::MCP::Models::FunctionDoc.new(name: "cf_test", category: "test", brief: "Test")
+    @index.add(func)
+
+    items = @index.items_in_category("test")
+
+    assert_equal 1, items.size
+    assert_equal "cf_test", items.first.name
+  end
+
+  def test_items_in_nonexistent_category
+    items = @index.items_in_category("nonexistent")
+
+    assert_empty items
+  end
+
+  def test_size
+    @index.add(@func)
+    @index.add(@struct)
+
+    assert_equal 2, @index.size
+  end
+
+  def test_stats_includes_topics
+    topic = CF::MCP::Models::TopicDoc.new(name: "test_topic", brief: "Test")
+    @index.add(@func)
+    @index.add(topic)
+
+    stats = @index.stats
+
+    assert_equal 2, stats[:total]
+    assert_equal 1, stats[:topics]
+  end
+
+  def test_add_item_without_category
+    func = CF::MCP::Models::FunctionDoc.new(name: "cf_test", brief: "Test")
+    @index.add(func)
+
+    assert_equal func, @index.find("cf_test")
+    assert_empty @index.categories
+  end
+
+  def test_topic_reverse_index_no_duplicate_entries
+    func = CF::MCP::Models::FunctionDoc.new(name: "cf_test", brief: "Test")
+    topic1 = CF::MCP::Models::TopicDoc.new(
+      name: "topic1",
+      brief: "Topic 1",
+      function_references: ["cf_test"]
+    )
+    topic2 = CF::MCP::Models::TopicDoc.new(
+      name: "topic2",
+      brief: "Topic 2",
+      function_references: ["cf_test"]
+    )
+
+    @index.add(func)
+    @index.add(topic1)
+    @index.add(topic2)
+
+    related_topics = @index.topics_for("cf_test")
+
+    assert_equal 2, related_topics.size
+    names = related_topics.map(&:name)
+    assert_includes names, "topic1"
+    assert_includes names, "topic2"
+  end
 end

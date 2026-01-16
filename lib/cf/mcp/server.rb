@@ -39,6 +39,7 @@ module CF
         "access-control-expose-headers" => "Mcp-Session-Id"
       }.freeze
 
+      # :nocov:
       # Build a rack app with automatic header downloading and indexing
       # This is the shared entry point for both config.ru and CLI
       def self.build_rack_app(root: nil, download: false)
@@ -58,6 +59,7 @@ module CF
 
         new(index).rack_app
       end
+      # :nocov:
 
       def initialize(index)
         @index = index
@@ -77,11 +79,14 @@ module CF
         end
       end
 
+      # :nocov:
       def run_stdio
         transport = ::MCP::Server::Transports::StdioTransport.new(@server)
         transport.open
       end
+      # :nocov:
 
+      # :nocov:
       def rack_app
         require "rack"
 
@@ -129,6 +134,7 @@ module CF
           run app
         end
       end
+      # :nocov:
 
       private
 
@@ -159,6 +165,7 @@ module CF
         }]
       end
 
+      # :nocov:
       def escape_html(text)
         text.to_s
           .gsub("&", "&amp;")
@@ -254,6 +261,7 @@ module CF
           binding
         end
       end
+      # :nocov:
     end
   end
 end

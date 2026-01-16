@@ -48,6 +48,7 @@ module CF
         return root if root
         return ENV["CF_HEADERS_PATH"] if ENV["CF_HEADERS_PATH"]
 
+        # :nocov:
         if download
           warn "Downloading Cute Framework headers from GitHub..."
           downloader = Downloader.new
@@ -55,6 +56,7 @@ module CF
           warn "Downloaded headers to: #{path}"
           return path
         end
+        # :nocov:
 
         DEFAULT_HEADERS_PATH
       end

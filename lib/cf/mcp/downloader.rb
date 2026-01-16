@@ -18,6 +18,7 @@ module CF
         @download_dir = download_dir
       end
 
+      # :nocov:
       def download_and_extract
         FileUtils.mkdir_p(@download_dir)
 
@@ -62,6 +63,7 @@ module CF
           File.binwrite(destination, response.body)
         end
       end
+      # :nocov:
 
       def extract_directories(zip_path, base_path)
         FileUtils.rm_rf(base_path)

@@ -10,3 +10,4 @@ gem "rake", "~> 13.0"
 gem "minitest", "~> 6.0"
 gem "standard", "~> 1.53"
 gem "rbs", "~> 3.0"
+gem "simplecov", "~> 0.22", require: false

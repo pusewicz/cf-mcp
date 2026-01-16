@@ -2,10 +2,9 @@
 
 require "bundler/gem_tasks"
 require "minitest/test_task"
+require "standard/rake"
 
 Minitest::TestTask.create
-
-require "standard/rake"
 
 desc "Generate Manifest.txt from git ls-files"
 task :manifest do

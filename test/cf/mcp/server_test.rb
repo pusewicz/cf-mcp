@@ -57,6 +57,47 @@ class CF::MCP::ServerTest < Minitest::Test
 
     assert_equal expected_tools, CF::MCP::Server::TOOLS
   end
+
+  def test_server_builds_topic_resources
+    index = CF::MCP::Index.new
+    index.add(CF::MCP::Models::TopicDoc.new(
+      name: "audio",
+      brief: "Audio guide",
+      content: "# Audio"
+    ))
+    index.add(CF::MCP::Models::TopicDoc.new(
+      name: "drawing",
+      brief: "Drawing guide",
+      content: "# Drawing"
+    ))
+
+    server = CF::MCP::Server.new(index)
+
+    # Access the MCP server's resources
+    resources = server.server.resources
+
+    assert_equal 2, resources.size
+    uris = resources.map(&:uri)
+    assert_includes uris, "cf://topics/audio"
+    assert_includes uris, "cf://topics/drawing"
+  end
+
+  def test_server_topic_resource_attributes
+    index = CF::MCP::Index.new
+    index.add(CF::MCP::Models::TopicDoc.new(
+      name: "audio_guide",
+      brief: "Comprehensive audio guide",
+      content: "# Audio Content"
+    ))
+
+    server = CF::MCP::Server.new(index)
+    resource = server.server.resources.first
+
+    assert_equal "cf://topics/audio_guide", resource.uri
+    assert_equal "Audio Guide", resource.name
+    assert_equal "Comprehensive audio guide", resource.description
+    assert_equal "text/markdown", resource.mime_type
+  end
 end
 
 # Integration tests using STDIO transport simulation
@@ -213,6 +254,76 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
     assert_includes tool_names, "cf_get_topic"
   end
 
+  def test_stdio_resources_list_with_topics
+    # Create a new index with topics and server
+    index = CF::MCP::Index.new
+    index.add(CF::MCP::Models::TopicDoc.new(
+      name: "sprites",
+      brief: "Sprites guide",
+      content: "# Sprites\n\nAll about sprites."
+    ))
+    server = CF::MCP::Server.new(index)
+
+    responses = run_stdio_requests_with_server(server, [
+      initialize_request(1),
+      {jsonrpc: "2.0", id: 2, method: "resources/list", params: {}}
+    ])
+
+    response = responses[1]
+    refute response.key?("error"), "Expected no error: #{response["error"]}"
+
+    resources = response["result"]["resources"]
+    assert_equal 1, resources.size
+    assert_equal "cf://topics/sprites", resources.first["uri"]
+  end
+
+  def test_stdio_resources_read
+    # Create a new index with topics and server
+    index = CF::MCP::Index.new
+    index.add(CF::MCP::Models::TopicDoc.new(
+      name: "sprites",
+      brief: "Sprites guide",
+      content: "# Sprites\n\nAll about sprites."
+    ))
+    server = CF::MCP::Server.new(index)
+
+    responses = run_stdio_requests_with_server(server, [
+      initialize_request(1),
+      {jsonrpc: "2.0", id: 2, method: "resources/read", params: {uri: "cf://topics/sprites"}}
+    ])
+
+    response = responses[1]
+    refute response.key?("error"), "Expected no error: #{response["error"]}"
+
+    contents = response["result"]["contents"]
+    assert_equal 1, contents.size
+    assert_equal "cf://topics/sprites", contents.first["uri"]
+    assert_equal "text/markdown", contents.first["mimeType"]
+    assert_includes contents.first["text"], "# Sprites"
+  end
+
+  def test_stdio_resources_read_invalid_uri
+    responses = run_stdio_requests([
+      initialize_request(1),
+      {jsonrpc: "2.0", id: 2, method: "resources/read", params: {uri: "invalid://uri"}}
+    ])
+
+    response = responses[1]
+    refute response.key?("error")
+    assert_empty response["result"]["contents"]
+  end
+
+  def test_stdio_resources_read_nonexistent_topic
+    responses = run_stdio_requests([
+      initialize_request(1),
+      {jsonrpc: "2.0", id: 2, method: "resources/read", params: {uri: "cf://topics/nonexistent"}}
+    ])
+
+    response = responses[1]
+    refute response.key?("error")
+    assert_empty response["result"]["contents"]
+  end
+
   private
 
   def initialize_request(id)
@@ -241,6 +352,10 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
   end
 
   def run_stdio_requests(requests)
+    run_stdio_requests_with_server(@server, requests)
+  end
+
+  def run_stdio_requests_with_server(server, requests)
     input = requests.map { |r| JSON.generate(r) }.join("\n")
     stdin = StringIO.new(input)
     stdout = StringIO.new
@@ -252,7 +367,7 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
       $stdin = stdin
       $stdout = stdout
 
-      transport = ::MCP::Server::Transports::StdioTransport.new(@server.server)
+      transport = ::MCP::Server::Transports::StdioTransport.new(server.server)
       transport.open
     rescue EOFError
       # Expected when stdin is exhausted

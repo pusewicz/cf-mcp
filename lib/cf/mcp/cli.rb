@@ -12,6 +12,7 @@ module CF
         @options = parse_args
       end
 
+      # :nocov:
       def run
         case @options[:command]
         when :stdio
@@ -25,6 +26,7 @@ module CF
           exit 1
         end
       end
+      # :nocov:
 
       private
 
@@ -66,10 +68,12 @@ module CF
             options[:command] = :help
           end
 
+          # :nocov:
           opts.on("-v", "--version", "Show version") do
             puts "cf-mcp #{CF::MCP::VERSION}"
             exit 0
           end
+          # :nocov:
         end
 
         @option_parser.parse!(@args)
@@ -84,6 +88,7 @@ module CF
         options
       end
 
+      # :nocov:
       def run_server(mode)
         builder = IndexBuilder.new(root: @options[:root], download: @options[:download])
 
@@ -120,6 +125,7 @@ module CF
         warn "MCP endpoint available at http://localhost:#{port}/http"
         Rackup::Server.start(app: app, Host: host, Port: port, Logger: $stderr)
       end
+      # :nocov:
     end
   end
 end

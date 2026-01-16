@@ -86,4 +86,41 @@ class CF::MCP::ParserTest < Minitest::Test
     assert_includes struct.related, "test_function"
     assert_includes struct.related, "TestEnum"
   end
+
+  def test_parse_doc_block_without_type_tag_returns_nothing
+    header_content = <<~HEADER
+      /**
+       * @brief Just a brief with no type tag.
+       * @category misc
+       */
+      void something(void);
+    HEADER
+
+    items = parse_content(header_content)
+
+    # No items should be returned since there's no @function, @struct, or @enum tag
+    assert_empty items
+  end
+
+  def test_parse_empty_doc_block_returns_nothing
+    header_content = <<~HEADER
+      /**
+       */
+      void something(void);
+    HEADER
+
+    items = parse_content(header_content)
+
+    assert_empty items
+  end
+
+  private
+
+  def parse_content(content)
+    Tempfile.create(["test", ".h"]) do |f|
+      f.write(content)
+      f.rewind
+      @parser.parse_file(f.path)
+    end
+  end
 end

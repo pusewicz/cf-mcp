@@ -134,10 +134,11 @@ module CF
           else
             # Default route - show landing page for browsers
             accept = request.get_header("HTTP_ACCEPT") || ""
-            if request.get? && accept.include?("text/html")
+            if request.get? && !accept.include?("application/json")
+              # Serve HTML by default for GET requests unless client specifically requests JSON
               [200, {"content-type" => "text/html; charset=utf-8"}, [landing_page.call(index, tools)]]
             else
-              # For non-browser clients at root, redirect to /http
+              # For JSON clients or non-GET requests, redirect to MCP endpoint
               [301, {"location" => "/http", "content-type" => "text/plain"}, ["Redirecting to /http"]]
             end
           end

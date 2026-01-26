@@ -546,14 +546,35 @@ class CF::MCP::ServerHTTPTest < Minitest::Test
     assert_equal 11, tools.size
   end
 
-  def test_get_without_html_accept_redirects_to_http
+  def test_get_with_json_accept_redirects_to_http
     env = Rack::MockRequest.env_for("/", method: "GET")
     env["HTTP_ACCEPT"] = "application/json"
     response = Rack::MockResponse.new(*@app.call(env))
 
-    # Should redirect to /http
+    # Should redirect to /http for JSON clients
     assert_equal 301, response.status
     assert_equal "/http", response.headers["location"]
+  end
+
+  def test_landing_page_served_without_accept_header
+    # W3C validator and similar tools may not send Accept header
+    env = Rack::MockRequest.env_for("/", method: "GET")
+    # No HTTP_ACCEPT header set
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_equal 200, response.status
+    assert_equal "text/html; charset=utf-8", response.headers["content-type"]
+    assert_includes response.body, "<title>CF::MCP"
+  end
+
+  def test_landing_page_served_with_wildcard_accept
+    env = Rack::MockRequest.env_for("/", method: "GET")
+    env["HTTP_ACCEPT"] = "*/*"
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_equal 200, response.status
+    assert_equal "text/html; charset=utf-8", response.headers["content-type"]
+    assert_includes response.body, "<title>CF::MCP"
   end
 
   def test_cors_headers_on_landing_page

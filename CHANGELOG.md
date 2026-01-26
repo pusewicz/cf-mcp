@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.1] - 2026-01-26
+
+### Added
+
+- Server metadata: title ("Cute Framework MCP"), website URL, and logo icon
+- Cute Framework logo served as static asset at `/logo.svg`
+- Protocol version output in MCP server info
+
 ## [0.13.1] - 2026-01-16
 
 ### Added
@@ -167,6 +175,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `cf_list_category` - List items by category
   - `cf_get_details` - Get full documentation by name
 
+[0.14.1]: https://github.com/pusewicz/cf-mcp/compare/v0.14.0...v0.14.1
 [0.13.1]: https://github.com/pusewicz/cf-mcp/compare/v0.13.0...v0.13.1
 [0.13.0]: https://github.com/pusewicz/cf-mcp/compare/v0.12.1...v0.13.0
 [0.12.1]: https://github.com/pusewicz/cf-mcp/compare/v0.12.0...v0.12.1

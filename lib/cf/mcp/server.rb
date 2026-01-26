@@ -73,8 +73,8 @@ module CF
           version: CF::MCP::VERSION,
           website_url: WEBSITE_URL,
           icons: [
-            ::MCP::Icon.new(src: "#{WEBSITE_URL}/logo.svg", mime_type: "image/svg+xml", sizes: ["any"]),
-            ::MCP::Icon.new(src: "#{WEBSITE_URL}/logo.png", mime_type: "image/png", sizes: ["262x218"])
+            ::MCP::Icon.new(src: "#{WEBSITE_URL}/favicon.svg", mime_type: "image/svg+xml", sizes: ["any"]),
+            ::MCP::Icon.new(src: "#{WEBSITE_URL}/favicon-96x96.png", mime_type: "image/png", sizes: ["96x96"])
           ],
           tools: TOOLS,
           resources: build_topic_resources(index)
@@ -120,15 +120,19 @@ module CF
             [404, {"content-type" => "application/json"}, ['{"error":"Not found"}']]
           when %r{^/http(/|$)}
             http_transport.handle_request(request)
-          when "/logo.svg", "/logo.png", %r{^/favicon.*\.(png|ico)$}
+          when %r{^/(favicon|apple-touch-icon|web-app-manifest|site\.webmanifest).*$}
             # Serve static assets from public directory
             filename = path.delete_prefix("/")
-            # Map favicon.ico to 32x32 PNG (standard ICO size)
-            filename = "favicon-32x32.png" if filename == "favicon.ico"
-            logo_path = File.join(public_dir, filename)
-            if File.exist?(logo_path)
-              content_type = filename.end_with?(".svg") ? "image/svg+xml" : "image/png"
-              [200, {"content-type" => content_type, "cache-control" => "public, max-age=86400"}, [File.read(logo_path, mode: "rb")]]
+            asset_path = File.join(public_dir, filename)
+            if File.exist?(asset_path)
+              content_type = case filename
+              when /\.svg$/ then "image/svg+xml"
+              when /\.png$/ then "image/png"
+              when /\.ico$/ then "image/x-icon"
+              when /\.webmanifest$/ then "application/manifest+json"
+              else "application/octet-stream"
+              end
+              [200, {"content-type" => content_type, "cache-control" => "public, max-age=86400"}, [File.read(asset_path, mode: "rb")]]
             else
               [404, {"content-type" => "text/plain"}, ["Not found"]]
             end

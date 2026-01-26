@@ -47,6 +47,7 @@ class CF::MCP::ServerTest < Minitest::Test
     expected_url = "#{CF::MCP::Server::WEBSITE_URL}#{CF::MCP::Server::LOGO_PATH}"
     assert_equal expected_url, icon.src
     assert_equal "image/svg+xml", icon.mime_type
+    assert_equal "any", icon.sizes
   end
 
   def test_server_has_index

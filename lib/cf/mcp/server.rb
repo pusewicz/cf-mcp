@@ -74,7 +74,11 @@ module CF
           version: CF::MCP::VERSION,
           website_url: WEBSITE_URL,
           icons: [
-            ::MCP::Icon.new(src: "#{WEBSITE_URL}#{LOGO_PATH}", mime_type: "image/svg+xml")
+            ::MCP::Icon.new(
+              src: "#{WEBSITE_URL}#{LOGO_PATH}",
+              mime_type: "image/svg+xml",
+              sizes: "any"
+            )
           ],
           tools: TOOLS,
           resources: build_topic_resources(index)

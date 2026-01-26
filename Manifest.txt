@@ -35,10 +35,7 @@ lib/cf/mcp/tools/list_topics.rb
 lib/cf/mcp/tools/member_search.rb
 lib/cf/mcp/tools/parameter_search.rb
 lib/cf/mcp/tools/response_helpers.rb
-lib/cf/mcp/tools/search_enums.rb
-lib/cf/mcp/tools/search_functions.rb
 lib/cf/mcp/tools/search_result_formatter.rb
-lib/cf/mcp/tools/search_structs.rb
 lib/cf/mcp/tools/search_tool.rb
 lib/cf/mcp/topic_parser.rb
 lib/cf/mcp/version.rb

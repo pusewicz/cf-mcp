@@ -40,13 +40,19 @@ class CF::MCP::ServerTest < Minitest::Test
     assert_equal CF::MCP::Server::WEBSITE_URL, @server.server.website_url
   end
 
-  def test_server_has_icon
+  def test_server_has_icons
     icons = @server.server.icons
-    assert_equal 1, icons.size
-    icon = icons.first
-    expected_url = "#{CF::MCP::Server::WEBSITE_URL}#{CF::MCP::Server::LOGO_PATH}"
-    assert_equal expected_url, icon.src
-    assert_equal "image/svg+xml", icon.mime_type
+    assert_equal 2, icons.size
+
+    svg_icon = icons.find { |i| i.mime_type == "image/svg+xml" }
+    assert svg_icon, "Should have SVG icon"
+    assert_equal "#{CF::MCP::Server::WEBSITE_URL}/logo.svg", svg_icon.src
+    assert_equal ["any"], svg_icon.sizes
+
+    png_icon = icons.find { |i| i.mime_type == "image/png" }
+    assert png_icon, "Should have PNG icon"
+    assert_equal "#{CF::MCP::Server::WEBSITE_URL}/logo.png", png_icon.src
+    assert_equal ["262x218"], png_icon.sizes
   end
 
   def test_server_has_index
@@ -468,6 +474,18 @@ class CF::MCP::ServerHTTPTest < Minitest::Test
     assert_equal "image/svg+xml", response.headers["content-type"]
     assert_includes response.headers["cache-control"], "public"
     assert_includes response.body, "<svg"
+    assert_cors_headers(response)
+  end
+
+  def test_logo_png_served_as_static_asset
+    env = Rack::MockRequest.env_for("/logo.png", method: "GET")
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_equal 200, response.status
+    assert_equal "image/png", response.headers["content-type"]
+    assert_includes response.headers["cache-control"], "public"
+    # PNG magic bytes
+    assert response.body.start_with?("\x89PNG".b)
     assert_cors_headers(response)
   end
 

@@ -8,7 +8,8 @@ body {
   background: #0d1117;
   color: #c9d1d9;
 }
-h1 { color: #58a6ff; margin-bottom: 0.5rem; }
+h1 { color: #58a6ff; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+.title-logo { height: 1.5em; width: auto; }
 h2 { color: #58a6ff; margin-top: 2rem; border-bottom: 1px solid #30363d; padding-bottom: 0.5rem; }
 a { color: #58a6ff; }
 code {

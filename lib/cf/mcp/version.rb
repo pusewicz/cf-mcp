@@ -2,6 +2,6 @@
 
 module CF
   module MCP
-    VERSION = "0.15.4"
+    VERSION = "0.15.5"
   end
 end

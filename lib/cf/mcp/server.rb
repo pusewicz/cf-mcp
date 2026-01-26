@@ -61,7 +61,6 @@ module CF
 
       PROTOCOL_VERSION = "2025-06-18"
       WEBSITE_URL = ENV.fetch("FLY_APP_NAME", nil) ? "https://#{ENV["FLY_APP_NAME"]}.fly.dev" : "https://cf-mcp.fly.dev"
-      LOGO_PATH = "/logo.svg"
       PUBLIC_DIR = File.join(__dir__, "public")
 
       def initialize(index)
@@ -74,7 +73,8 @@ module CF
           version: CF::MCP::VERSION,
           website_url: WEBSITE_URL,
           icons: [
-            ::MCP::Icon.new(src: "#{WEBSITE_URL}#{LOGO_PATH}", mime_type: "image/svg+xml", sizes: ["any"])
+            ::MCP::Icon.new(src: "#{WEBSITE_URL}/logo.svg", mime_type: "image/svg+xml", sizes: ["any"]),
+            ::MCP::Icon.new(src: "#{WEBSITE_URL}/logo.png", mime_type: "image/png", sizes: ["262x218"])
           ],
           tools: TOOLS,
           resources: build_topic_resources(index)
@@ -120,11 +120,13 @@ module CF
             [404, {"content-type" => "application/json"}, ['{"error":"Not found"}']]
           when %r{^/http(/|$)}
             http_transport.handle_request(request)
-          when "/logo.svg"
+          when "/logo.svg", "/logo.png"
             # Serve logo as static asset
-            logo_path = File.join(public_dir, "logo.svg")
+            filename = path.delete_prefix("/")
+            logo_path = File.join(public_dir, filename)
             if File.exist?(logo_path)
-              [200, {"content-type" => "image/svg+xml", "cache-control" => "public, max-age=86400"}, [File.read(logo_path)]]
+              content_type = filename.end_with?(".svg") ? "image/svg+xml" : "image/png"
+              [200, {"content-type" => content_type, "cache-control" => "public, max-age=86400"}, [File.read(logo_path, mode: "rb")]]
             else
               [404, {"content-type" => "text/plain"}, ["Not found"]]
             end

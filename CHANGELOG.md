@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - MCP Inspector usage instructions in README
+- PNG icon (262x218) as additional server icon option
 
 ## [0.14.3] - 2026-01-26
 

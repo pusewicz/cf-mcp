@@ -16,6 +16,7 @@ lib/cf/mcp/models/function_doc.rb
 lib/cf/mcp/models/struct_doc.rb
 lib/cf/mcp/models/topic_doc.rb
 lib/cf/mcp/parser.rb
+lib/cf/mcp/public/logo.png
 lib/cf/mcp/public/logo.svg
 lib/cf/mcp/server.rb
 lib/cf/mcp/templates/index.erb

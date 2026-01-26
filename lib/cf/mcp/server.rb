@@ -59,9 +59,11 @@ module CF
         new(index).rack_app
       end
 
+      PROTOCOL_VERSION = "2025-06-18"
+
       def initialize(index)
         @index = index
-        configuration = ::MCP::Configuration.new(protocol_version: "2025-06-18")
+        configuration = ::MCP::Configuration.new(protocol_version: PROTOCOL_VERSION)
         @server = ::MCP::Server.new(
           name: "cf-mcp",
           configuration:,
@@ -178,6 +180,7 @@ module CF
         ->(index, tool_classes) {
           context = TemplateContext.new(
             version: CF::MCP::VERSION,
+            protocol_version: PROTOCOL_VERSION,
             stats: index.stats,
             categories: index.categories.sort,
             topics: index.topics_ordered.map { |t| {name: t.name, brief: t.brief} },
@@ -201,10 +204,11 @@ module CF
       class TemplateContext
         TEMPLATES_DIR = File.join(__dir__, "templates")
 
-        attr_reader :version, :stats, :categories, :topics, :tools, :tool_schemas_json
+        attr_reader :version, :protocol_version, :stats, :categories, :topics, :tools, :tool_schemas_json
 
-        def initialize(version:, stats:, categories:, topics:, tools:, tool_schemas_json:)
+        def initialize(version:, protocol_version:, stats:, categories:, topics:, tools:, tool_schemas_json:)
           @version = version
+          @protocol_version = protocol_version
           @stats = stats
           @categories = categories
           @topics = topics

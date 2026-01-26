@@ -40,6 +40,34 @@ pre code { background: none; padding: 0; }
 }
 .stat-value { font-size: 2rem; font-weight: bold; color: #58a6ff; }
 .stat-label { color: #8b949e; font-size: 0.9rem; }
+.server-info {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+.server-info th, .server-info td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #30363d;
+}
+.server-info tr:last-child th, .server-info tr:last-child td {
+  border-bottom: none;
+}
+.server-info th {
+  background: #0d1117;
+  color: #8b949e;
+  font-weight: normal;
+  width: 40%;
+}
+.server-info td {
+  color: #c9d1d9;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
 .endpoint {
   background: #161b22;
   padding: 1rem;

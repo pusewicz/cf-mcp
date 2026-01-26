@@ -61,7 +61,7 @@ module CF
 
       def initialize(index)
         @index = index
-        configuration = ::MCP::Configuration.new(protocol_version: "2024-11-05")
+        configuration = ::MCP::Configuration.new(protocol_version: "2025-06-18")
         @server = ::MCP::Server.new(
           name: "cf-mcp",
           configuration:,

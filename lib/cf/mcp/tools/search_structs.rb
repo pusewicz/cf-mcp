@@ -11,7 +11,10 @@ module CF
         extend ResponseHelpers
         extend SearchResultFormatter
 
+        TITLE = "CF: Search Structs"
+
         tool_name "cf_search_structs"
+        title TITLE
         description "Search Cute Framework structs"
 
         input_schema(
@@ -22,6 +25,14 @@ module CF
             limit: {type: "integer", description: "Maximum results (default: 20)"}
           },
           required: ["query"]
+        )
+
+        annotations(
+          title: TITLE,
+          read_only_hint: true,
+          destructive_hint: false,
+          idempotent_hint: true,
+          open_world_hint: false
         )
 
         DETAILS_TIP = "**Tip:** Use `cf_get_details` with an exact name to get full documentation including members and examples."

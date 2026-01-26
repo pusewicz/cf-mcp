@@ -9,7 +9,10 @@ module CF
       class MemberSearch < ::MCP::Tool
         extend ResponseHelpers
 
+        TITLE = "CF: Member Search"
+
         tool_name "cf_member_search"
+        title TITLE
         description "Search Cute Framework structs by member name or type"
 
         input_schema(
@@ -19,6 +22,14 @@ module CF
             limit: {type: "integer", description: "Maximum number of results to return (default: 20)"}
           },
           required: ["query"]
+        )
+
+        annotations(
+          title: TITLE,
+          read_only_hint: true,
+          destructive_hint: false,
+          idempotent_hint: true,
+          open_world_hint: false
         )
 
         def self.call(query:, limit: 20, server_context: {})

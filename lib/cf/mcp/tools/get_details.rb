@@ -9,7 +9,10 @@ module CF
       class GetDetails < ::MCP::Tool
         extend ResponseHelpers
 
+        TITLE = "CF: Get Details"
+
         tool_name "cf_get_details"
+        title TITLE
         description "Get detailed documentation for a specific Cute Framework item by exact name"
 
         input_schema(
@@ -18,6 +21,14 @@ module CF
             name: {type: "string", description: "Exact name of the item (e.g., 'cf_make_app', 'CF_Sprite', 'CF_PlayDirection')"}
           },
           required: ["name"]
+        )
+
+        annotations(
+          title: TITLE,
+          read_only_hint: true,
+          destructive_hint: false,
+          idempotent_hint: true,
+          open_world_hint: false
         )
 
         NAMING_TIP = "**Tip:** Cute Framework uses `cf_` prefix for functions and `CF_` prefix for types (structs/enums)."

@@ -9,7 +9,10 @@ module CF
       class FindRelated < ::MCP::Tool
         extend ResponseHelpers
 
+        TITLE = "CF: Find Related"
+
         tool_name "cf_find_related"
+        title TITLE
         description "Find all items related to a given Cute Framework item (bidirectional relationship search)"
 
         input_schema(
@@ -18,6 +21,14 @@ module CF
             name: {type: "string", description: "Name of the item to find relations for (e.g., 'CF_Sprite', 'cf_make_sprite')"}
           },
           required: ["name"]
+        )
+
+        annotations(
+          title: TITLE,
+          read_only_hint: true,
+          destructive_hint: false,
+          idempotent_hint: true,
+          open_world_hint: false
         )
 
         def self.call(name:, server_context: {})

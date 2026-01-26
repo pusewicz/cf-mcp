@@ -11,7 +11,10 @@ module CF
         extend ResponseHelpers
         extend SearchResultFormatter
 
+        TITLE = "CF: Search"
+
         tool_name "cf_search"
+        title TITLE
         description "Search Cute Framework documentation across all types (functions, structs, enums, topics)"
 
         input_schema(
@@ -23,6 +26,14 @@ module CF
             limit: {type: "integer", description: "Maximum number of results to return (default: 20)"}
           },
           required: ["query"]
+        )
+
+        annotations(
+          title: TITLE,
+          read_only_hint: true,
+          destructive_hint: false,
+          idempotent_hint: true,
+          open_world_hint: false
         )
 
         DETAILS_TIP = "**Tip:** Use `cf_get_details` for API items or `cf_get_topic` for topic guides to get full documentation."

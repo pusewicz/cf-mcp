@@ -35,6 +35,34 @@ cf-mcp stdio --root /path/to/cute_framework_project  # STDIO mode
 cf-mcp http --root /path/to/cute_framework_project   # HTTP mode with web UI
 ```
 
+## Inspecting with MCP Inspector
+
+You can use the [MCP Inspector](https://github.com/modelcontextprotocol/inspector) to debug and test the server.
+
+### STDIO Mode
+
+Run the inspector with the cf-mcp command directly:
+
+```bash
+npx @modelcontextprotocol/inspector cf-mcp stdio --root /path/to/cute_framework
+```
+
+This starts the inspector web UI at `http://localhost:6274` connected to your MCP server.
+
+### HTTP Mode
+
+First, start the server in HTTP mode:
+
+```bash
+cf-mcp http --root /path/to/cute_framework --port 9292
+```
+
+Then launch the inspector and connect using Streamable HTTP transport to:
+
+```
+http://localhost:9292/http
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

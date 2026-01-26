@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Landing page now serves HTML by default for GET requests without an explicit `Accept: application/json` header, fixing W3C validator compatibility
 
+### Changed
+
+- Improved favicon support with proper sizes (16x16, 32x32, 96x96) and SVG fallback
+
 ## [0.15.2] - 2026-01-26
 
 ### Added

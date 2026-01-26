@@ -120,10 +120,11 @@ module CF
             [404, {"content-type" => "application/json"}, ['{"error":"Not found"}']]
           when %r{^/http(/|$)}
             http_transport.handle_request(request)
-          when "/logo.svg", "/logo.png", "/favicon.png", "/favicon.ico"
+          when "/logo.svg", "/logo.png", %r{^/favicon.*\.(png|ico)$}
             # Serve static assets from public directory
             filename = path.delete_prefix("/")
-            filename = "favicon.png" if filename == "favicon.ico" # Serve PNG for .ico requests
+            # Map favicon.ico to 32x32 PNG (standard ICO size)
+            filename = "favicon-32x32.png" if filename == "favicon.ico"
             logo_path = File.join(public_dir, filename)
             if File.exist?(logo_path)
               content_type = filename.end_with?(".svg") ? "image/svg+xml" : "image/png"

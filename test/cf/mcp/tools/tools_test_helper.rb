@@ -4,7 +4,8 @@ require "test_helper"
 
 module ToolsTestHelper
   def setup_test_index
-    @index = CF::MCP::Index.new
+    @index = CF::MCP::Index.instance
+    @index.reset!
     @index.add(CF::MCP::Models::FunctionDoc.new(
       name: "cf_make_sprite",
       category: "sprite",

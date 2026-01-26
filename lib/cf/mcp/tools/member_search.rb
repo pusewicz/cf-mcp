@@ -33,8 +33,7 @@ module CF
         )
 
         def self.call(query:, limit: 20, server_context: {})
-          index = server_context[:index]
-          return error_response("Index not available") unless index
+          index = Index.instance
 
           pattern = Regexp.new(Regexp.escape(query), Regexp::IGNORECASE)
           results = []

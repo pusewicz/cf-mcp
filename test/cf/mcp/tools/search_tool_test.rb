@@ -40,13 +40,6 @@ class CF::MCP::Tools::SearchToolTest < Minitest::Test
     assert_includes response.content.first[:text], "No results found"
   end
 
-  def test_handles_missing_index
-    response = CF::MCP::Tools::SearchTool.call(query: "test", server_context: {})
-
-    assert response.error?
-    assert_includes response.content.first[:text], "Index not available"
-  end
-
   def test_respects_limit_parameter
     response = CF::MCP::Tools::SearchTool.call(query: "sprite", limit: 1, server_context: @server_context)
 

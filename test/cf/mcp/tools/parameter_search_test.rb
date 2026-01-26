@@ -47,11 +47,4 @@ class CF::MCP::Tools::ParameterSearchTest < Minitest::Test
     text = response.content.first[:text]
     assert_includes text, "No functions found"
   end
-
-  def test_handles_missing_index
-    response = CF::MCP::Tools::ParameterSearch.call(type: "test", server_context: {})
-
-    assert response.error?
-    assert_includes response.content.first[:text], "Index not available"
-  end
 end

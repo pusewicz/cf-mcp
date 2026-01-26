@@ -37,8 +37,7 @@ module CF
         )
 
         def self.call(type:, direction: "both", server_context: {})
-          index = server_context[:index]
-          return error_response("Index not available") unless index
+          index = Index.instance
 
           pattern = Regexp.new(Regexp.escape(type), Regexp::IGNORECASE)
           input_matches = []

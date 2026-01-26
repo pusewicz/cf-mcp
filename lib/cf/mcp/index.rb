@@ -1,11 +1,19 @@
 # frozen_string_literal: true
 
+require "singleton"
+
 module CF
   module MCP
     class Index
+      include Singleton
+
       attr_reader :items, :by_type, :by_category, :topic_references
 
       def initialize
+        reset!
+      end
+
+      def reset!
         @items = {}
         @by_type = {
           function: [],

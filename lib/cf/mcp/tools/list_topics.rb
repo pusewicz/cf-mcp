@@ -32,8 +32,7 @@ module CF
         )
 
         def self.call(category: nil, ordered: false, server_context: {})
-          index = server_context[:index]
-          return error_response("Index not available") unless index
+          index = Index.instance
 
           topics = ordered ? index.topics_ordered : index.topics
 

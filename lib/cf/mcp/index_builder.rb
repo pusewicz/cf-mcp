@@ -18,7 +18,8 @@ module CF
 
       def build
         parser = Parser.new
-        index = Index.new
+        index = Index.instance
+        index.reset!
 
         parser.parse_directory(headers_path).each do |item|
           index.add(item)

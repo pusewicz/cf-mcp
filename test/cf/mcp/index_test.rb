@@ -4,7 +4,8 @@ require "test_helper"
 
 class CF::MCP::IndexTest < Minitest::Test
   def setup
-    @index = CF::MCP::Index.new
+    @index = CF::MCP::Index.instance
+    @index.reset!
     @func = CF::MCP::Models::FunctionDoc.new(
       name: "test_func",
       category: "test",

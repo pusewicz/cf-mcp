@@ -48,11 +48,4 @@ class CF::MCP::Tools::MemberSearchTest < Minitest::Test
 
     refute response.error?
   end
-
-  def test_handles_missing_index
-    response = CF::MCP::Tools::MemberSearch.call(query: "test", server_context: {})
-
-    assert response.error?
-    assert_includes response.content.first[:text], "Index not available"
-  end
 end

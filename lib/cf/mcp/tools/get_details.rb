@@ -34,8 +34,7 @@ module CF
         NAMING_TIP = "**Tip:** Cute Framework uses `cf_` prefix for functions and `CF_` prefix for types (structs/enums)."
 
         def self.call(name:, server_context: {})
-          index = server_context[:index]
-          return error_response("Index not available") unless index
+          index = Index.instance
 
           item = index.find(name)
 

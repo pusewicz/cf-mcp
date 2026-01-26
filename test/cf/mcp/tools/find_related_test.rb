@@ -43,11 +43,4 @@ class CF::MCP::Tools::FindRelatedTest < Minitest::Test
     text = response.content.first[:text]
     assert_includes text, "No related items"
   end
-
-  def test_handles_missing_index
-    response = CF::MCP::Tools::FindRelated.call(name: "test", server_context: {})
-
-    assert response.error?
-    assert_includes response.content.first[:text], "Index not available"
-  end
 end

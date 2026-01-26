@@ -1,30 +1,11 @@
 # frozen_string_literal: true
 
 require "mcp"
-require_relative "tools/search_tool"
-require_relative "tools/list_category"
-require_relative "tools/get_details"
-require_relative "tools/find_related"
-require_relative "tools/parameter_search"
-require_relative "tools/member_search"
-require_relative "tools/list_topics"
-require_relative "tools/get_topic"
 
 module CF
   module MCP
     class Server
       attr_reader :server, :index
-
-      TOOLS = [
-        Tools::SearchTool,
-        Tools::ListCategory,
-        Tools::GetDetails,
-        Tools::FindRelated,
-        Tools::ParameterSearch,
-        Tools::MemberSearch,
-        Tools::ListTopics,
-        Tools::GetTopic
-      ].freeze
 
       CORS_HEADERS = {
         "access-control-allow-origin" => "*",
@@ -59,6 +40,7 @@ module CF
 
       def initialize(index)
         @index = index
+
         configuration = ::MCP::Configuration.new(protocol_version: PROTOCOL_VERSION)
         @server = ::MCP::Server.new(
           name: "cf-mcp",
@@ -70,7 +52,16 @@ module CF
             ::MCP::Icon.new(src: "#{WEBSITE_URL}/favicon.svg", mime_type: "image/svg+xml", sizes: ["any"]),
             ::MCP::Icon.new(src: "#{WEBSITE_URL}/favicon-96x96.png", mime_type: "image/png", sizes: ["96x96"])
           ],
-          tools: TOOLS,
+          tools: [
+            Tools::SearchTool,
+            Tools::ListCategory,
+            Tools::GetDetails,
+            Tools::FindRelated,
+            Tools::ParameterSearch,
+            Tools::MemberSearch,
+            Tools::ListTopics,
+            Tools::GetTopic
+          ],
           resources: build_topic_resources(index)
         )
         @server.server_context = {index: index}
@@ -94,7 +85,7 @@ module CF
 
         landing_page = build_landing_page
         index = @index
-        tools = TOOLS
+        tools = @server.tools.values
         cors_headers = CORS_HEADERS
         public_dir = PUBLIC_DIR
 

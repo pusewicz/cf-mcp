@@ -20,5 +20,16 @@ module CF
     def self.root
       @root ||= Pathname.new(File.expand_path("../..", __dir__))
     end
+
+    module Tools
+      autoload :SearchTool, "cf/mcp/tools/search_tool"
+      autoload :ListCategory, "cf/mcp/tools/list_category"
+      autoload :GetDetails, "cf/mcp/tools/get_details"
+      autoload :FindRelated, "cf/mcp/tools/find_related"
+      autoload :ParameterSearch, "cf/mcp/tools/parameter_search"
+      autoload :MemberSearch, "cf/mcp/tools/member_search"
+      autoload :ListTopics, "cf/mcp/tools/list_topics"
+      autoload :GetTopic, "cf/mcp/tools/get_topic"
+    end
   end
 end

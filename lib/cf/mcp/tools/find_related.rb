@@ -32,8 +32,7 @@ module CF
         )
 
         def self.call(name:, server_context: {})
-          index = server_context[:index]
-          return error_response("Index not available") unless index
+          index = Index.instance
 
           item = index.find(name)
           return text_response("Not found: '#{name}'") unless item

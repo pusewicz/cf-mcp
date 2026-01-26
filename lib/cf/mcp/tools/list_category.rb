@@ -18,7 +18,7 @@ module CF
         input_schema(
           type: "object",
           properties: {
-            category: {type: "string", description: "Category name (e.g., 'app', 'sprite', 'graphics'). Leave empty to list all categories."},
+            category: {type: "string", enum: Index.instance.categories, description: "Category name. Leave empty to list all categories."},
             type: {type: "string", enum: ["function", "struct", "enum"], description: "Optional: filter by item type"}
           }
         )
@@ -32,8 +32,7 @@ module CF
         )
 
         def self.call(category: nil, type: nil, server_context: {})
-          index = server_context[:index]
-          return error_response("Index not available") unless index
+          index = Index.instance
 
           if category.nil? || category.empty?
             # List all categories with counts by type

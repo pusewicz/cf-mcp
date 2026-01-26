@@ -71,7 +71,8 @@ class CF::MCP::ModelsTest < Minitest::Test
   end
 
   def test_format_related_items_with_index
-    index = CF::MCP::Index.new
+    index = CF::MCP::Index.instance
+    index.reset!
     index.add(CF::MCP::Models::FunctionDoc.new(
       name: "cf_sprite_play",
       category: "sprite",
@@ -110,7 +111,8 @@ class CF::MCP::ModelsTest < Minitest::Test
   end
 
   def test_to_text_includes_enriched_related_items
-    index = CF::MCP::Index.new
+    index = CF::MCP::Index.instance
+    index.reset!
     index.add(CF::MCP::Models::FunctionDoc.new(
       name: "cf_sprite_play",
       category: "sprite",

@@ -6,7 +6,8 @@ require "stringio"
 
 class CF::MCP::ServerTest < Minitest::Test
   def setup
-    @index = CF::MCP::Index.new
+    @index = CF::MCP::Index.instance
+    @index.reset!
     @index.add(CF::MCP::Models::FunctionDoc.new(
       name: "cf_make_sprite",
       category: "sprite",
@@ -63,7 +64,7 @@ class CF::MCP::ServerTest < Minitest::Test
     assert_equal @index, @server.server.server_context[:index]
   end
 
-  def test_server_tools_constant_contains_all_tool_classes
+  def test_server_tools_contains_all_tool_classes
     expected_tools = [
       CF::MCP::Tools::SearchTool,
       CF::MCP::Tools::ListCategory,
@@ -75,11 +76,11 @@ class CF::MCP::ServerTest < Minitest::Test
       CF::MCP::Tools::GetTopic
     ]
 
-    assert_equal expected_tools, CF::MCP::Server::TOOLS
+    assert_equal expected_tools, @server.server.tools.values
   end
 
   def test_all_tools_have_title_constant
-    CF::MCP::Server::TOOLS.each do |tool|
+    @server.server.tools.each_value do |tool|
       assert tool.const_defined?(:TITLE), "#{tool.name} should define TITLE constant"
       assert_kind_of String, tool::TITLE
       refute_empty tool::TITLE, "#{tool.name} TITLE should not be empty"
@@ -87,13 +88,13 @@ class CF::MCP::ServerTest < Minitest::Test
   end
 
   def test_all_tools_have_title_set
-    CF::MCP::Server::TOOLS.each do |tool|
+    @server.server.tools.each_value do |tool|
       assert_equal tool::TITLE, tool.title_value, "#{tool.name} should have title set to TITLE constant"
     end
   end
 
   def test_all_tools_have_read_only_annotations
-    CF::MCP::Server::TOOLS.each do |tool|
+    @server.server.tools.each_value do |tool|
       annotations = tool.annotations_value
       assert annotations, "#{tool.name} should have annotations"
       assert_equal true, annotations.read_only_hint, "#{tool.name} should be read-only"
@@ -108,7 +109,8 @@ end
 # Integration tests using STDIO transport simulation
 class CF::MCP::ServerIntegrationTest < Minitest::Test
   def setup
-    @index = CF::MCP::Index.new
+    @index = CF::MCP::Index.instance
+    @index.reset!
     @index.add(CF::MCP::Models::FunctionDoc.new(
       name: "cf_make_sprite",
       category: "sprite",
@@ -314,7 +316,8 @@ end
 # HTTP server tests (CORS, routing, landing page)
 class CF::MCP::ServerHTTPTest < Minitest::Test
   def setup
-    @index = CF::MCP::Index.new
+    @index = CF::MCP::Index.instance
+    @index.reset!
     @index.add(CF::MCP::Models::FunctionDoc.new(
       name: "cf_make_sprite",
       category: "sprite",
@@ -420,7 +423,7 @@ class CF::MCP::ServerHTTPTest < Minitest::Test
     response = Rack::MockResponse.new(*@app.call(env))
 
     # Should show all configured tools
-    CF::MCP::Server::TOOLS.each do |tool|
+    @http_server.server.tools.each_value do |tool|
       assert_includes response.body, tool.tool_name
     end
   end

@@ -22,7 +22,7 @@ module CF
           properties: {
             query: {type: "string", description: "Search query (searches in name, description, and remarks)"},
             type: {type: "string", enum: ["function", "struct", "enum", "topic"], description: "Optional: filter by item type"},
-            category: {type: "string", description: "Optional: filter by category (e.g., 'app', 'sprite', 'graphics')"},
+            category: {type: "string", enum: Index.instance.categories, description: "Optional: filter by category"},
             limit: {type: "integer", description: "Maximum number of results to return (default: 20)"}
           },
           required: ["query"]
@@ -53,8 +53,7 @@ module CF
         }.freeze
 
         def self.call(query:, type: nil, category: nil, limit: 20, server_context: {})
-          index = server_context[:index]
-          return error_response("Index not available") unless index
+          index = Index.instance
 
           results = index.search(query, type: type, category: category, limit: limit)
 

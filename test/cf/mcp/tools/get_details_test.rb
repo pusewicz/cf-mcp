@@ -49,20 +49,17 @@ class CF::MCP::Tools::GetDetailsTest < Minitest::Test
   end
 
   def test_completely_not_found
-    empty_index = CF::MCP::Index.new
-    response = CF::MCP::Tools::GetDetails.call(name: "nonexistent", server_context: {index: empty_index})
+    # Reset and use an empty index
+    CF::MCP::Index.instance.reset!
+    response = CF::MCP::Tools::GetDetails.call(name: "nonexistent", server_context: @server_context)
 
     refute response.error?
     text = response.content.first[:text]
     assert_includes text, "Not found"
     refute_includes text, "Similar items"
-  end
 
-  def test_handles_missing_index
-    response = CF::MCP::Tools::GetDetails.call(name: "test", server_context: {})
-
-    assert response.error?
-    assert_includes response.content.first[:text], "Index not available"
+    # Restore test index for other tests
+    setup_test_index
   end
 
   def test_includes_naming_tip_on_not_found

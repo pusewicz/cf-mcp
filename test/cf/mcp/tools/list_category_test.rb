@@ -48,13 +48,6 @@ class CF::MCP::Tools::ListCategoryTest < Minitest::Test
     assert_includes response.content.first[:text], "Available categories"
   end
 
-  def test_handles_missing_index
-    response = CF::MCP::Tools::ListCategory.call(server_context: {})
-
-    assert response.error?
-    assert_includes response.content.first[:text], "Index not available"
-  end
-
   def test_with_struct_type_filter
     response = CF::MCP::Tools::ListCategory.call(
       category: "sprite",

@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Logo icon displayed in the web dashboard title
 
+### Changed
+
+- Icon now includes `sizes: "any"` per MCP spec for scalable SVG
+
 ## [0.14.1] - 2026-01-26
 
 ### Added

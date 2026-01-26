@@ -74,10 +74,7 @@ lib/cf/mcp/
 │   ├── struct_doc.rb   # StructDoc with members
 │   └── enum_doc.rb     # EnumDoc with entries
 ├── tools/
-│   ├── search_tool.rb      # search - search all types
-│   ├── search_functions.rb # search_functions
-│   ├── search_structs.rb   # search_structs
-│   ├── search_enums.rb     # search_enums
+│   ├── search_tool.rb      # search - search all types with optional type/category filters
 │   ├── list_category.rb    # list_category
 │   └── get_details.rb      # get_details - full docs by name
 └── templates/          # Web UI for HTTP mode
@@ -99,9 +96,8 @@ lib/cf/mcp/
 - Prefix match = 500, suffix = 400, contains = 100
 - Brief/category/remarks matches add points
 
-**Tools** - Six MCP tools for documentation access:
-- `search` - Search all types with filtering
-- `search_functions`, `search_structs`, `search_enums` - Type-specific search
+**Tools** - MCP tools for documentation access:
+- `search` - Search all types with optional `type` and `category` filters
 - `list_category` - List items by category
 - `get_details` - Full documentation by exact name
 

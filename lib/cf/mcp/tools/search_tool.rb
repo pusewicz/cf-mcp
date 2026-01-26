@@ -36,7 +36,21 @@ module CF
           open_world_hint: false
         )
 
-        DETAILS_TIP = "**Tip:** Use `get_details` for API items or `get_topic` for topic guides to get full documentation."
+        DETAILS_TIPS = {
+          "function" => "**Tip:** Use `get_details` with an exact name to get full documentation including signature, parameters, and examples.",
+          "struct" => "**Tip:** Use `get_details` with an exact name to get full documentation including members and examples.",
+          "enum" => "**Tip:** Use `get_details` with an exact name to get full documentation including values and examples.",
+          "topic" => "**Tip:** Use `get_topic` with an exact name to get the full topic guide.",
+          nil => "**Tip:** Use `get_details` for API items or `get_topic` for topic guides to get full documentation."
+        }.freeze
+
+        TYPE_LABELS = {
+          "function" => "function(s)",
+          "struct" => "struct(s)",
+          "enum" => "enum(s)",
+          "topic" => "topic(s)",
+          nil => "result(s)"
+        }.freeze
 
         def self.call(query:, type: nil, category: nil, limit: 20, server_context: {})
           index = server_context[:index]
@@ -44,13 +58,19 @@ module CF
 
           results = index.search(query, type: type, category: category, limit: limit)
 
+          filter_suggestion = if type
+            "To find more results, narrow your search with a `category` filter."
+          else
+            "To find more results, narrow your search with `type` or `category` filters."
+          end
+
           text = format_search_results(
             results,
             query: query,
-            type_label: "result(s)",
+            type_label: TYPE_LABELS[type],
             limit: limit,
-            details_tip: DETAILS_TIP,
-            filter_suggestion: "To find more results, narrow your search with `type` or `category` filters."
+            details_tip: DETAILS_TIPS[type],
+            filter_suggestion: filter_suggestion
           )
           text_response(text)
         end

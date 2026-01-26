@@ -66,9 +66,6 @@ class CF::MCP::ServerTest < Minitest::Test
   def test_server_tools_constant_contains_all_tool_classes
     expected_tools = [
       CF::MCP::Tools::SearchTool,
-      CF::MCP::Tools::SearchFunctions,
-      CF::MCP::Tools::SearchStructs,
-      CF::MCP::Tools::SearchEnums,
       CF::MCP::Tools::ListCategory,
       CF::MCP::Tools::GetDetails,
       CF::MCP::Tools::FindRelated,
@@ -167,22 +164,25 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
     assert_includes text, "Loads a sprite"
   end
 
-  def test_stdio_search_functions_tool
+  def test_stdio_search_with_type_filter_function
     responses = run_stdio_requests([
       initialize_request(1),
-      tools_call_request(2, "search_functions", {query: "sprite"})
+      tools_call_request(2, "search", {query: "sprite", type: "function"})
     ])
 
     response = responses[1]
     refute response["result"]["isError"]
     text = response["result"]["content"].first["text"]
     assert_includes text, "cf_make_sprite"
+    assert_includes text, "function(s)"
+    # CF_Sprite appears in signature, but should not be listed as a struct result
+    refute_includes text, "(struct)"
   end
 
-  def test_stdio_search_structs_tool
+  def test_stdio_search_with_type_filter_struct
     responses = run_stdio_requests([
       initialize_request(1),
-      tools_call_request(2, "search_structs", {query: "sprite"})
+      tools_call_request(2, "search", {query: "sprite", type: "struct"})
     ])
 
     response = responses[1]
@@ -191,10 +191,10 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
     assert_includes text, "CF_Sprite"
   end
 
-  def test_stdio_search_enums_tool
+  def test_stdio_search_with_type_filter_enum
     responses = run_stdio_requests([
       initialize_request(1),
-      tools_call_request(2, "search_enums", {query: "direction"})
+      tools_call_request(2, "search", {query: "direction", type: "enum"})
     ])
 
     response = responses[1]
@@ -249,13 +249,10 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
     refute response.key?("error")
 
     tools = response["result"]["tools"]
-    assert_equal 11, tools.size
+    assert_equal 8, tools.size
 
     tool_names = tools.map { |t| t["name"] }
     assert_includes tool_names, "search"
-    assert_includes tool_names, "search_functions"
-    assert_includes tool_names, "search_structs"
-    assert_includes tool_names, "search_enums"
     assert_includes tool_names, "list_category"
     assert_includes tool_names, "get_details"
     assert_includes tool_names, "list_topics"
@@ -575,7 +572,7 @@ class CF::MCP::ServerHTTPTest < Minitest::Test
     assert_equal 200, response.status
     body = JSON.parse(response.body)
     tools = body["result"]["tools"]
-    assert_equal 11, tools.size
+    assert_equal 8, tools.size
   end
 
   def test_get_with_json_accept_redirects_to_http

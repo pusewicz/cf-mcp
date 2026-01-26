@@ -2,9 +2,6 @@
 
 require "mcp"
 require_relative "tools/search_tool"
-require_relative "tools/search_functions"
-require_relative "tools/search_structs"
-require_relative "tools/search_enums"
 require_relative "tools/list_category"
 require_relative "tools/get_details"
 require_relative "tools/find_related"
@@ -20,9 +17,6 @@ module CF
 
       TOOLS = [
         Tools::SearchTool,
-        Tools::SearchFunctions,
-        Tools::SearchStructs,
-        Tools::SearchEnums,
         Tools::ListCategory,
         Tools::GetDetails,
         Tools::FindRelated,

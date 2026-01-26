@@ -82,12 +82,56 @@ class CF::MCP::Tools::SearchToolTest < Minitest::Test
     refute_includes response.content.first[:text], "(struct)"
   end
 
-  def test_includes_details_tip
+  def test_includes_generic_details_tip_without_type_filter
     response = CF::MCP::Tools::SearchTool.call(query: "sprite", server_context: @server_context)
 
     refute response.error?
-    assert_includes response.content.first[:text], "get_details"
-    assert_includes response.content.first[:text], "Tip"
+    text = response.content.first[:text]
+    assert_includes text, "get_details"
+    assert_includes text, "get_topic"
+    assert_includes text, "Tip"
+  end
+
+  def test_includes_function_specific_tip_with_function_type
+    response = CF::MCP::Tools::SearchTool.call(query: "sprite", type: "function", server_context: @server_context)
+
+    refute response.error?
+    text = response.content.first[:text]
+    assert_includes text, "signature"
+    assert_includes text, "parameters"
+    refute_includes text, "get_topic"
+  end
+
+  def test_includes_struct_specific_tip_with_struct_type
+    response = CF::MCP::Tools::SearchTool.call(query: "sprite", type: "struct", server_context: @server_context)
+
+    refute response.error?
+    text = response.content.first[:text]
+    assert_includes text, "members"
+    refute_includes text, "get_topic"
+  end
+
+  def test_includes_enum_specific_tip_with_enum_type
+    response = CF::MCP::Tools::SearchTool.call(query: "direction", type: "enum", server_context: @server_context)
+
+    refute response.error?
+    text = response.content.first[:text]
+    assert_includes text, "values"
+    refute_includes text, "get_topic"
+  end
+
+  def test_shows_type_specific_label_for_functions
+    response = CF::MCP::Tools::SearchTool.call(query: "sprite", type: "function", server_context: @server_context)
+
+    refute response.error?
+    assert_includes response.content.first[:text], "function(s)"
+  end
+
+  def test_shows_type_specific_label_for_structs
+    response = CF::MCP::Tools::SearchTool.call(query: "sprite", type: "struct", server_context: @server_context)
+
+    refute response.error?
+    assert_includes response.content.first[:text], "struct(s)"
   end
 
   def test_shows_truncation_when_limit_reached

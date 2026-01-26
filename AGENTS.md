@@ -74,12 +74,12 @@ lib/cf/mcp/
 │   ├── struct_doc.rb   # StructDoc with members
 │   └── enum_doc.rb     # EnumDoc with entries
 ├── tools/
-│   ├── search_tool.rb      # cf_search - search all types
-│   ├── search_functions.rb # cf_search_functions
-│   ├── search_structs.rb   # cf_search_structs
-│   ├── search_enums.rb     # cf_search_enums
-│   ├── list_category.rb    # cf_list_category
-│   └── get_details.rb      # cf_get_details - full docs by name
+│   ├── search_tool.rb      # search - search all types
+│   ├── search_functions.rb # search_functions
+│   ├── search_structs.rb   # search_structs
+│   ├── search_enums.rb     # search_enums
+│   ├── list_category.rb    # list_category
+│   └── get_details.rb      # get_details - full docs by name
 └── templates/          # Web UI for HTTP mode
     ├── index.erb
     ├── style.css
@@ -100,10 +100,10 @@ lib/cf/mcp/
 - Brief/category/remarks matches add points
 
 **Tools** - Six MCP tools for documentation access:
-- `cf_search` - Search all types with filtering
-- `cf_search_functions`, `cf_search_structs`, `cf_search_enums` - Type-specific search
-- `cf_list_category` - List items by category
-- `cf_get_details` - Full documentation by exact name
+- `search` - Search all types with filtering
+- `search_functions`, `search_structs`, `search_enums` - Type-specific search
+- `list_category` - List items by category
+- `get_details` - Full documentation by exact name
 
 ## Code Style
 

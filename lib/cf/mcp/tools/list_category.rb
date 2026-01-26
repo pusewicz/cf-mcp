@@ -9,9 +9,9 @@ module CF
       class ListCategory < ::MCP::Tool
         extend ResponseHelpers
 
-        TITLE = "CF: List Category"
+        TITLE = "List Category"
 
-        tool_name "cf_list_category"
+        tool_name "list_category"
         title TITLE
         description "List all items in a specific category, or list all available categories"
 
@@ -49,7 +49,7 @@ module CF
                   .join(", ")
                 "- **#{cat}** — #{items.size} items (#{type_breakdown})"
               end.join("\n")
-              text_response("Available categories:\n\n#{formatted}\n\n**Tip:** Use `cf_list_category` with a category name to see all items in that category.")
+              text_response("Available categories:\n\n#{formatted}\n\n**Tip:** Use `list_category` with a category name to see all items in that category.")
             end
           else
             # List items in the specified category
@@ -73,7 +73,7 @@ module CF
                 ""
               end
 
-              text_response("Items in '#{category}':\n\n#{formatted}#{topic_suggestion}\n\n**Tip:** Use `cf_get_details` with an exact name to get full documentation.")
+              text_response("Items in '#{category}':\n\n#{formatted}#{topic_suggestion}\n\n**Tip:** Use `get_details` with an exact name to get full documentation.")
             end
           end
         end

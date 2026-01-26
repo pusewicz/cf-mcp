@@ -9,9 +9,9 @@ module CF
       class FindRelated < ::MCP::Tool
         extend ResponseHelpers
 
-        TITLE = "CF: Find Related"
+        TITLE = "Find Related"
 
-        tool_name "cf_find_related"
+        tool_name "find_related"
         title TITLE
         description "Find all items related to a given Cute Framework item (bidirectional relationship search)"
 

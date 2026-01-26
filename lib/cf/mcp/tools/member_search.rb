@@ -9,9 +9,9 @@ module CF
       class MemberSearch < ::MCP::Tool
         extend ResponseHelpers
 
-        TITLE = "CF: Member Search"
+        TITLE = "Member Search"
 
-        tool_name "cf_member_search"
+        tool_name "member_search"
         title TITLE
         description "Search Cute Framework structs by member name or type"
 
@@ -72,7 +72,7 @@ module CF
             lines << ""
           end
 
-          lines << "**Tip:** Use `cf_get_details` with a struct name for full documentation."
+          lines << "**Tip:** Use `get_details` with a struct name for full documentation."
 
           text_response(lines.join("\n"))
         end

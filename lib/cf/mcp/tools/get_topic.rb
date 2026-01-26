@@ -9,9 +9,9 @@ module CF
       class GetTopic < ::MCP::Tool
         extend ResponseHelpers
 
-        TITLE = "CF: Get Topic"
+        TITLE = "Get Topic"
 
-        tool_name "cf_get_topic"
+        tool_name "get_topic"
         title TITLE
         description "Get the full content of a Cute Framework topic guide document"
 
@@ -44,7 +44,7 @@ module CF
             }
 
             if suggestions.empty?
-              text_response("Topic not found: '#{name}'\n\nUse `cf_list_topics` to see available topics.")
+              text_response("Topic not found: '#{name}'\n\nUse `list_topics` to see available topics.")
             else
               formatted = suggestions.map { |t| "- **#{t.name}** — #{t.brief}" }.join("\n")
               text_response("Topic not found: '#{name}'\n\n**Similar topics:**\n#{formatted}")

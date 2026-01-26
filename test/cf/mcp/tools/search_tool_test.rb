@@ -86,7 +86,7 @@ class CF::MCP::Tools::SearchToolTest < Minitest::Test
     response = CF::MCP::Tools::SearchTool.call(query: "sprite", server_context: @server_context)
 
     refute response.error?
-    assert_includes response.content.first[:text], "cf_get_details"
+    assert_includes response.content.first[:text], "get_details"
     assert_includes response.content.first[:text], "Tip"
   end
 

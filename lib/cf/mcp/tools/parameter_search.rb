@@ -9,9 +9,9 @@ module CF
       class ParameterSearch < ::MCP::Tool
         extend ResponseHelpers
 
-        TITLE = "CF: Parameter Search"
+        TITLE = "Parameter Search"
 
-        tool_name "cf_parameter_search"
+        tool_name "parameter_search"
         title TITLE
         description "Find Cute Framework functions by parameter or return type"
 
@@ -98,7 +98,7 @@ module CF
             lines << ""
           end
 
-          lines << "**Tip:** Use `cf_get_details` with a function name for full documentation."
+          lines << "**Tip:** Use `get_details` with a function name for full documentation."
 
           text_response(lines.join("\n"))
         end

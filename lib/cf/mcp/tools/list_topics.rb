@@ -9,9 +9,9 @@ module CF
       class ListTopics < ::MCP::Tool
         extend ResponseHelpers
 
-        TITLE = "CF: List Topics"
+        TITLE = "List Topics"
 
-        tool_name "cf_list_topics"
+        tool_name "list_topics"
         title TITLE
         description "List all Cute Framework topic guides, optionally filtered by category or in recommended reading order"
 
@@ -58,12 +58,12 @@ module CF
           end
 
           lines << ""
-          lines << "**Tip:** Use `cf_get_topic` with a topic name to read the full content."
+          lines << "**Tip:** Use `get_topic` with a topic name to read the full content."
 
           text_response(lines.join("\n"))
         end
 
-        CATEGORY_TIP = "Use `cf_list_topics` without a category to see all available topics."
+        CATEGORY_TIP = "Use `list_topics` without a category to see all available topics."
       end
     end
   end

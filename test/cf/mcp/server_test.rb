@@ -79,7 +79,7 @@ class CF::MCP::ServerTest < Minitest::Test
     CF::MCP::Server::TOOLS.each do |tool|
       assert tool.const_defined?(:TITLE), "#{tool.name} should define TITLE constant"
       assert_kind_of String, tool::TITLE
-      assert tool::TITLE.start_with?("CF: "), "#{tool.name} TITLE should start with 'CF: '"
+      refute_empty tool::TITLE, "#{tool.name} TITLE should not be empty"
     end
   end
 
@@ -129,7 +129,7 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
   def test_stdio_initialize_and_search_tool
     responses = run_stdio_requests([
       initialize_request(1),
-      tools_call_request(2, "cf_search", {query: "sprite"})
+      tools_call_request(2, "search", {query: "sprite"})
     ])
 
     # Check initialize response
@@ -148,10 +148,10 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
     assert_includes text, "cf_make_sprite"
   end
 
-  def test_stdio_cf_get_details_tool
+  def test_stdio_get_details_tool
     responses = run_stdio_requests([
       initialize_request(1),
-      tools_call_request(2, "cf_get_details", {name: "cf_make_sprite"})
+      tools_call_request(2, "get_details", {name: "cf_make_sprite"})
     ])
 
     response = responses[1]
@@ -161,10 +161,10 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
     assert_includes text, "Loads a sprite"
   end
 
-  def test_stdio_cf_search_functions_tool
+  def test_stdio_search_functions_tool
     responses = run_stdio_requests([
       initialize_request(1),
-      tools_call_request(2, "cf_search_functions", {query: "sprite"})
+      tools_call_request(2, "search_functions", {query: "sprite"})
     ])
 
     response = responses[1]
@@ -173,10 +173,10 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
     assert_includes text, "cf_make_sprite"
   end
 
-  def test_stdio_cf_search_structs_tool
+  def test_stdio_search_structs_tool
     responses = run_stdio_requests([
       initialize_request(1),
-      tools_call_request(2, "cf_search_structs", {query: "sprite"})
+      tools_call_request(2, "search_structs", {query: "sprite"})
     ])
 
     response = responses[1]
@@ -185,10 +185,10 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
     assert_includes text, "CF_Sprite"
   end
 
-  def test_stdio_cf_search_enums_tool
+  def test_stdio_search_enums_tool
     responses = run_stdio_requests([
       initialize_request(1),
-      tools_call_request(2, "cf_search_enums", {query: "direction"})
+      tools_call_request(2, "search_enums", {query: "direction"})
     ])
 
     response = responses[1]
@@ -197,10 +197,10 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
     assert_includes text, "CF_PlayDirection"
   end
 
-  def test_stdio_cf_list_category_tool
+  def test_stdio_list_category_tool
     responses = run_stdio_requests([
       initialize_request(1),
-      tools_call_request(2, "cf_list_category", {})
+      tools_call_request(2, "list_category", {})
     ])
 
     response = responses[1]
@@ -212,7 +212,7 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
   def test_stdio_search_no_results
     responses = run_stdio_requests([
       initialize_request(1),
-      tools_call_request(2, "cf_search", {query: "nonexistent_xyz"})
+      tools_call_request(2, "search", {query: "nonexistent_xyz"})
     ])
 
     response = responses[1]
@@ -224,7 +224,7 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
   def test_stdio_get_details_not_found
     responses = run_stdio_requests([
       initialize_request(1),
-      tools_call_request(2, "cf_get_details", {name: "nonexistent_function"})
+      tools_call_request(2, "get_details", {name: "nonexistent_function"})
     ])
 
     response = responses[1]
@@ -246,14 +246,14 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
     assert_equal 11, tools.size
 
     tool_names = tools.map { |t| t["name"] }
-    assert_includes tool_names, "cf_search"
-    assert_includes tool_names, "cf_search_functions"
-    assert_includes tool_names, "cf_search_structs"
-    assert_includes tool_names, "cf_search_enums"
-    assert_includes tool_names, "cf_list_category"
-    assert_includes tool_names, "cf_get_details"
-    assert_includes tool_names, "cf_list_topics"
-    assert_includes tool_names, "cf_get_topic"
+    assert_includes tool_names, "search"
+    assert_includes tool_names, "search_functions"
+    assert_includes tool_names, "search_structs"
+    assert_includes tool_names, "search_enums"
+    assert_includes tool_names, "list_category"
+    assert_includes tool_names, "get_details"
+    assert_includes tool_names, "list_topics"
+    assert_includes tool_names, "get_topic"
   end
 
   private
@@ -497,7 +497,7 @@ class CF::MCP::ServerHTTPTest < Minitest::Test
 
   def test_tools_call_via_http_server
     response = make_mcp_request("/http", "tools/call", {
-      name: "cf_search",
+      name: "search",
       arguments: {query: "sprite"}
     })
 

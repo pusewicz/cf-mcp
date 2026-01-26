@@ -46,13 +46,13 @@ class CF::MCP::ServerTest < Minitest::Test
 
     svg_icon = icons.find { |i| i.mime_type == "image/svg+xml" }
     assert svg_icon, "Should have SVG icon"
-    assert_equal "#{CF::MCP::Server::WEBSITE_URL}/logo.svg", svg_icon.src
+    assert_equal "#{CF::MCP::Server::WEBSITE_URL}/favicon.svg", svg_icon.src
     assert_equal ["any"], svg_icon.sizes
 
     png_icon = icons.find { |i| i.mime_type == "image/png" }
     assert png_icon, "Should have PNG icon"
-    assert_equal "#{CF::MCP::Server::WEBSITE_URL}/logo.png", png_icon.src
-    assert_equal ["262x218"], png_icon.sizes
+    assert_equal "#{CF::MCP::Server::WEBSITE_URL}/favicon-96x96.png", png_icon.src
+    assert_equal ["96x96"], png_icon.sizes
   end
 
   def test_server_has_index
@@ -466,8 +466,8 @@ class CF::MCP::ServerHTTPTest < Minitest::Test
 
   # Static Asset Tests
 
-  def test_logo_svg_served_as_static_asset
-    env = Rack::MockRequest.env_for("/logo.svg", method: "GET")
+  def test_favicon_svg_served_as_static_asset
+    env = Rack::MockRequest.env_for("/favicon.svg", method: "GET")
     response = Rack::MockResponse.new(*@app.call(env))
 
     assert_equal 200, response.status
@@ -477,8 +477,8 @@ class CF::MCP::ServerHTTPTest < Minitest::Test
     assert_cors_headers(response)
   end
 
-  def test_logo_png_served_as_static_asset
-    env = Rack::MockRequest.env_for("/logo.png", method: "GET")
+  def test_favicon_png_served_as_static_asset
+    env = Rack::MockRequest.env_for("/favicon-96x96.png", method: "GET")
     response = Rack::MockResponse.new(*@app.call(env))
 
     assert_equal 200, response.status
@@ -486,6 +486,38 @@ class CF::MCP::ServerHTTPTest < Minitest::Test
     assert_includes response.headers["cache-control"], "public"
     # PNG magic bytes
     assert response.body.start_with?("\x89PNG".b)
+    assert_cors_headers(response)
+  end
+
+  def test_favicon_ico_served_as_static_asset
+    env = Rack::MockRequest.env_for("/favicon.ico", method: "GET")
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_equal 200, response.status
+    assert_equal "image/x-icon", response.headers["content-type"]
+    assert_includes response.headers["cache-control"], "public"
+    assert_cors_headers(response)
+  end
+
+  def test_apple_touch_icon_served_as_static_asset
+    env = Rack::MockRequest.env_for("/apple-touch-icon.png", method: "GET")
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_equal 200, response.status
+    assert_equal "image/png", response.headers["content-type"]
+    assert_includes response.headers["cache-control"], "public"
+    assert response.body.start_with?("\x89PNG".b)
+    assert_cors_headers(response)
+  end
+
+  def test_site_webmanifest_served_as_static_asset
+    env = Rack::MockRequest.env_for("/site.webmanifest", method: "GET")
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_equal 200, response.status
+    assert_equal "application/manifest+json", response.headers["content-type"]
+    assert_includes response.headers["cache-control"], "public"
+    assert_includes response.body, "CF::MCP"
     assert_cors_headers(response)
   end
 

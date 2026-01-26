@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.5] - 2026-01-26
+
+### Changed
+
+- Complete favicon overhaul using realfavicongenerator for proper cross-browser support
+- Added SVG favicon, apple-touch-icon, and web app manifest
+- MCP server icons now use favicon.svg and favicon-96x96.png
+
 ## [0.15.4] - 2026-01-26
 
 ### Fixed
@@ -228,6 +236,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `cf_list_category` - List items by category
   - `cf_get_details` - Get full documentation by name
 
+[0.15.5]: https://github.com/pusewicz/cf-mcp/compare/v0.15.4...v0.15.5
 [0.15.4]: https://github.com/pusewicz/cf-mcp/compare/v0.15.3...v0.15.4
 [0.15.3]: https://github.com/pusewicz/cf-mcp/compare/v0.15.2...v0.15.3
 [0.15.2]: https://github.com/pusewicz/cf-mcp/compare/v0.15.1...v0.15.2

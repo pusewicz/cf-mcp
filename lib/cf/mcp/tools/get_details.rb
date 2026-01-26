@@ -9,9 +9,9 @@ module CF
       class GetDetails < ::MCP::Tool
         extend ResponseHelpers
 
-        TITLE = "CF: Get Details"
+        TITLE = "Get Details"
 
-        tool_name "cf_get_details"
+        tool_name "get_details"
         title TITLE
         description "Get detailed documentation for a specific Cute Framework item by exact name"
 
@@ -57,7 +57,7 @@ module CF
               if related_topics.any?
                 output += "\n\n## Related Topics\n"
                 output += related_topics.map { |t| "- **#{t.name}** — #{t.brief}" }.join("\n")
-                output += "\n\n**Tip:** Use `cf_get_topic` to read the full topic content."
+                output += "\n\n**Tip:** Use `get_topic` to read the full topic content."
               end
             end
 

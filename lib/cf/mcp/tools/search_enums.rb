@@ -11,9 +11,9 @@ module CF
         extend ResponseHelpers
         extend SearchResultFormatter
 
-        TITLE = "CF: Search Enums"
+        TITLE = "Search Enums"
 
-        tool_name "cf_search_enums"
+        tool_name "search_enums"
         title TITLE
         description "Search Cute Framework enums"
 
@@ -35,7 +35,7 @@ module CF
           open_world_hint: false
         )
 
-        DETAILS_TIP = "**Tip:** Use `cf_get_details` with an exact name to get full documentation including values and examples."
+        DETAILS_TIP = "**Tip:** Use `get_details` with an exact name to get full documentation including values and examples."
 
         def self.call(query:, category: nil, limit: 20, server_context: {})
           index = server_context[:index]

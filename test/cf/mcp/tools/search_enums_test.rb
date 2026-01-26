@@ -34,6 +34,6 @@ class CF::MCP::Tools::SearchEnumsTest < Minitest::Test
     response = CF::MCP::Tools::SearchEnums.call(query: "direction", server_context: @server_context)
 
     refute response.error?
-    assert_includes response.content.first[:text], "cf_get_details"
+    assert_includes response.content.first[:text], "get_details"
   end
 end

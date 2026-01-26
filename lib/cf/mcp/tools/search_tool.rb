@@ -11,9 +11,9 @@ module CF
         extend ResponseHelpers
         extend SearchResultFormatter
 
-        TITLE = "CF: Search"
+        TITLE = "Search"
 
-        tool_name "cf_search"
+        tool_name "search"
         title TITLE
         description "Search Cute Framework documentation across all types (functions, structs, enums, topics)"
 
@@ -36,7 +36,7 @@ module CF
           open_world_hint: false
         )
 
-        DETAILS_TIP = "**Tip:** Use `cf_get_details` for API items or `cf_get_topic` for topic guides to get full documentation."
+        DETAILS_TIP = "**Tip:** Use `get_details` for API items or `get_topic` for topic guides to get full documentation."
 
         def self.call(query:, type: nil, category: nil, limit: 20, server_context: {})
           index = server_context[:index]

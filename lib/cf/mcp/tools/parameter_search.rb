@@ -9,7 +9,10 @@ module CF
       class ParameterSearch < ::MCP::Tool
         extend ResponseHelpers
 
+        TITLE = "CF: Parameter Search"
+
         tool_name "cf_parameter_search"
+        title TITLE
         description "Find Cute Framework functions by parameter or return type"
 
         input_schema(
@@ -23,6 +26,14 @@ module CF
             }
           },
           required: ["type"]
+        )
+
+        annotations(
+          title: TITLE,
+          read_only_hint: true,
+          destructive_hint: false,
+          idempotent_hint: true,
+          open_world_hint: false
         )
 
         def self.call(type:, direction: "both", server_context: {})

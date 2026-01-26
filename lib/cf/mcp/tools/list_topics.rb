@@ -9,7 +9,10 @@ module CF
       class ListTopics < ::MCP::Tool
         extend ResponseHelpers
 
+        TITLE = "CF: List Topics"
+
         tool_name "cf_list_topics"
+        title TITLE
         description "List all Cute Framework topic guides, optionally filtered by category or in recommended reading order"
 
         input_schema(
@@ -18,6 +21,14 @@ module CF
             category: {type: "string", description: "Optional: filter topics by category (e.g., 'audio', 'draw', 'graphics')"},
             ordered: {type: "boolean", description: "If true, return topics in recommended reading order (default: false)"}
           }
+        )
+
+        annotations(
+          title: TITLE,
+          read_only_hint: true,
+          destructive_hint: false,
+          idempotent_hint: true,
+          open_world_hint: false
         )
 
         def self.call(category: nil, ordered: false, server_context: {})

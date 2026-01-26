@@ -9,7 +9,10 @@ module CF
       class GetTopic < ::MCP::Tool
         extend ResponseHelpers
 
+        TITLE = "CF: Get Topic"
+
         tool_name "cf_get_topic"
+        title TITLE
         description "Get the full content of a Cute Framework topic guide document"
 
         input_schema(
@@ -18,6 +21,14 @@ module CF
             name: {type: "string", description: "Topic name (e.g., 'audio', 'collision', 'drawing', 'coroutines')"}
           },
           required: ["name"]
+        )
+
+        annotations(
+          title: TITLE,
+          read_only_hint: true,
+          destructive_hint: false,
+          idempotent_hint: true,
+          open_world_hint: false
         )
 
         def self.call(name:, server_context: {})

@@ -57,6 +57,32 @@ class CF::MCP::ServerTest < Minitest::Test
 
     assert_equal expected_tools, CF::MCP::Server::TOOLS
   end
+
+  def test_all_tools_have_title_constant
+    CF::MCP::Server::TOOLS.each do |tool|
+      assert tool.const_defined?(:TITLE), "#{tool.name} should define TITLE constant"
+      assert_kind_of String, tool::TITLE
+      assert tool::TITLE.start_with?("CF: "), "#{tool.name} TITLE should start with 'CF: '"
+    end
+  end
+
+  def test_all_tools_have_title_set
+    CF::MCP::Server::TOOLS.each do |tool|
+      assert_equal tool::TITLE, tool.title_value, "#{tool.name} should have title set to TITLE constant"
+    end
+  end
+
+  def test_all_tools_have_read_only_annotations
+    CF::MCP::Server::TOOLS.each do |tool|
+      annotations = tool.annotations_value
+      assert annotations, "#{tool.name} should have annotations"
+      assert_equal true, annotations.read_only_hint, "#{tool.name} should be read-only"
+      assert_equal false, annotations.destructive_hint, "#{tool.name} should not be destructive"
+      assert_equal true, annotations.idempotent_hint, "#{tool.name} should be idempotent"
+      assert_equal false, annotations.open_world_hint, "#{tool.name} should not be open-world"
+      assert_equal tool::TITLE, annotations.title, "#{tool.name} annotation title should match TITLE constant"
+    end
+  end
 end
 
 # Integration tests using STDIO transport simulation

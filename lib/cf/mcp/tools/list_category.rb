@@ -9,7 +9,10 @@ module CF
       class ListCategory < ::MCP::Tool
         extend ResponseHelpers
 
+        TITLE = "CF: List Category"
+
         tool_name "cf_list_category"
+        title TITLE
         description "List all items in a specific category, or list all available categories"
 
         input_schema(
@@ -18,6 +21,14 @@ module CF
             category: {type: "string", description: "Category name (e.g., 'app', 'sprite', 'graphics'). Leave empty to list all categories."},
             type: {type: "string", enum: ["function", "struct", "enum"], description: "Optional: filter by item type"}
           }
+        )
+
+        annotations(
+          title: TITLE,
+          read_only_hint: true,
+          destructive_hint: false,
+          idempotent_hint: true,
+          open_world_hint: false
         )
 
         def self.call(category: nil, type: nil, server_context: {})

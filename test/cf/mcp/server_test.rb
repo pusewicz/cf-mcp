@@ -32,6 +32,23 @@ class CF::MCP::ServerTest < Minitest::Test
     assert_equal CF::MCP::VERSION, @server.server.version
   end
 
+  def test_server_has_title
+    assert_equal "Cute Framework MCP", @server.server.title
+  end
+
+  def test_server_has_website_url
+    assert_equal CF::MCP::Server::WEBSITE_URL, @server.server.website_url
+  end
+
+  def test_server_has_icon
+    icons = @server.server.icons
+    assert_equal 1, icons.size
+    icon = icons.first
+    expected_url = "#{CF::MCP::Server::WEBSITE_URL}#{CF::MCP::Server::LOGO_PATH}"
+    assert_equal expected_url, icon.src
+    assert_equal "image/svg+xml", icon.mime_type
+  end
+
   def test_server_has_index
     assert_equal @index, @server.index
   end
@@ -439,6 +456,19 @@ class CF::MCP::ServerHTTPTest < Minitest::Test
     assert_includes response.body, "Claude Desktop"
     assert_includes response.body, "Settings"
     assert_includes response.body, "Connectors"
+  end
+
+  # Static Asset Tests
+
+  def test_logo_svg_served_as_static_asset
+    env = Rack::MockRequest.env_for("/logo.svg", method: "GET")
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_equal 200, response.status
+    assert_equal "image/svg+xml", response.headers["content-type"]
+    assert_includes response.headers["cache-control"], "public"
+    assert_includes response.body, "<svg"
+    assert_cors_headers(response)
   end
 
   # Routing Tests

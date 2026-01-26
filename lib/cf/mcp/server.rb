@@ -60,14 +60,22 @@ module CF
       end
 
       PROTOCOL_VERSION = "2025-06-18"
+      WEBSITE_URL = ENV.fetch("FLY_APP_NAME", nil) ? "https://#{ENV["FLY_APP_NAME"]}.fly.dev" : "https://cf-mcp.fly.dev"
+      LOGO_PATH = "/logo.svg"
+      PUBLIC_DIR = File.join(__dir__, "public")
 
       def initialize(index)
         @index = index
         configuration = ::MCP::Configuration.new(protocol_version: PROTOCOL_VERSION)
         @server = ::MCP::Server.new(
           name: "cf-mcp",
+          title: "Cute Framework MCP",
           configuration:,
           version: CF::MCP::VERSION,
+          website_url: WEBSITE_URL,
+          icons: [
+            ::MCP::Icon.new(src: "#{WEBSITE_URL}#{LOGO_PATH}", mime_type: "image/svg+xml")
+          ],
           tools: TOOLS,
           resources: build_topic_resources(index)
         )
@@ -94,6 +102,7 @@ module CF
         index = @index
         tools = TOOLS
         cors_headers = CORS_HEADERS
+        public_dir = PUBLIC_DIR
 
         app = ->(env) {
           request = Rack::Request.new(env)
@@ -111,6 +120,14 @@ module CF
             [404, {"content-type" => "application/json"}, ['{"error":"Not found"}']]
           when %r{^/http(/|$)}
             http_transport.handle_request(request)
+          when "/logo.svg"
+            # Serve logo as static asset
+            logo_path = File.join(public_dir, "logo.svg")
+            if File.exist?(logo_path)
+              [200, {"content-type" => "image/svg+xml", "cache-control" => "public, max-age=86400"}, [File.read(logo_path)]]
+            else
+              [404, {"content-type" => "text/plain"}, ["Not found"]]
+            end
           else
             # Default route - show landing page for browsers
             accept = request.get_header("HTTP_ACCEPT") || ""

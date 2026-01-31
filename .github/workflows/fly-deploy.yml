@@ -8,11 +8,13 @@ on:
       - completed
     branches:
       - main
+  workflow_dispatch:  # Allows manual triggering from GitHub UI
 jobs:
   deploy:
     name: Deploy app
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # Only run if manually triggered OR if the Ruby workflow succeeded
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     concurrency: deploy-group    # optional: ensure only one action runs at a time
     steps:
       - uses: actions/checkout@v4

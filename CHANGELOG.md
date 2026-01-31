@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.1] - 2026-01-31
+
+### Fixed
+
+- Fix broken logo image path in dashboard (use favicon.svg instead of non-existent logo.svg)
+
+### Changed
+
+- Add workflow_dispatch trigger to fly-deploy.yml for manual deployments
+
 ## [0.16.0] - 2026-01-26
 
 ### Changed
@@ -245,6 +255,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `cf_list_category` - List items by category
   - `cf_get_details` - Get full documentation by name
 
+[0.16.1]: https://github.com/pusewicz/cf-mcp/compare/v0.16.0...v0.16.1
 [0.16.0]: https://github.com/pusewicz/cf-mcp/compare/v0.15.5...v0.16.0
 [0.15.5]: https://github.com/pusewicz/cf-mcp/compare/v0.15.4...v0.15.5
 [0.15.4]: https://github.com/pusewicz/cf-mcp/compare/v0.15.3...v0.15.4

@@ -236,7 +236,8 @@ module CF
         # Find the #define block with CF_ENUM macros
         # Pattern: /* @entry description */ followed by CF_ENUM(NAME, VALUE)
         content.scan(%r{/\*\s*@entry\s+(.*?)\s*\*/\s*\\?\s*CF_ENUM\s*\(\s*(\w+)\s*,\s*([^)]*)\)}m) do |description, name, value|
-          entries << Models::EnumDoc::Entry.new(name.strip, value.strip, description.strip)
+          # CF_ENUM(K, V) expands to CF_##K = V, so add CF_ prefix
+          entries << Models::EnumDoc::Entry.new("CF_#{name.strip}", value.strip, description.strip)
         end
 
         entries

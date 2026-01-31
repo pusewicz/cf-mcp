@@ -46,7 +46,7 @@ class CF::MCP::ParserTest < Minitest::Test
     enum = items.find { |i| i.name == "TestEnum" }
 
     assert_equal 2, enum.entries.size
-    assert_equal "TEST_VALUE_ONE", enum.entries.first.name
+    assert_equal "CF_TEST_VALUE_ONE", enum.entries.first.name
     assert_equal "0", enum.entries.first.value
     assert_equal "First test value.", enum.entries.first.description
   end

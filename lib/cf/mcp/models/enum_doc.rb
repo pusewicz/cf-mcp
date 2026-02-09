@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
 require_relative "doc_item"
+require_relative "tabular_doc"
 
 module CF
   module MCP
     module Models
       class EnumDoc < DocItem
+        include TabularDoc
+
         attr_accessor :entries
 
         Entry = Data.define(:name, :value, :description)
@@ -29,16 +32,9 @@ module CF
         def build_type_specific_lines
           return [] unless entries && !entries.empty?
 
-          lines = []
-          lines << "## Values"
-          lines << ""
-          lines << "| Name | Value | Description |"
-          lines << "| --- | --- | --- |"
-          entries.each do |entry|
-            lines << "| `#{entry.name}` | #{entry.value} | #{entry.description} |"
-          end
-          lines << ""
-          lines
+          build_table(heading: "Values", headers: ["Name", "Value", "Description"], rows: entries) { |e|
+            "`#{e.name}` | #{e.value} | #{e.description}"
+          }
         end
       end
     end

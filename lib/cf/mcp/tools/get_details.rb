@@ -1,14 +1,11 @@
 # frozen_string_literal: true
 
-require "mcp"
-require_relative "response_helpers"
+require_relative "base_tool"
 
 module CF
   module MCP
     module Tools
-      class GetDetails < ::MCP::Tool
-        extend ResponseHelpers
-
+      class GetDetails < BaseTool
         TITLE = "Get Details"
 
         tool_name "get_details"
@@ -23,24 +20,18 @@ module CF
           required: ["name"]
         )
 
-        annotations(
-          title: TITLE,
-          read_only_hint: true,
-          destructive_hint: false,
-          idempotent_hint: true,
-          open_world_hint: false
-        )
+        default_annotations(title: TITLE)
 
         NAMING_TIP = "**Tip:** Cute Framework uses `cf_` prefix for functions and `CF_` prefix for types (structs/enums)."
 
         def self.call(name:, server_context: {})
-          index = Index.instance
+          idx = index(server_context)
 
-          item = index.find(name)
+          item = idx.find(name)
 
           if item.nil?
             # Try a fuzzy search to suggest alternatives
-            suggestions = index.search(name, limit: 5)
+            suggestions = idx.search(name, limit: 5)
             if suggestions.empty?
               text_response("Not found: '#{name}'\n\n#{NAMING_TIP}")
             else
@@ -48,11 +39,11 @@ module CF
               text_response("Not found: '#{name}'\n\n**Similar items:**\n#{formatted}\n\n#{NAMING_TIP}")
             end
           else
-            output = item.to_text(detailed: true, index: index)
+            output = item.to_text(detailed: true, index: idx)
 
             # Append related topics section for API items
             if item.type != :topic
-              related_topics = index.topics_for(name)
+              related_topics = idx.topics_for(name)
               if related_topics.any?
                 output += "\n\n## Related Topics\n"
                 output += related_topics.map { |t| "- **#{t.name}** — #{t.brief}" }.join("\n")

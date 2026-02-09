@@ -22,6 +22,7 @@ module CF
     end
 
     module Tools
+      autoload :BaseTool, "cf/mcp/tools/base_tool"
       autoload :SearchTool, "cf/mcp/tools/search_tool"
       autoload :ListCategory, "cf/mcp/tools/list_category"
       autoload :GetDetails, "cf/mcp/tools/get_details"

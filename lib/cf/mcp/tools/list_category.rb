@@ -1,14 +1,11 @@
 # frozen_string_literal: true
 
-require "mcp"
-require_relative "response_helpers"
+require_relative "base_tool"
 
 module CF
   module MCP
     module Tools
-      class ListCategory < ::MCP::Tool
-        extend ResponseHelpers
-
+      class ListCategory < BaseTool
         TITLE = "List Category"
 
         tool_name "list_category"
@@ -23,25 +20,19 @@ module CF
           }
         )
 
-        annotations(
-          title: TITLE,
-          read_only_hint: true,
-          destructive_hint: false,
-          idempotent_hint: true,
-          open_world_hint: false
-        )
+        default_annotations(title: TITLE)
 
         def self.call(category: nil, type: nil, server_context: {})
-          index = Index.instance
+          idx = index(server_context)
 
           if category.nil? || category.empty?
             # List all categories with counts by type
-            categories = index.categories
+            categories = idx.categories
             if categories.empty?
               text_response("No categories found")
             else
               formatted = categories.map do |cat|
-                items = index.items_in_category(cat)
+                items = idx.items_in_category(cat)
                 counts = items.group_by(&:type).transform_values(&:size)
                 type_breakdown = [:function, :struct, :enum]
                   .filter_map { |t| "#{counts[t]} #{t}s" if counts[t]&.positive? }
@@ -52,7 +43,7 @@ module CF
             end
           else
             # List items in the specified category
-            items = index.items_in_category(category)
+            items = idx.items_in_category(category)
 
             if type
               type_sym = type.to_sym
@@ -65,7 +56,7 @@ module CF
               formatted = items.map(&:to_summary).join("\n")
 
               # Suggest related topics
-              related_topics = index.topics.select { |t| t.category == category }
+              related_topics = idx.topics.select { |t| t.category == category }
               topic_suggestion = if related_topics.any?
                 "\n\n**Related Topics:**\n" + related_topics.map { |t| "- **#{t.name}** — #{t.brief}" }.join("\n")
               else

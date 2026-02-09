@@ -1,14 +1,11 @@
 # frozen_string_literal: true
 
-require "mcp"
-require_relative "response_helpers"
+require_relative "base_tool"
 
 module CF
   module MCP
     module Tools
-      class ListTopics < ::MCP::Tool
-        extend ResponseHelpers
-
+      class ListTopics < BaseTool
         TITLE = "List Topics"
 
         tool_name "list_topics"
@@ -23,18 +20,14 @@ module CF
           }
         )
 
-        annotations(
-          title: TITLE,
-          read_only_hint: true,
-          destructive_hint: false,
-          idempotent_hint: true,
-          open_world_hint: false
-        )
+        default_annotations(title: TITLE)
+
+        CATEGORY_TIP = "Use `list_topics` without a category to see all available topics."
 
         def self.call(category: nil, ordered: false, server_context: {})
-          index = Index.instance
+          idx = index(server_context)
 
-          topics = ordered ? index.topics_ordered : index.topics
+          topics = ordered ? idx.topics_ordered : idx.topics
 
           if category
             topics = topics.select { |t| t.category == category }
@@ -61,8 +54,6 @@ module CF
 
           text_response(lines.join("\n"))
         end
-
-        CATEGORY_TIP = "Use `list_topics` without a category to see all available topics."
       end
     end
   end

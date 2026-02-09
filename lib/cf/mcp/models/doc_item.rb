@@ -7,6 +7,15 @@ module CF
         GITHUB_REPO = "https://github.com/RandyGaul/cute_framework"
         GITHUB_RAW_BASE = "https://raw.githubusercontent.com/RandyGaul/cute_framework/refs/heads/master"
 
+        # Relevance scoring weights for keyword_score
+        EXACT_NAME_MATCH = 1000
+        PREFIX_MATCH = 500
+        SUFFIX_MATCH = 400
+        CONTAINS_MATCH = 100
+        BRIEF_MATCH = 50
+        CATEGORY_MATCH = 30
+        REMARKS_MATCH = 10
+
         attr_accessor :name, :type, :category, :brief, :remarks, :example,
           :example_brief, :related, :source_file, :source_line
 
@@ -65,28 +74,19 @@ module CF
           keyword_downcase = keyword.downcase
           name_downcase = name&.downcase || ""
 
-          # Exact name match (highest priority)
           if name_downcase == keyword_downcase
-            score += 1000
-          # Name starts with keyword (prefix match)
+            score += EXACT_NAME_MATCH
           elsif name_downcase.start_with?(keyword_downcase)
-            score += 500
-          # Name ends with keyword (suffix match)
+            score += PREFIX_MATCH
           elsif name_downcase.end_with?(keyword_downcase)
-            score += 400
-          # Name contains keyword
+            score += SUFFIX_MATCH
           elsif name_downcase.include?(keyword_downcase)
-            score += 100
+            score += CONTAINS_MATCH
           end
 
-          # Brief contains keyword
-          score += 50 if brief&.downcase&.include?(keyword_downcase)
-
-          # Category contains keyword
-          score += 30 if category&.downcase&.include?(keyword_downcase)
-
-          # Remarks contains keyword
-          score += 10 if remarks&.downcase&.include?(keyword_downcase)
+          score += BRIEF_MATCH if brief&.downcase&.include?(keyword_downcase)
+          score += CATEGORY_MATCH if category&.downcase&.include?(keyword_downcase)
+          score += REMARKS_MATCH if remarks&.downcase&.include?(keyword_downcase)
 
           score
         end

@@ -17,7 +17,8 @@ $server_context = nil
 def load_index(path = DEFAULT_HEADERS_PATH)
   puts "Loading headers from: #{path}"
   parser = CF::MCP::Parser.new
-  $index = CF::MCP::Index.new
+  $index = CF::MCP::Index.instance
+  $index.reset!
 
   items = parser.parse_directory(path)
   items.each { |item| $index.add(item) }
@@ -94,18 +95,20 @@ def in_category(category, type: nil)
 end
 
 # Call an MCP tool directly
-# @param tool_name [String] Tool name (e.g., "cf_search", "cf_get_details")
+# @param tool_name [String] Tool name (e.g., "search", "get_details")
 # @param args [Hash] Tool arguments
 # @return [MCP::Tool::Response]
 def call_tool(tool_name, **args)
   ensure_index!
   tools = {
-    "cf_search" => CF::MCP::Tools::SearchTool,
-    "cf_search_functions" => CF::MCP::Tools::SearchFunctions,
-    "cf_search_structs" => CF::MCP::Tools::SearchStructs,
-    "cf_search_enums" => CF::MCP::Tools::SearchEnums,
-    "cf_list_category" => CF::MCP::Tools::ListCategory,
-    "cf_get_details" => CF::MCP::Tools::GetDetails
+    "search" => CF::MCP::Tools::SearchTool,
+    "list_category" => CF::MCP::Tools::ListCategory,
+    "get_details" => CF::MCP::Tools::GetDetails,
+    "find_related" => CF::MCP::Tools::FindRelated,
+    "parameter_search" => CF::MCP::Tools::ParameterSearch,
+    "member_search" => CF::MCP::Tools::MemberSearch,
+    "list_topics" => CF::MCP::Tools::ListTopics,
+    "get_topic" => CF::MCP::Tools::GetTopic
   }
 
   tool_class = tools[tool_name]
@@ -115,8 +118,7 @@ def call_tool(tool_name, **args)
     return nil
   end
 
-  tool = tool_class.new
-  response = tool.call(**args, server_context: $server_context)
+  response = tool_class.call(**args, server_context: $server_context)
   puts response.content.first[:text]
   response
 end
@@ -141,15 +143,21 @@ def help
       in_category('sprite', type: :enum)  List enums in category
 
     MCP Tools:
-      call_tool('cf_search', query: 'sprite')
-      call_tool('cf_get_details', name: 'CF_Sprite')
-      call_tool('cf_list_category', category: 'sprite')
+      call_tool('search', query: 'sprite')
+      call_tool('get_details', name: 'CF_Sprite')
+      call_tool('list_category', category: 'sprite')
+      call_tool('find_related', name: 'CF_Sprite')
+      call_tool('parameter_search', type: 'CF_Sprite')
+      call_tool('member_search', query: 'name')
+      call_tool('list_topics')
+      call_tool('get_topic', name: 'audio')
 
     Direct Access:
       $index                  The CF::MCP::Index instance
       $index.functions        All functions
       $index.structs          All structs
       $index.enums            All enums
+      $index.topics           All topics
 
   HELP
 end

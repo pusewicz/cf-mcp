@@ -1,14 +1,11 @@
 # frozen_string_literal: true
 
-require "mcp"
-require_relative "response_helpers"
+require_relative "base_tool"
 
 module CF
   module MCP
     module Tools
-      class MemberSearch < ::MCP::Tool
-        extend ResponseHelpers
-
+      class MemberSearch < BaseTool
         TITLE = "Member Search"
 
         tool_name "member_search"
@@ -24,21 +21,15 @@ module CF
           required: ["query"]
         )
 
-        annotations(
-          title: TITLE,
-          read_only_hint: true,
-          destructive_hint: false,
-          idempotent_hint: true,
-          open_world_hint: false
-        )
+        default_annotations(title: TITLE)
 
         def self.call(query:, limit: 20, server_context: {})
-          index = Index.instance
+          idx = index(server_context)
 
           pattern = Regexp.new(Regexp.escape(query), Regexp::IGNORECASE)
           results = []
 
-          index.structs.each do |struct|
+          idx.structs.each do |struct|
             next unless struct.members&.any?
 
             matching_members = struct.members.select { |member|

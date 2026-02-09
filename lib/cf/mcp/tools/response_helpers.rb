@@ -9,10 +9,6 @@ module CF
         def text_response(text)
           ::MCP::Tool::Response.new([{type: "text", text: text}])
         end
-
-        def error_response(message)
-          ::MCP::Tool::Response.new([{type: "text", text: "Error: #{message}"}], error: true)
-        end
       end
     end
   end

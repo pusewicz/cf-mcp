@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
 require_relative "doc_item"
+require_relative "tabular_doc"
 
 module CF
   module MCP
     module Models
       class StructDoc < DocItem
+        include TabularDoc
+
         attr_accessor :members
 
         Member = Data.define(:declaration, :description)
@@ -29,16 +32,9 @@ module CF
         def build_type_specific_lines
           return [] unless members && !members.empty?
 
-          lines = []
-          lines << "## Members"
-          lines << ""
-          lines << "| Member | Description |"
-          lines << "| --- | --- |"
-          members.each do |member|
-            lines << "| `#{member.declaration}` | #{member.description} |"
-          end
-          lines << ""
-          lines
+          build_table(heading: "Members", headers: ["Member", "Description"], rows: members) { |m|
+            "`#{m.declaration}` | #{m.description}"
+          }
         end
       end
     end

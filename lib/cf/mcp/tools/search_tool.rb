@@ -1,14 +1,12 @@
 # frozen_string_literal: true
 
-require "mcp"
-require_relative "response_helpers"
+require_relative "base_tool"
 require_relative "search_result_formatter"
 
 module CF
   module MCP
     module Tools
-      class SearchTool < ::MCP::Tool
-        extend ResponseHelpers
+      class SearchTool < BaseTool
         extend SearchResultFormatter
 
         TITLE = "Search"
@@ -28,13 +26,7 @@ module CF
           required: ["query"]
         )
 
-        annotations(
-          title: TITLE,
-          read_only_hint: true,
-          destructive_hint: false,
-          idempotent_hint: true,
-          open_world_hint: false
-        )
+        default_annotations(title: TITLE)
 
         DETAILS_TIPS = {
           "function" => "**Tip:** Use `get_details` with an exact name to get full documentation including signature, parameters, and examples.",
@@ -53,9 +45,9 @@ module CF
         }.freeze
 
         def self.call(query:, type: nil, category: nil, limit: 20, server_context: {})
-          index = Index.instance
+          idx = index(server_context)
 
-          results = index.search(query, type: type, category: category, limit: limit)
+          results = idx.search(query, type: type, category: category, limit: limit)
 
           filter_suggestion = if type
             "To find more results, narrow your search with a `category` filter."

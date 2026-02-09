@@ -1,14 +1,11 @@
 # frozen_string_literal: true
 
-require "mcp"
-require_relative "response_helpers"
+require_relative "base_tool"
 
 module CF
   module MCP
     module Tools
-      class FindRelated < ::MCP::Tool
-        extend ResponseHelpers
-
+      class FindRelated < BaseTool
         TITLE = "Find Related"
 
         tool_name "find_related"
@@ -23,23 +20,17 @@ module CF
           required: ["name"]
         )
 
-        annotations(
-          title: TITLE,
-          read_only_hint: true,
-          destructive_hint: false,
-          idempotent_hint: true,
-          open_world_hint: false
-        )
+        default_annotations(title: TITLE)
 
         def self.call(name:, server_context: {})
-          index = Index.instance
+          idx = index(server_context)
 
-          item = index.find(name)
+          item = idx.find(name)
           return text_response("Not found: '#{name}'") unless item
 
           # Forward references: items this item references
           forward_refs = (item.related || []).map { |ref_name|
-            ref_item = index.find(ref_name)
+            ref_item = idx.find(ref_name)
             if ref_item
               "- `#{ref_item.name}` (#{ref_item.type}) — #{ref_item.brief}"
             else
@@ -49,7 +40,7 @@ module CF
 
           # Back references: items that reference this item
           back_refs = []
-          index.items.each_value do |other_item|
+          idx.items.each_value do |other_item|
             next if other_item.name == name
             next unless other_item.related&.include?(name)
 

@@ -1,14 +1,11 @@
 # frozen_string_literal: true
 
-require "mcp"
-require_relative "response_helpers"
+require_relative "base_tool"
 
 module CF
   module MCP
     module Tools
-      class GetTopic < ::MCP::Tool
-        extend ResponseHelpers
-
+      class GetTopic < BaseTool
         TITLE = "Get Topic"
 
         tool_name "get_topic"
@@ -23,22 +20,16 @@ module CF
           required: ["name"]
         )
 
-        annotations(
-          title: TITLE,
-          read_only_hint: true,
-          destructive_hint: false,
-          idempotent_hint: true,
-          open_world_hint: false
-        )
+        default_annotations(title: TITLE)
 
         def self.call(name:, server_context: {})
-          index = Index.instance
+          idx = index(server_context)
 
-          topic = index.find(name)
+          topic = idx.find(name)
 
           if topic.nil? || topic.type != :topic
             # Try fuzzy match on topic names
-            suggestions = index.topics.select { |t|
+            suggestions = idx.topics.select { |t|
               t.name.include?(name) || name.include?(t.name) || t.name.delete("_").include?(name.delete("_"))
             }
 
@@ -49,7 +40,7 @@ module CF
               text_response("Topic not found: '#{name}'\n\n**Similar topics:**\n#{formatted}")
             end
           else
-            text_response(topic.to_text(detailed: true, index: index))
+            text_response(topic.to_text(detailed: true, index: idx))
           end
         end
       end

@@ -1,14 +1,11 @@
 # frozen_string_literal: true
 
-require "mcp"
-require_relative "response_helpers"
+require_relative "base_tool"
 
 module CF
   module MCP
     module Tools
-      class ParameterSearch < ::MCP::Tool
-        extend ResponseHelpers
-
+      class ParameterSearch < BaseTool
         TITLE = "Parameter Search"
 
         tool_name "parameter_search"
@@ -28,22 +25,16 @@ module CF
           required: ["type"]
         )
 
-        annotations(
-          title: TITLE,
-          read_only_hint: true,
-          destructive_hint: false,
-          idempotent_hint: true,
-          open_world_hint: false
-        )
+        default_annotations(title: TITLE)
 
         def self.call(type:, direction: "both", server_context: {})
-          index = Index.instance
+          idx = index(server_context)
 
           pattern = Regexp.new(Regexp.escape(type), Regexp::IGNORECASE)
           input_matches = []
           output_matches = []
 
-          index.functions.each do |func|
+          idx.functions.each do |func|
             next unless func.signature
 
             # Check return type (text before function name in signature)

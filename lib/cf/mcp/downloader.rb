@@ -4,12 +4,13 @@ require "net/http"
 require "uri"
 require "fileutils"
 require "zip"
-require_relative "version"
 
 module CF
   module MCP
     class Downloader
       CUTE_FRAMEWORK_ZIP_URL = "https://github.com/RandyGaul/cute_framework/archive/refs/heads/master.zip"
+      GITHUB_ARCHIVE_URL_TEMPLATE = "https://github.com/RandyGaul/cute_framework/archive/%{ref}.zip"
+      SHA_METADATA_FILE = ".cf-mcp-sha"
       DEFAULT_DOWNLOAD_DIR = File.join(Dir.tmpdir, "cf-mcp-#{VERSION}")
 
       class DownloadError < StandardError; end
@@ -24,23 +25,41 @@ module CF
         zip_path = File.join(@download_dir, "cute_framework.zip")
         base_path = File.join(@download_dir, "cute_framework")
         include_path = File.join(base_path, "include")
-        File.join(base_path, "docs", "topics")
+        sha_file = File.join(@download_dir, SHA_METADATA_FILE)
 
-        # Return existing path if already downloaded
-        if File.directory?(include_path) && !Dir.empty?(include_path)
-          return include_path
+        # Check if cache is valid
+        stored_sha = read_sha_metadata(sha_file)
+        latest_sha = fetch_latest_sha
+
+        if stored_sha && latest_sha && stored_sha == latest_sha
+          if File.directory?(include_path) && !Dir.empty?(include_path)
+            warn "Using cached Cute Framework headers (SHA: #{stored_sha})"
+            return include_path
+          end
         end
 
-        download_zip(zip_path)
+        # Determine download URL
+        if latest_sha
+          download_url = format(GITHUB_ARCHIVE_URL_TEMPLATE, ref: latest_sha)
+          warn "Downloading Cute Framework at SHA #{latest_sha}..."
+        else
+          download_url = CUTE_FRAMEWORK_ZIP_URL
+          warn "Downloading Cute Framework from master branch..."
+        end
+
+        download_zip(zip_path, download_url)
         extract_directories(zip_path, base_path)
+
+        # Store metadata for future cache checks
+        write_sha_metadata(sha_file, latest_sha) if latest_sha
 
         include_path
       end
 
       private
 
-      def download_zip(destination)
-        uri = URI.parse(CUTE_FRAMEWORK_ZIP_URL)
+      def download_zip(destination, url = CUTE_FRAMEWORK_ZIP_URL)
+        uri = URI.parse(url)
 
         Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
           request = Net::HTTP::Get.new(uri)
@@ -73,9 +92,9 @@ module CF
           top_level_prefix = nil
 
           zip_file.each do |entry|
-            # Find the top-level directory prefix (e.g., "cute_framework-master/")
-            if top_level_prefix.nil? && entry.name.match?(%r{^[^/]+/include/})
-              top_level_prefix = entry.name.match(%r{^([^/]+/)})[1]
+            # Find the top-level directory prefix (e.g., "cute_framework-master/" or "cute_framework-abc1234/")
+            if top_level_prefix.nil? && entry.name.match?(%r{^cute_framework-[^/]+/include/})
+              top_level_prefix = entry.name.match(%r{^(cute_framework-[^/]+/)})[1]
               break
             end
           end
@@ -106,6 +125,29 @@ module CF
             end
           end
         end
+      end
+
+      def fetch_latest_sha
+        client = GitHubClient.new
+        client.latest_commit_sha
+      rescue => e
+        warn "GitHub API error: #{e.message}"
+        nil
+      end
+
+      def read_sha_metadata(file)
+        return nil unless File.exist?(file)
+        File.read(file).strip
+      rescue => e
+        warn "Error reading SHA metadata: #{e.message}"
+        nil
+      end
+
+      def write_sha_metadata(file, sha)
+        return unless sha
+        File.write(file, sha)
+      rescue => e
+        warn "Error writing SHA metadata: #{e.message}"
       end
     end
   end

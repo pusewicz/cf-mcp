@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- SHA-based caching for downloaded Cute Framework headers - checks GitHub API for latest commit SHA before downloading to avoid redundant fetches
+- GitHub API client with optional GITHUB_TOKEN support for higher rate limits (5000/hr vs 60/hr unauthenticated)
+- Metadata tracking (.cf-mcp-sha file) stores downloaded version SHA for cache validation
+
+### Changed
+
+- Downloader uses commit-specific archive URLs (e.g., /archive/abc1234.zip) instead of always downloading master branch
+- Download process now checks for updates by comparing stored SHA with latest GitHub commit
+
 ## [0.16.2] - 2026-01-31
 
 ### Fixed

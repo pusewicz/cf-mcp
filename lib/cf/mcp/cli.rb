@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 require "optparse"
-require_relative "index_builder"
-require_relative "server"
 
 module CF
   module MCP

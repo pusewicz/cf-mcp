@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "models/topic_doc"
-
 module CF
   module MCP
     class TopicParser

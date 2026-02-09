@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "doc_item"
-
 module CF
   module MCP
     module Models

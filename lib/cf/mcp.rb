@@ -2,23 +2,30 @@
 
 require "pathname"
 require_relative "mcp/version"
-require_relative "mcp/models/doc_item"
-require_relative "mcp/models/function_doc"
-require_relative "mcp/models/struct_doc"
-require_relative "mcp/models/enum_doc"
-require_relative "mcp/parser"
-require_relative "mcp/index"
-require_relative "mcp/index_builder"
-require_relative "mcp/server"
-require_relative "mcp/downloader"
-require_relative "mcp/cli"
 
 module CF
   module MCP
     class Error < StandardError; end
 
+    autoload :Parser, "cf/mcp/parser"
+    autoload :Index, "cf/mcp/index"
+    autoload :IndexBuilder, "cf/mcp/index_builder"
+    autoload :TopicParser, "cf/mcp/topic_parser"
+    autoload :Server, "cf/mcp/server"
+    autoload :Downloader, "cf/mcp/downloader"
+    autoload :GitHubClient, "cf/mcp/github_client"
+    autoload :CLI, "cf/mcp/cli"
+
     def self.root
       @root ||= Pathname.new(File.expand_path("../..", __dir__))
+    end
+
+    module Models
+      autoload :DocItem, "cf/mcp/models/doc_item"
+      autoload :FunctionDoc, "cf/mcp/models/function_doc"
+      autoload :StructDoc, "cf/mcp/models/struct_doc"
+      autoload :EnumDoc, "cf/mcp/models/enum_doc"
+      autoload :TopicDoc, "cf/mcp/models/topic_doc"
     end
 
     module Tools

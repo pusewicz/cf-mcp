@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "models/function_doc"
-require_relative "models/struct_doc"
-require_relative "models/enum_doc"
-
 module CF
   module MCP
     class Parser

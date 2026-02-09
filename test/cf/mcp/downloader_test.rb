@@ -92,6 +92,62 @@ class CF::MCP::DownloaderTest < Minitest::Test
     refute File.exist?(stale_file), "stale file should be removed"
   end
 
+  def test_extract_directories_with_sha_based_prefix
+    # Create mock zip with SHA-based prefix
+    zip_path = create_test_zip_with_sha("abc1234")
+    base_path = File.join(@temp_dir, "cute_framework")
+
+    @downloader.send(:extract_directories, zip_path, base_path)
+
+    # Verify extraction works with SHA prefix
+    include_path = File.join(base_path, "include")
+    assert File.directory?(include_path)
+
+    header_path = File.join(include_path, "cute.h")
+    assert File.file?(header_path)
+    assert_equal "// Cute Framework Header\n", File.read(header_path)
+  end
+
+  def test_read_sha_metadata_returns_stored_sha
+    sha_file = File.join(@temp_dir, ".cf-mcp-sha")
+    File.write(sha_file, "abc1234")
+
+    sha = @downloader.send(:read_sha_metadata, sha_file)
+    assert_equal "abc1234", sha
+  end
+
+  def test_read_sha_metadata_returns_nil_when_missing
+    sha_file = File.join(@temp_dir, ".cf-mcp-sha")
+
+    sha = @downloader.send(:read_sha_metadata, sha_file)
+    assert_nil sha
+  end
+
+  def test_read_sha_metadata_handles_whitespace
+    sha_file = File.join(@temp_dir, ".cf-mcp-sha")
+    File.write(sha_file, "  abc1234\n  ")
+
+    sha = @downloader.send(:read_sha_metadata, sha_file)
+    assert_equal "abc1234", sha
+  end
+
+  def test_write_sha_metadata_stores_sha
+    sha_file = File.join(@temp_dir, ".cf-mcp-sha")
+
+    @downloader.send(:write_sha_metadata, sha_file, "abc1234")
+
+    assert File.exist?(sha_file)
+    assert_equal "abc1234", File.read(sha_file).strip
+  end
+
+  def test_write_sha_metadata_skips_nil_sha
+    sha_file = File.join(@temp_dir, ".cf-mcp-sha")
+
+    @downloader.send(:write_sha_metadata, sha_file, nil)
+
+    refute File.exist?(sha_file)
+  end
+
   private
 
   def create_test_zip
@@ -151,6 +207,21 @@ class CF::MCP::DownloaderTest < Minitest::Test
 
       zipfile.get_output_stream("cute_framework-master/src/main.c") do |f|
         f.write("// No include directory\n")
+      end
+    end
+
+    zip_path
+  end
+
+  def create_test_zip_with_sha(sha)
+    zip_path = File.join(@temp_dir, "test_sha.zip")
+
+    Zip::File.open(zip_path, create: true) do |zipfile|
+      zipfile.mkdir("cute_framework-#{sha}")
+      zipfile.mkdir("cute_framework-#{sha}/include")
+
+      zipfile.get_output_stream("cute_framework-#{sha}/include/cute.h") do |f|
+        f.write("// Cute Framework Header\n")
       end
     end
 

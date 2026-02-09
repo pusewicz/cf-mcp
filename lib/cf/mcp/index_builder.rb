@@ -1,10 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "parser"
-require_relative "topic_parser"
-require_relative "index"
-require_relative "downloader"
-
 module CF
   module MCP
     class IndexBuilder

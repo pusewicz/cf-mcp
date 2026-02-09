@@ -8,6 +8,7 @@ exe/cf-mcp
 lib/cf/mcp.rb
 lib/cf/mcp/cli.rb
 lib/cf/mcp/downloader.rb
+lib/cf/mcp/github_client.rb
 lib/cf/mcp/index.rb
 lib/cf/mcp/index_builder.rb
 lib/cf/mcp/models/doc_item.rb

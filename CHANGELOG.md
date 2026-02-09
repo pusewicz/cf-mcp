@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-02-09
+
 ### Added
 
 - SHA-based caching for downloaded Cute Framework headers - checks GitHub API for latest commit SHA before downloading to avoid redundant fetches
@@ -17,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Downloader uses commit-specific archive URLs (e.g., /archive/abc1234.zip) instead of always downloading master branch
 - Download process now checks for updates by comparing stored SHA with latest GitHub commit
+- Refactored all internal `require_relative` statements to use `autoload` for lazy loading, improving load time and memory usage
 
 ## [0.16.2] - 2026-01-31
 
@@ -274,6 +277,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `cf_list_category` - List items by category
   - `cf_get_details` - Get full documentation by name
 
+[0.17.0]: https://github.com/pusewicz/cf-mcp/compare/v0.16.2...v0.17.0
 [0.16.2]: https://github.com/pusewicz/cf-mcp/compare/v0.16.1...v0.16.2
 [0.16.1]: https://github.com/pusewicz/cf-mcp/compare/v0.16.0...v0.16.1
 [0.16.0]: https://github.com/pusewicz/cf-mcp/compare/v0.15.5...v0.16.0

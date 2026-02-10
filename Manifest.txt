@@ -5,6 +5,7 @@ README.md
 Rakefile
 config.ru
 exe/cf-mcp
+exe/cf-mcp-wrapper
 lib/cf/mcp.rb
 lib/cf/mcp/cli.rb
 lib/cf/mcp/downloader.rb

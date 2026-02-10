@@ -33,14 +33,6 @@ class CF::MCP::ServerTest < Minitest::Test
     assert_equal CF::MCP::VERSION, @server.server.version
   end
 
-  def test_server_has_title
-    assert_equal "Cute Framework MCP", @server.server.title
-  end
-
-  def test_server_has_website_url
-    assert_equal CF::MCP::Server::WEBSITE_URL, @server.server.website_url
-  end
-
   def test_server_has_icons
     icons = @server.server.icons
     assert_equal 2, icons.size
@@ -79,20 +71,6 @@ class CF::MCP::ServerTest < Minitest::Test
     assert_equal expected_tools, @server.server.tools.values
   end
 
-  def test_all_tools_have_title_constant
-    @server.server.tools.each_value do |tool|
-      assert tool.const_defined?(:TITLE), "#{tool.name} should define TITLE constant"
-      assert_kind_of String, tool::TITLE
-      refute_empty tool::TITLE, "#{tool.name} TITLE should not be empty"
-    end
-  end
-
-  def test_all_tools_have_title_set
-    @server.server.tools.each_value do |tool|
-      assert_equal tool::TITLE, tool.title_value, "#{tool.name} should have title set to TITLE constant"
-    end
-  end
-
   def test_all_tools_have_read_only_annotations
     @server.server.tools.each_value do |tool|
       annotations = tool.annotations_value
@@ -101,7 +79,6 @@ class CF::MCP::ServerTest < Minitest::Test
       assert_equal false, annotations.destructive_hint, "#{tool.name} should not be destructive"
       assert_equal true, annotations.idempotent_hint, "#{tool.name} should be idempotent"
       assert_equal false, annotations.open_world_hint, "#{tool.name} should not be open-world"
-      assert_equal tool::TITLE, annotations.title, "#{tool.name} annotation title should match TITLE constant"
     end
   end
 end

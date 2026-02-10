@@ -34,7 +34,7 @@ module CF
         new(index).rack_app
       end
 
-      PROTOCOL_VERSION = "2025-06-18"
+      PROTOCOL_VERSION = "2025-03-26"
       WEBSITE_URL = ENV.fetch("FLY_APP_NAME", nil) ? "https://#{ENV["FLY_APP_NAME"]}.fly.dev" : "https://cf-mcp.fly.dev"
       PUBLIC_DIR = File.join(__dir__, "public")
 
@@ -44,10 +44,8 @@ module CF
         configuration = ::MCP::Configuration.new(protocol_version: PROTOCOL_VERSION)
         @server = ::MCP::Server.new(
           name: "cf-mcp",
-          title: "Cute Framework MCP",
           configuration:,
           version: CF::MCP::VERSION,
-          website_url: WEBSITE_URL,
           icons: [
             ::MCP::Icon.new(src: "#{WEBSITE_URL}/favicon.svg", mime_type: "image/svg+xml", sizes: ["any"]),
             ::MCP::Icon.new(src: "#{WEBSITE_URL}/favicon-96x96.png", mime_type: "image/png", sizes: ["96x96"])

@@ -9,10 +9,7 @@ module CF
       class MemberSearch < ::MCP::Tool
         extend ResponseHelpers
 
-        TITLE = "Member Search"
-
         tool_name "member_search"
-        title TITLE
         description "Search Cute Framework structs by member name or type"
 
         input_schema(
@@ -25,7 +22,6 @@ module CF
         )
 
         annotations(
-          title: TITLE,
           read_only_hint: true,
           destructive_hint: false,
           idempotent_hint: true,

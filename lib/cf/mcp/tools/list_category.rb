@@ -9,10 +9,7 @@ module CF
       class ListCategory < ::MCP::Tool
         extend ResponseHelpers
 
-        TITLE = "List Category"
-
         tool_name "list_category"
-        title TITLE
         description "List all items in a specific category, or list all available categories"
 
         input_schema(
@@ -24,7 +21,6 @@ module CF
         )
 
         annotations(
-          title: TITLE,
           read_only_hint: true,
           destructive_hint: false,
           idempotent_hint: true,

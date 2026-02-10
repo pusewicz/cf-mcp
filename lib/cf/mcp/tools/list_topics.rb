@@ -9,10 +9,7 @@ module CF
       class ListTopics < ::MCP::Tool
         extend ResponseHelpers
 
-        TITLE = "List Topics"
-
         tool_name "list_topics"
-        title TITLE
         description "List all Cute Framework topic guides, optionally filtered by category or in recommended reading order"
 
         input_schema(
@@ -24,7 +21,6 @@ module CF
         )
 
         annotations(
-          title: TITLE,
           read_only_hint: true,
           destructive_hint: false,
           idempotent_hint: true,

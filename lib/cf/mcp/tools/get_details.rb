@@ -9,10 +9,7 @@ module CF
       class GetDetails < ::MCP::Tool
         extend ResponseHelpers
 
-        TITLE = "Get Details"
-
         tool_name "get_details"
-        title TITLE
         description "Get detailed documentation for a specific Cute Framework item by exact name"
 
         input_schema(
@@ -24,7 +21,6 @@ module CF
         )
 
         annotations(
-          title: TITLE,
           read_only_hint: true,
           destructive_hint: false,
           idempotent_hint: true,

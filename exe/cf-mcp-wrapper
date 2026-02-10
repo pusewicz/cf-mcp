@@ -1,0 +1,8 @@
+#!/bin/bash
+source /opt/homebrew/share/chruby/chruby.sh
+
+PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+chruby "$(cat "$PROJECT_DIR/.ruby-version")"
+
+export BUNDLE_GEMFILE="$PROJECT_DIR/Gemfile"
+exec "$PROJECT_DIR/exe/cf-mcp" "$@"

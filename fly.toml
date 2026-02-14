@@ -28,7 +28,3 @@ primary_region = 'iad'
 [[vm]]
   size = 'shared-cpu-1x'
   memory = 256
-
-[vm]
-  kill_signal = "SIGTERM"
-  kill_timeout = "5s"

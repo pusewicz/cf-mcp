@@ -20,5 +20,15 @@ primary_region = 'iad'
   min_machines_running = 0
   processes = ['app']
 
+[http_service.concurrency]
+  type = "requests"
+  soft_limit = 200
+  hard_limit = 250
+
 [[vm]]
   size = 'shared-cpu-1x'
+  memory = 256
+
+[vm]
+  kill_signal = "SIGTERM"
+  kill_timeout = "5s"

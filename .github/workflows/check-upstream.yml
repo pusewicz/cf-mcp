@@ -1,0 +1,56 @@
+name: Check Upstream
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"  # Every 6 hours
+  workflow_dispatch:        # Allow manual trigger
+
+jobs:
+  check:
+    name: Check for cute_framework updates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get latest upstream commit SHA
+        id: upstream
+        run: |
+          SHA=$(curl -s \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/RandyGaul/cute_framework/commits/master \
+            | jq -r '.sha[:7]')
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Restore cached SHA
+        id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .upstream-sha
+          key: upstream-sha-${{ steps.upstream.outputs.sha }}
+          restore-keys: upstream-sha-
+
+      - name: Read cached SHA
+        id: cached
+        run: |
+          if [ -f .upstream-sha ]; then
+            echo "sha=$(cat .upstream-sha)" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compare and trigger deploy
+        if: steps.upstream.outputs.sha != steps.cached.outputs.sha && steps.upstream.outputs.sha != 'null'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Upstream changed: ${{ steps.cached.outputs.sha }} -> ${{ steps.upstream.outputs.sha }}"
+          gh workflow run fly-deploy.yml --repo ${{ github.repository }}
+
+      - name: Save new SHA to cache
+        if: steps.upstream.outputs.sha != 'null'
+        run: echo "${{ steps.upstream.outputs.sha }}" > .upstream-sha
+
+      - name: Update cache
+        if: steps.upstream.outputs.sha != steps.cached.outputs.sha && steps.upstream.outputs.sha != 'null'
+        uses: actions/cache/save@v4
+        with:
+          path: .upstream-sha
+          key: upstream-sha-${{ steps.upstream.outputs.sha }}

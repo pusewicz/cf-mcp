@@ -1,9 +1,6 @@
 # Puma configuration for Fly.io deployment
 # Optimized for low memory usage on shared-cpu-1x (256MB RAM)
 
-# Use the PORT environment variable, default to 8080
-port ENV.fetch("PORT", 8080)
-
 # Single worker process (no forking) to save memory
 workers 0
 

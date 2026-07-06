@@ -55,6 +55,12 @@
       <th>Protocol Version</th>
       <td><%= protocol_version %></td>
     </tr>
+    <% if revision %>
+    <tr>
+      <th>Cute Framework Revision</th>
+      <td><a href="<%= h(revision_url) %>"><%= h(revision) %></a></td>
+    </tr>
+    <% end %>
   </table>
 
   <h2>Endpoints</h2>

@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
+require "open3"
+
 module CF
   module MCP
     class IndexBuilder
       DEFAULT_HEADERS_PATH = File.expand_path("~/Work/GitHub/pusewicz/cute_framework/include")
 
-      attr_reader :headers_path
+      attr_reader :headers_path, :revision
 
       def initialize(root: nil, download: false)
         @headers_path = resolve_headers_path(root: root, download: download)
@@ -41,18 +43,42 @@ module CF
       private
 
       def resolve_headers_path(root:, download:)
-        return root if root
-        return ENV["CF_HEADERS_PATH"] if ENV["CF_HEADERS_PATH"]
+        if root
+          @revision = detect_git_revision(root)
+          return root
+        end
+
+        if (env_path = ENV["CF_HEADERS_PATH"])
+          @revision = detect_git_revision(env_path)
+          return env_path
+        end
 
         if download
           warn "Downloading Cute Framework headers from GitHub..."
           downloader = Downloader.new
           path = downloader.download_and_extract
+          @revision = downloader.sha
           warn "Downloaded headers to: #{path}"
           return path
         end
 
+        @revision = detect_git_revision(DEFAULT_HEADERS_PATH)
         DEFAULT_HEADERS_PATH
+      end
+
+      # Detects the current git commit SHA for a local Cute Framework checkout.
+      # `path` may be the repo root or any subdirectory within it (e.g. include/) -
+      # git walks up to find the enclosing repository either way.
+      def detect_git_revision(path)
+        return nil unless File.directory?(path)
+
+        stdout, _stderr, status = Open3.capture3("git", "-C", path, "rev-parse", "--short", "HEAD")
+        return nil unless status.success?
+
+        sha = stdout.strip
+        sha.empty? ? nil : sha
+      rescue Errno::ENOENT
+        nil
       end
 
       def find_topics_path(headers_path)

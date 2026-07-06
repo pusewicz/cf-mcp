@@ -14,6 +14,10 @@ class CF::MCP::DownloaderTest < Minitest::Test
     FileUtils.rm_rf(@temp_dir) if @temp_dir && File.directory?(@temp_dir)
   end
 
+  def test_sha_is_nil_before_download
+    assert_nil @downloader.sha
+  end
+
   def test_extract_directories_extracts_include_files
     zip_path = create_test_zip
     base_path = File.join(@temp_dir, "cute_framework")

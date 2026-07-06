@@ -97,8 +97,9 @@ module CF
           warn "Indexed #{count} topics from: #{path}" if event == :topics_indexed
         end
         warn "Indexed #{index.stats[:total]} items (#{index.stats[:functions]} functions, #{index.stats[:structs]} structs, #{index.stats[:enums]} enums)"
+        warn "Cute Framework revision: #{builder.revision}" if builder.revision
 
-        server = Server.new(index)
+        server = Server.new(index, revision: builder.revision)
         server.run_stdio
       end
 

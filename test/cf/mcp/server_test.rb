@@ -640,3 +640,41 @@ class CF::MCP::ServerHTTPTest < Minitest::Test
       "Expected access-control-expose-headers header"
   end
 end
+
+# Landing page revision display tests
+class CF::MCP::ServerRevisionTest < Minitest::Test
+  def setup
+    @index = CF::MCP::Index.instance
+    @index.reset!
+    @index.add(CF::MCP::Models::FunctionDoc.new(
+      name: "cf_make_sprite",
+      category: "sprite",
+      brief: "Loads a sprite from an aseprite file."
+    ))
+  end
+
+  def test_server_exposes_revision
+    server = CF::MCP::Server.new(@index, revision: "abc1234")
+    assert_equal "abc1234", server.revision
+  end
+
+  def test_landing_page_shows_revision_with_commit_link_when_present
+    app = CF::MCP::Server.new(@index, revision: "abc1234").rack_app
+    env = Rack::MockRequest.env_for("/", method: "GET")
+    env["HTTP_ACCEPT"] = "text/html"
+    response = Rack::MockResponse.new(*app.call(env))
+
+    assert_includes response.body, "Cute Framework Revision"
+    assert_includes response.body, "abc1234"
+    assert_includes response.body, "https://github.com/RandyGaul/cute_framework/commit/abc1234"
+  end
+
+  def test_landing_page_omits_revision_row_when_absent
+    app = CF::MCP::Server.new(@index).rack_app
+    env = Rack::MockRequest.env_for("/", method: "GET")
+    env["HTTP_ACCEPT"] = "text/html"
+    response = Rack::MockResponse.new(*app.call(env))
+
+    refute_includes response.body, "Cute Framework Revision"
+  end
+end

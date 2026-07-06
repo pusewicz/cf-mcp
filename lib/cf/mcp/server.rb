@@ -5,7 +5,9 @@ require "mcp"
 module CF
   module MCP
     class Server
-      attr_reader :server, :index
+      attr_reader :server, :index, :revision
+
+      CUTE_FRAMEWORK_COMMIT_URL_TEMPLATE = "https://github.com/RandyGaul/cute_framework/commit/%{revision}"
 
       CORS_HEADERS = {
         "access-control-allow-origin" => "*",
@@ -30,16 +32,18 @@ module CF
           warn "Indexed #{count} topics from: #{path}" if event == :topics_indexed
         end
         warn "Indexed #{index.stats[:total]} items (#{index.stats[:functions]} functions, #{index.stats[:structs]} structs, #{index.stats[:enums]} enums)"
+        warn "Cute Framework revision: #{builder.revision}" if builder.revision
 
-        new(index).rack_app
+        new(index, revision: builder.revision).rack_app
       end
 
       PROTOCOL_VERSION = "2025-03-26"
       WEBSITE_URL = ENV.fetch("FLY_APP_NAME", nil) ? "https://#{ENV["FLY_APP_NAME"]}.fly.dev" : "https://cf-mcp.fly.dev"
       PUBLIC_DIR = File.join(__dir__, "public")
 
-      def initialize(index)
+      def initialize(index, revision: nil)
         @index = index
+        @revision = revision
 
         configuration = ::MCP::Configuration.new(protocol_version: PROTOCOL_VERSION)
         @server = ::MCP::Server.new(
@@ -190,6 +194,8 @@ module CF
           context = TemplateContext.new(
             version: CF::MCP::VERSION,
             protocol_version: PROTOCOL_VERSION,
+            revision: @revision,
+            revision_url: @revision && format(CUTE_FRAMEWORK_COMMIT_URL_TEMPLATE, revision: @revision),
             stats: index.stats,
             categories: index.categories.sort,
             topics: index.topics_ordered.map { |t| {name: t.name, brief: t.brief} },
@@ -213,11 +219,13 @@ module CF
       class TemplateContext
         TEMPLATES_DIR = File.join(__dir__, "templates")
 
-        attr_reader :version, :protocol_version, :stats, :categories, :topics, :tools, :tool_schemas_json
+        attr_reader :version, :protocol_version, :revision, :revision_url, :stats, :categories, :topics, :tools, :tool_schemas_json
 
-        def initialize(version:, protocol_version:, stats:, categories:, topics:, tools:, tool_schemas_json:)
+        def initialize(version:, protocol_version:, revision:, revision_url:, stats:, categories:, topics:, tools:, tool_schemas_json:)
           @version = version
           @protocol_version = protocol_version
+          @revision = revision
+          @revision_url = revision_url
           @stats = stats
           @categories = categories
           @topics = topics

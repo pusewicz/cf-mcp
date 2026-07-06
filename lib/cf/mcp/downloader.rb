@@ -15,6 +15,8 @@ module CF
 
       class DownloadError < StandardError; end
 
+      attr_reader :sha
+
       def initialize(download_dir: DEFAULT_DOWNLOAD_DIR)
         @download_dir = download_dir
       end
@@ -30,6 +32,7 @@ module CF
         # Check if cache is valid
         stored_sha = read_sha_metadata(sha_file)
         latest_sha = fetch_latest_sha
+        @sha = latest_sha
 
         if stored_sha && latest_sha && stored_sha == latest_sha
           if File.directory?(include_path) && !Dir.empty?(include_path)

@@ -40,6 +40,25 @@ class CF::MCP::IndexBuilderTest < Minitest::Test
     end
   end
 
+  def test_headers_path_descends_into_include_subdirectory_when_root_is_project_root
+    Dir.mktmpdir do |dir|
+      include_dir = File.join(dir, "include")
+      FileUtils.mkdir_p(include_dir)
+
+      builder = CF::MCP::IndexBuilder.new(root: dir)
+
+      assert_equal include_dir, builder.headers_path
+    end
+  end
+
+  def test_headers_path_is_root_when_root_has_no_include_subdirectory
+    Dir.mktmpdir do |dir|
+      builder = CF::MCP::IndexBuilder.new(root: dir)
+
+      assert_equal dir, builder.headers_path
+    end
+  end
+
   def test_revision_uses_downloader_sha_when_downloading
     fake_downloader = Object.new
     fake_downloader.define_singleton_method(:download_and_extract) { "/tmp/cf-mcp-fake/include" }

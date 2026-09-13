@@ -104,6 +104,12 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
       category: "sprite",
       brief: "The direction a sprite plays frames."
     ))
+    @index.add(CF::MCP::Models::TopicDoc.new(
+      name: "sprites",
+      category: "sprite",
+      brief: "How to work with sprites.",
+      content: "# Sprites\n\nSprites are drawable entities."
+    ))
 
     @server = CF::MCP::Server.new(@index)
   end
@@ -216,6 +222,33 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
     refute response["result"]["isError"]
     text = response["result"]["content"].first["text"]
     assert_includes text, "Not found"
+  end
+
+  def test_stdio_resources_list_includes_topics
+    responses = run_stdio_requests([
+      initialize_request(1),
+      {jsonrpc: "2.0", id: 2, method: "resources/list", params: {}}
+    ])
+
+    response = responses[1]
+    refute response.key?("error")
+
+    resources = response["result"]["resources"]
+    uris = resources.map { |r| r["uri"] }
+    assert_includes uris, "cf://topics/sprites"
+  end
+
+  def test_stdio_resources_read_returns_topic_content
+    responses = run_stdio_requests([
+      initialize_request(1),
+      {jsonrpc: "2.0", id: 2, method: "resources/read", params: {uri: "cf://topics/sprites"}}
+    ])
+
+    response = responses[1]
+    refute response.key?("error")
+
+    contents = response["result"]["contents"]
+    assert_includes contents.first["text"], "Sprites are drawable entities."
   end
 
   def test_stdio_tools_list

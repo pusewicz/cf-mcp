@@ -45,7 +45,8 @@ module CF
       def resolve_headers_path(root:, download:)
         if root
           @revision = detect_git_revision(root)
-          return root
+          nested_include = File.join(root, "include")
+          return File.directory?(nested_include) ? nested_include : root
         end
 
         if (env_path = ENV["CF_HEADERS_PATH"])

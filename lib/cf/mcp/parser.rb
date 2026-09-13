@@ -32,6 +32,7 @@ module CF
       def parse_directory(path)
         items = []
         Dir.glob(File.join(path, "**/*.h")).each do |header_file|
+          warn "Parsing #{header_file}"
           items.concat(parse_file(header_file))
         end
         items

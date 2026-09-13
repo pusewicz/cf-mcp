@@ -128,7 +128,7 @@ cf-mcp stdio --root ~/Work/GitHub/pusewicz/cute_framework
 
 ## Dependencies
 
-- `mcp` (~> 0.5) - Ruby MCP SDK
+- `mcp` (~> 0.25) - Ruby MCP SDK
 - `rack` (~> 3.0) / `rackup` (~> 2.0) / `puma` (~> 6.0) - HTTP server
 - `rubyzip` (~> 2.3) - ZIP extraction for downloader
 

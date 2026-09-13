@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Show the Cute Framework revision (git commit SHA) being served at startup and on the dashboard, linked to the commit on GitHub
 
+### Changed
+
+- Updated dependencies, including `mcp` from 0.22.0 to 0.25.0
+
 ## [0.17.2] - 2026-02-10
 
 ### Changed

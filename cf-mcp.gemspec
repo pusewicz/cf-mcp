@@ -27,7 +27,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "listen", "~> 3.10"
-  spec.add_dependency "mcp", "~> 0.6"
+  spec.add_dependency "mcp", "~> 0.25"
   spec.add_dependency "puma", "~> 7.1"
   spec.add_dependency "rack", "~> 3.0"
   spec.add_dependency "rackup", "~> 2.0"

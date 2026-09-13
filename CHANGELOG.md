@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Show the Cute Framework revision (git commit SHA) being served at startup and on the dashboard, linked to the commit on GitHub
 
+### Changed
+
+- Updated dependencies, including `mcp` from 0.22.0 to 0.25.0
+
 ### Fixed
 
 - `--root` now accepts a Cute Framework project root (as documented) and auto-descends into its `include/` directory; previously this scanned unrelated files and skipped topic indexing entirely

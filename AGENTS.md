@@ -128,9 +128,7 @@ cf-mcp stdio --root ~/Work/GitHub/pusewicz/cute_framework
 
 ## Dependencies
 
-- `mcp` (~> 0.25) - Ruby MCP SDK
-- `rack` (~> 3.0) / `rackup` (~> 2.0) / `puma` (~> 7.1) - HTTP server
-- `rubyzip` (~> 3.2) - ZIP extraction for downloader
+See `cf-mcp.gemspec` for runtime and development dependencies, and `Gemfile.lock` for pinned versions.
 
 ## Changelog
 

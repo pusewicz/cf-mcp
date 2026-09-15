@@ -6,7 +6,6 @@ Rakefile
 config.ru
 config/puma.rb
 exe/cf-mcp
-exe/cf-mcp-wrapper
 lib/cf/mcp.rb
 lib/cf/mcp/cli.rb
 lib/cf/mcp/downloader.rb

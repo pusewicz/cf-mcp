@@ -9,7 +9,10 @@ module CF
       class ParameterSearch < ::MCP::Tool
         extend ResponseHelpers
 
+        TITLE = "Parameter Search"
+
         tool_name "parameter_search"
+        title TITLE
         description "Find Cute Framework functions by parameter or return type"
 
         input_schema(
@@ -26,6 +29,7 @@ module CF
         )
 
         annotations(
+          title: TITLE,
           read_only_hint: true,
           destructive_hint: false,
           idempotent_hint: true,

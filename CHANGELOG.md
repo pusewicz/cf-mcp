@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CF_MCP_ALLOWED_HOSTS` environment variable (comma-separated) to allow extra `Host` header values on the HTTP endpoint; set to `cf-mcp.fly.dev` in `fly.toml`
 - Support MCP protocol version 2026-07-28: stateless requests carrying their version in `_meta`, and the `server/discover` method
 - Allow the `MCP-Protocol-Version`, `Mcp-Method` and `Mcp-Name` headers in CORS preflight responses
+- Server `description` in `serverInfo`
 
 ### Changed
 
@@ -21,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `mcp` from 0.25.0 to 1.5.1
 - Updated `puma` from 7.2.1 to 8.0.2 (the gemspec constraint is now `~> 8.0`) and `rubyzip` from 3.6.0 to 3.7.0
 - Removed the `2025-03-26` protocol pin; clients using the `initialize` handshake now negotiate up to 2025-11-25
+- Restored the server `title`, `website_url` and tool titles removed in 0.17.2 for that pin; the SDK still omits the server fields for clients that negotiate an older version
 - The web UI now calls tools through the stateless 2026-07-28 protocol
 - The web UI shows both the modern and the legacy handshake protocol versions
 - Bump Ruby to 4.0.7 in `.ruby-version`, the Dockerfile, and the CI matrix

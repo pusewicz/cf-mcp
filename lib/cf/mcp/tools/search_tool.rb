@@ -11,7 +11,10 @@ module CF
         extend ResponseHelpers
         extend SearchResultFormatter
 
+        TITLE = "Search"
+
         tool_name "search"
+        title TITLE
         description "Search Cute Framework documentation across all types (functions, structs, enums, topics)"
 
         input_schema(
@@ -26,6 +29,7 @@ module CF
         )
 
         annotations(
+          title: TITLE,
           read_only_hint: true,
           destructive_hint: false,
           idempotent_hint: true,

@@ -157,6 +157,52 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
     assert_equal "cf-mcp", response["result"]["_meta"]["io.modelcontextprotocol/serverInfo"]["name"]
   end
 
+  def test_stdio_server_discover_includes_title_website_url_and_description
+    response = run_stdio_requests([
+      {jsonrpc: "2.0", id: 1, method: "server/discover", params: {}}
+    ]).first
+
+    info = response["result"]["_meta"]["io.modelcontextprotocol/serverInfo"]
+    assert_equal "Cute Framework MCP", info["title"]
+    assert_equal CF::MCP::Server::WEBSITE_URL, info["websiteUrl"]
+    refute_empty info["description"]
+  end
+
+  def test_stdio_initialize_includes_title_website_url_and_description_on_latest_version
+    info = initialize_server_info("2025-11-25")
+
+    assert_equal "Cute Framework MCP", info["title"]
+    assert_equal CF::MCP::Server::WEBSITE_URL, info["websiteUrl"]
+    refute_empty info["description"]
+    assert_equal 2, info["icons"].size
+  end
+
+  def test_stdio_initialize_omits_newer_server_info_fields_for_older_versions
+    # Clients like Zed negotiate an older version and must not see fields from a newer one.
+    info = initialize_server_info("2025-06-18")
+    assert_equal "Cute Framework MCP", info["title"]
+    assert_equal CF::MCP::Server::WEBSITE_URL, info["websiteUrl"]
+    refute info.key?("description")
+    refute info.key?("icons")
+
+    info = initialize_server_info("2025-03-26")
+    assert_equal ["name", "version"], info.keys.sort
+  end
+
+  def test_stdio_tools_list_gives_every_tool_a_title
+    response = run_stdio_requests([
+      initialize_request(1),
+      {jsonrpc: "2.0", id: 2, method: "tools/list", params: {}}
+    ])[1]
+
+    tools = response["result"]["tools"]
+    assert_equal 8, tools.size
+    tools.each do |tool|
+      refute_empty tool["title"].to_s, "#{tool["name"]} has no title"
+      assert_equal tool["title"], tool["annotations"]["title"], "#{tool["name"]} annotation title differs"
+    end
+  end
+
   def test_stdio_get_details_tool
     responses = run_stdio_requests([
       initialize_request(1),
@@ -305,6 +351,15 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
         clientInfo: {name: "test", version: "1.0"}
       }
     }
+  end
+
+  def initialize_server_info(protocol_version)
+    request = initialize_request(1)
+    request[:params][:protocolVersion] = protocol_version
+
+    response = run_stdio_requests([request]).first
+    assert_equal protocol_version, response["result"]["protocolVersion"]
+    response["result"]["serverInfo"]
   end
 
   def tools_call_request(id, tool_name, arguments)

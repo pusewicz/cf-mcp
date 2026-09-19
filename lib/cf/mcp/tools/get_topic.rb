@@ -9,7 +9,10 @@ module CF
       class GetTopic < ::MCP::Tool
         extend ResponseHelpers
 
+        TITLE = "Get Topic"
+
         tool_name "get_topic"
+        title TITLE
         description "Get the full content of a Cute Framework topic guide document"
 
         input_schema(
@@ -21,6 +24,7 @@ module CF
         )
 
         annotations(
+          title: TITLE,
           read_only_hint: true,
           destructive_hint: false,
           idempotent_hint: true,

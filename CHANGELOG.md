@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `CF_MCP_ALLOWED_HOSTS` environment variable (comma-separated) to allow extra `Host` header values on the HTTP endpoint; set to `cf-mcp.fly.dev` in `fly.toml`
 
+### Changed
+
+- Bump Ruby to 4.0.7 in `.ruby-version`, the Dockerfile, and the CI matrix
+
 ### Fixed
 
 - HTTP endpoint rejected all non-loopback requests with `403 Invalid Host header` since `mcp` 0.25 enabled DNS-rebinding protection, breaking the hosted server

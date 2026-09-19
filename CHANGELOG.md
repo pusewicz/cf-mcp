@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-09-19
+
 ### Added
 
 - `CF_MCP_ALLOWED_HOSTS` environment variable (comma-separated) to allow extra `Host` header values on the HTTP endpoint; set to `cf-mcp.fly.dev` in `fly.toml`
@@ -15,16 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **BREAKING:** Raised the minimum supported Ruby from 3.2 to 3.3 (`required_ruby_version` and the Standard Ruby target); 3.2 reached end of life on 2026-03-31; CI now also runs against Ruby 3.3
 - Updated `mcp` from 0.25.0 to 1.5.1
 - Updated `puma` from 7.2.1 to 8.0.2 (the gemspec constraint is now `~> 8.0`) and `rubyzip` from 3.6.0 to 3.7.0
 - Removed the `2025-03-26` protocol pin; clients using the `initialize` handshake now negotiate up to 2025-11-25
 - The web UI now calls tools through the stateless 2026-07-28 protocol
 - The web UI shows both the modern and the legacy handshake protocol versions
-
-### Changed
-
 - Bump Ruby to 4.0.7 in `.ruby-version`, the Dockerfile, and the CI matrix
-- Raised the minimum supported Ruby from 3.2 to 3.3 (`required_ruby_version` and the Standard Ruby target); 3.2 reached end of life on 2026-03-31; CI now also runs against Ruby 3.3
 - Bumped GitHub Actions: `actions/checkout` to v7 and `actions/cache` to v6
 - Added least-privilege permissions, PR concurrency cancellation and a job timeout to the CI workflow, and Dependabot for GitHub Actions and Bundler
 
@@ -333,7 +332,8 @@ This version was prepared but never released. Changes rolled into 0.17.2.
   - `cf_list_category` - List items by category
   - `cf_get_details` - Get full documentation by name
 
-[Unreleased]: https://github.com/pusewicz/cf-mcp/compare/v0.19.0...HEAD
+[Unreleased]: https://github.com/pusewicz/cf-mcp/compare/v0.20.0...HEAD
+[0.20.0]: https://github.com/pusewicz/cf-mcp/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/pusewicz/cf-mcp/compare/v0.18.0...v0.19.0
 [0.17.2]: https://github.com/pusewicz/cf-mcp/compare/v0.17.0...v0.17.2
 [0.17.1]: https://github.com/pusewicz/cf-mcp/compare/v0.17.0...v0.17.1

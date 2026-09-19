@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `name:` is now a required keyword on `DocItem` and its subclasses (`FunctionDoc`, `StructDoc`, `EnumDoc`, `TopicDoc`); previously a nameless item could be built and indexed
+- `Index#by_type` now returns an `Index::ByType` (`functions`, `structs`, `enums`, `topics`) instead of a Hash keyed by type symbol, and `Index#add` files items by class rather than by their `type`
 - Small internal refactors so the code type checks; no behavior change for valid input
 
 ### Removed

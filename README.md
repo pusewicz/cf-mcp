@@ -63,6 +63,12 @@ Then launch the inspector and connect using Streamable HTTP transport to:
 http://localhost:9292/http
 ```
 
+When serving under a non-loopback hostname, allow it via `CF_MCP_ALLOWED_HOSTS` (comma-separated), otherwise requests are rejected with `403 Invalid Host header`:
+
+```bash
+CF_MCP_ALLOWED_HOSTS=mcp.example.com cf-mcp http --root /path/to/cute_framework
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

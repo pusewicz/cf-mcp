@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `CF_MCP_ALLOWED_HOSTS` environment variable (comma-separated) to allow extra `Host` header values on the HTTP endpoint; set to `cf-mcp.fly.dev` in `fly.toml`
+
+### Fixed
+
+- HTTP endpoint rejected all non-loopback requests with `403 Invalid Host header` since `mcp` 0.25 enabled DNS-rebinding protection, breaking the hosted server
+
 ## [0.19.0] - 2026-09-15
 
 ### Added
@@ -306,6 +316,7 @@ This version was prepared but never released. Changes rolled into 0.17.2.
   - `cf_list_category` - List items by category
   - `cf_get_details` - Get full documentation by name
 
+[Unreleased]: https://github.com/pusewicz/cf-mcp/compare/v0.19.0...HEAD
 [0.19.0]: https://github.com/pusewicz/cf-mcp/compare/v0.18.0...v0.19.0
 [0.17.2]: https://github.com/pusewicz/cf-mcp/compare/v0.17.0...v0.17.2
 [0.17.1]: https://github.com/pusewicz/cf-mcp/compare/v0.17.0...v0.17.1

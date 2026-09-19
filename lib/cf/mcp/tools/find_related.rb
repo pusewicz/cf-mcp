@@ -48,7 +48,7 @@ module CF
           }
 
           # Back references: items that reference this item
-          back_refs = []
+          back_refs = [] #: Array[String]
           index.items.each_value do |other_item|
             next if other_item.name == name
             next unless other_item.related&.include?(name)

@@ -27,7 +27,10 @@ rake standard
 # Auto-fix linting issues
 rake standard:fix
 
-# Run tests, lint, and generate manifest (default task)
+# Validate signatures, type check with Steep, run tests under the runtime type checker
+rake rbs
+
+# Run tests, lint, type check, and generate manifest (default task)
 rake
 
 # Start interactive console
@@ -104,6 +107,31 @@ lib/cf/mcp/
 ## Code Style
 
 Uses Standard Ruby for linting (configured in `.standard.yml`). Target Ruby version is 3.3+.
+
+## Type Checking
+
+Signatures are hand-written RBS in `sig/`, one file per `lib/` file. Every method, attribute and constant needs one; CI fails otherwise. `bin/setup` (or `bundle exec rbs collection install`) installs the RBS collection that Steep and the tests load.
+
+```bash
+rake rbs            # all three checks below
+rake rbs:validate   # rbs validate: are the signatures well-formed?
+rake rbs:steep      # steep check: does lib/ agree with them?
+rake rbs:test       # the test suite under RBS's runtime checker
+```
+
+Each check catches something the others can't:
+
+- **Steep** (`Steepfile`) checks `lib/` against `sig/` and fails on any `def` without a signature.
+- **`test/cf/mcp/signatures_test.rb`** checks by reflection that everything declared exists and everything defined in `lib/` is declared. It covers `attr_*` (Steep doesn't treat those as definitions) and stale declarations (which Steep can't report reliably).
+- **`rake rbs:test`** runs the suite with `RBS_TEST_TARGET='CF::MCP::*'`, so signatures are checked against real runtime values, not just against the code.
+
+`sig-stubs/` holds hand-written stubs for gems that ship no RBS (`mcp`, `rackup`, `rubyzip`); keep them to the APIs `lib/` actually calls. Neither `sig/` nor `sig-stubs/` is packaged in the gem (see `rake manifest`).
+
+Things to know:
+
+- `parser.rb` and `topic_parser.rb` are checked with Steep's lenient template (see the `Steepfile`): RBS core types regex captures loosely, so strict mode would mean rewriting the parsing logic. They still need a signature for every method.
+- Rack signatures come from the RBS collection and describe rack 2.2; the gem runs on rack 3.
+- Empty collection literals need a type comment, e.g. `lines = [] #: Array[String]`.
 
 ## Testing
 

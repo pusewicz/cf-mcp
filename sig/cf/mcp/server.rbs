@@ -1,0 +1,100 @@
+module CF
+  module MCP
+    # Wraps an ::MCP::Server; it is not a subclass of it.
+    class Server
+      # Anything ENV-shaped: read with a default. Lets tests pass a plain Hash.
+      interface _EnvSource
+        def fetch: (String key, String default) -> String
+      end
+
+      # A `format` template with a `%{revision}` placeholder.
+      CUTE_FRAMEWORK_COMMIT_URL_TEMPLATE: String
+
+      CORS_HEADERS: Hash[String, String]
+
+      # Both track the SDK rather than pinning a version.
+      MODERN_PROTOCOL_VERSION: String
+      LEGACY_PROTOCOL_VERSION: String
+
+      DESCRIPTION: String
+      WEBSITE_URL: String
+      PUBLIC_DIR: String
+      ALLOWED_HOSTS_ENV: String
+
+      @allowed_hosts: Array[String]
+
+      attr_reader server: ::MCP::Server
+      attr_reader index: Index
+      attr_reader revision: String?
+
+      # Builds a Rack app with header downloading and indexing. Shared entry
+      # point for config.ru and the CLI.
+      def self.build_rack_app: (?root: String?, ?download: bool) -> Rack::Builder
+
+      # Extra Host header values the HTTP transport accepts, from a
+      # comma-separated environment variable.
+      def self.allowed_hosts_from_env: (?_EnvSource env) -> Array[String]
+
+      def initialize: (Index index, ?revision: String?, ?allowed_hosts: Array[String]) -> void
+
+      def run_stdio: () -> void
+
+      def rack_app: () -> Rack::Builder
+
+      private
+
+      def build_topic_resources: (Index index) -> Array[::MCP::Resource]
+
+      def handle_resource_read: (Hash[Symbol, untyped] params, Index index) -> Array[Hash[Symbol, String?]]
+
+      def escape_html: (untyped text) -> String
+
+      def build_landing_page: () -> ^(Index index, Array[singleton(::MCP::Tool)] tool_classes) -> String
+
+      # Provides a clean binding for the ERB landing page template.
+      class TemplateContext
+        TEMPLATES_DIR: String
+
+        attr_reader version: String
+        attr_reader modern_protocol_version: String
+        attr_reader legacy_protocol_version: String
+        attr_reader revision: String?
+        attr_reader revision_url: String?
+        attr_reader stats: Hash[Symbol, Integer]
+        attr_reader categories: Array[String]
+        attr_reader topics: Array[{ name: String?, brief: String? }]
+        attr_reader tools: Array[{ name: String?, description: String? }]
+        attr_reader tool_schemas_json: String
+
+        def initialize: (
+          version: String,
+          modern_protocol_version: String,
+          legacy_protocol_version: String,
+          revision: String?,
+          revision_url: String?,
+          stats: Hash[Symbol, Integer],
+          categories: Array[String],
+          topics: Array[{ name: String?, brief: String? }],
+          tools: Array[{ name: String?, description: String? }],
+          tool_schemas_json: String
+        ) -> void
+
+        def categories_json: () -> String
+
+        def topics_json: () -> String
+
+        def css_content: () -> String
+
+        def changelog_content: () -> String
+
+        def changelog_json: () -> String
+
+        def js_content: () -> String
+
+        def h: (untyped text) -> String
+
+        def get_binding: () -> Binding
+      end
+    end
+  end
+end

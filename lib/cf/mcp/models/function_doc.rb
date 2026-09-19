@@ -35,7 +35,7 @@ module CF
         end
 
         def to_text(detailed: false, index: nil)
-          lines = []
+          lines = [] #: Array[String]
           lines.concat(build_header_lines)
           lines.concat(build_signature_lines)
           lines.concat(build_description_lines)
@@ -58,7 +58,7 @@ module CF
         end
 
         def build_type_specific_lines
-          lines = []
+          lines = [] #: Array[String]
 
           if parameters && !parameters.empty?
             lines << "## Parameters"

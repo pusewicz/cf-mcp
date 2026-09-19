@@ -50,7 +50,7 @@ module CF
         end
 
         def to_text(detailed: false, index: nil)
-          lines = []
+          lines = [] #: Array[String]
           lines << "# #{name}"
           lines << ""
           lines << "**Type:** topic"

@@ -1,0 +1,23 @@
+module CF
+  module MCP
+    module Models
+      class StructDoc < DocItem
+        class Member < ::Data
+          attr_reader declaration: String
+          attr_reader description: String
+
+          def self.new: (String declaration, String description) -> instance
+                      | (declaration: String, description: String) -> instance
+        end
+
+        attr_accessor members: Array[Member]
+
+        def initialize: (?members: Array[Member]?, **untyped kwargs) -> void
+
+        def to_h: () -> Hash[Symbol, untyped]
+
+        def build_type_specific_lines: () -> Array[String]
+      end
+    end
+  end
+end

@@ -1,0 +1,9 @@
+module CF
+  module MCP
+    module Tools
+      module SearchResultFormatter
+        def format_search_results: (Array[Models::DocItem] results, query: String, type_label: String, limit: Integer, details_tip: String, ?filter_suggestion: String?) -> String
+      end
+    end
+  end
+end

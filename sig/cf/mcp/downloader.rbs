@@ -1,0 +1,40 @@
+module CF
+  module MCP
+    # Downloads and caches the Cute Framework headers and topic docs from GitHub.
+    class Downloader
+      CUTE_FRAMEWORK_ZIP_URL: String
+
+      # A `format` template with a `%{ref}` placeholder.
+      GITHUB_ARCHIVE_URL_TEMPLATE: String
+
+      SHA_METADATA_FILE: String
+      DEFAULT_DOWNLOAD_DIR: String
+
+      class DownloadError < StandardError
+      end
+
+      @download_dir: String
+
+      # Set by #download_and_extract, not by #initialize.
+      attr_reader sha: String?
+
+      def initialize: (?download_dir: String) -> void
+
+      # Returns the path of the extracted include/ directory.
+      def download_and_extract: () -> String
+
+      private
+
+      def download_zip: (String destination, ?String url) -> Integer
+
+      def extract_directories: (String zip_path, String base_path) -> void
+
+      def fetch_latest_sha: () -> String?
+
+      def read_sha_metadata: (String file) -> String?
+
+      # A nil sha is a no-op.
+      def write_sha_metadata: (String file, String? sha) -> void
+    end
+  end
+end

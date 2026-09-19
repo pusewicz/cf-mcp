@@ -34,5 +34,14 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
+      # bundler-cache restores gems, not the RBS collection that Steep and the
+      # signature tests load.
+      - name: Cache RBS collection
+        uses: actions/cache@v6
+        with:
+          path: .gem_rbs_collection
+          key: rbs-collection-${{ hashFiles('rbs_collection.lock.yaml') }}
+      - name: Install RBS collection
+        run: bundle exec rbs collection install --frozen
       - name: Run the default task
         run: bundle exec rake

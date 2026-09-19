@@ -1,0 +1,14 @@
+module CF
+  module MCP
+    module Tools
+      class ListTopics < ::MCP::Tool
+        extend ResponseHelpers
+
+        TITLE: String
+        CATEGORY_TIP: String
+
+        def self.call: (?category: String?, ?ordered: bool, ?server_context: server_context) -> ::MCP::Tool::Response
+      end
+    end
+  end
+end

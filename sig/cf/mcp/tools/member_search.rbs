@@ -1,0 +1,13 @@
+module CF
+  module MCP
+    module Tools
+      class MemberSearch < ::MCP::Tool
+        extend ResponseHelpers
+
+        TITLE: String
+
+        def self.call: (query: String, ?limit: Integer, ?server_context: server_context) -> ::MCP::Tool::Response
+      end
+    end
+  end
+end

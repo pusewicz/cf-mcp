@@ -1,0 +1,49 @@
+module CF
+  module MCP
+    # Extracts documentation from Cute Framework C headers.
+    class Parser
+      DOC_BLOCK_PATTERN: Regexp
+      TAG_PATTERN: Regexp
+      MEMBER_COMMENT_PATTERN: Regexp
+      ENTRY_COMMENT_PATTERN: Regexp
+      CF_ENUM_PATTERN: Regexp
+      SIGNATURE_CLEANUP: Regexp
+      END_MARKER_PATTERN: Regexp
+
+      # Concretely a FunctionDoc, StructDoc or EnumDoc.
+      def parse_file: (String path) -> Array[Models::DocItem]
+
+      def parse_directory: (String path) -> Array[Models::DocItem]
+
+      private
+
+      # Byte positions at which each line starts.
+      def build_line_offsets: (String content) -> Array[Integer]
+
+      # Converts a byte position to a 1-based line number.
+      def line_for_position: (Integer position, Array[Integer] line_offsets) -> Integer
+
+      def parse_doc_block: (String doc_block, String following_content, String source_file, ?Integer? source_line) -> Models::DocItem?
+
+      # Heterogeneous: `:params` maps to an Array of `{name:, description:}`
+      # hashes, `:related` to an Array of Strings, every other tag to a String.
+      def extract_tags: (String doc_block) -> Hash[Symbol, untyped]
+
+      def save_tag: (Hash[Symbol, untyped] tags, String tag, String content) -> void
+
+      def determine_type: (Hash[Symbol, untyped] tags) -> (:function | :struct | :enum)?
+
+      def parse_function: (Hash[Symbol, untyped] tags, String following_content, String source_file, ?Integer? source_line) -> Models::FunctionDoc
+
+      def parse_struct: (Hash[Symbol, untyped] tags, String following_content, String source_file, ?Integer? source_line) -> Models::StructDoc
+
+      def parse_enum: (Hash[Symbol, untyped] tags, String following_content, String source_file, ?Integer? source_line) -> Models::EnumDoc
+
+      def extract_signature: (String content) -> String?
+
+      def extract_members: (String content) -> Array[Models::StructDoc::Member]
+
+      def extract_enum_entries: (String content) -> Array[Models::EnumDoc::Entry]
+    end
+  end
+end

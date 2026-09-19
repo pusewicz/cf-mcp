@@ -27,7 +27,7 @@ module CF
         def build_type_specific_lines
           return [] unless entries && !entries.empty?
 
-          lines = []
+          lines = [] #: Array[String]
           lines << "## Values"
           lines << ""
           lines << "| Name | Value | Description |"

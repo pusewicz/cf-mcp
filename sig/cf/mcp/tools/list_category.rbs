@@ -1,0 +1,13 @@
+module CF
+  module MCP
+    module Tools
+      class ListCategory < ::MCP::Tool
+        extend ResponseHelpers
+
+        TITLE: String
+
+        def self.call: (?category: String?, ?type: String?, ?server_context: server_context) -> ::MCP::Tool::Response
+      end
+    end
+  end
+end

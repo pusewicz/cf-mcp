@@ -40,17 +40,19 @@ module CF
           index = Index.instance
 
           pattern = Regexp.new(Regexp.escape(type), Regexp::IGNORECASE)
-          input_matches = []
-          output_matches = []
+          input_matches = [] #: Array[Models::FunctionDoc]
+          output_matches = [] #: Array[Models::FunctionDoc]
 
           index.functions.each do |func|
             next unless func.signature
 
+            func_name = func.name #: String
+
             # Check return type (text before function name in signature)
             if direction != "input"
               # Extract return type: everything before the function name
-              if func.signature =~ /^(.+?)\s+#{Regexp.escape(func.name)}\s*\(/
-                return_type = ::Regexp.last_match(1).strip
+              if func.signature =~ /^(.+?)\s+#{Regexp.escape(func_name)}\s*\(/
+                return_type = ::Regexp.last_match(1).to_s.strip
                 if return_type.match?(pattern)
                   output_matches << func
                 end
@@ -61,7 +63,7 @@ module CF
             if direction != "output"
               # Check the signature for parameter types
               if func.signature =~ /\(([^)]*)\)/
-                params_str = ::Regexp.last_match(1)
+                params_str = ::Regexp.last_match(1).to_s
                 if params_str.match?(pattern)
                   input_matches << func unless input_matches.include?(func)
                 end

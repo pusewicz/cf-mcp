@@ -1,0 +1,17 @@
+module CF
+  module MCP
+    class GitHubClient
+      GITHUB_API_BASE: String
+      REPO_OWNER: String
+      REPO_NAME: String
+      DEFAULT_BRANCH: String
+
+      @token: String?
+
+      def initialize: (?token: String?) -> void
+
+      # The short (7 character) SHA of the latest commit, or nil on any failure.
+      def latest_commit_sha: () -> String?
+    end
+  end
+end

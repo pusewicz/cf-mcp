@@ -110,7 +110,7 @@ module CF
 
           # Handle CORS preflight
           if request.options?
-            return [204, cors_headers, []]
+            next [204, cors_headers, []] #: [Integer, Hash[String, String], Array[String]]
           end
 
           # Route based on path
@@ -149,12 +149,12 @@ module CF
           end
 
           # Add CORS headers to response
-          [status, headers.merge(cors_headers), body]
+          [status, headers.merge(cors_headers), body] #: ::Rack::response
         }
 
-        Rack::Builder.new do
-          use Rack::CommonLogger
-          run app
+        Rack::Builder.new do |builder|
+          builder.use Rack::CommonLogger
+          builder.run app
         end
       end
 
@@ -162,9 +162,10 @@ module CF
 
       def build_topic_resources(index)
         index.topics.map do |topic|
+          topic_name = topic.name #: String
           ::MCP::Resource.new(
-            uri: "cf://topics/#{topic.name}",
-            name: topic.name.tr("_", " ").split.map(&:capitalize).join(" "),
+            uri: "cf://topics/#{topic_name}",
+            name: topic_name.tr("_", " ").split.map(&:capitalize).join(" "),
             description: topic.brief,
             mime_type: "text/markdown"
           )
@@ -178,7 +179,7 @@ module CF
         topic_name = uri.sub("cf://topics/", "")
         topic = index.find(topic_name)
 
-        return [] unless topic&.type == :topic
+        return [] unless topic.is_a?(Models::TopicDoc)
 
         [{
           uri: uri,

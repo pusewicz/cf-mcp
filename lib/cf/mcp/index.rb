@@ -26,7 +26,9 @@ module CF
       end
 
       def add(item)
-        @items[item.name] = item
+        # Items are looked up by name, so every indexed item is expected to have one.
+        name = item.name #: String
+        @items[name] = item
         @by_type[item.type] << item if @by_type.key?(item.type)
 
         if item.category
@@ -35,7 +37,7 @@ module CF
         end
 
         # Build reverse reference index for topics
-        build_topic_reverse_index(item) if item.type == :topic
+        build_topic_reverse_index(item) if item.is_a?(Models::TopicDoc)
       end
 
       def find(name)
@@ -72,20 +74,21 @@ module CF
         results.take(limit)
       end
 
+      # `add` files each item under its own type, and every subclass fixes that type.
       def functions
-        @by_type[:function]
+        @by_type[:function] #: Array[Models::FunctionDoc]
       end
 
       def structs
-        @by_type[:struct]
+        @by_type[:struct] #: Array[Models::StructDoc]
       end
 
       def enums
-        @by_type[:enum]
+        @by_type[:enum] #: Array[Models::EnumDoc]
       end
 
       def topics
-        @by_type[:topic]
+        @by_type[:topic] #: Array[Models::TopicDoc]
       end
 
       def topics_ordered
@@ -126,9 +129,10 @@ module CF
       end
 
       def build_topic_reverse_index(topic)
+        topic_name = topic.name #: String
         topic.all_api_references.each do |ref_name|
           @topic_references[ref_name] ||= []
-          @topic_references[ref_name] << topic.name unless @topic_references[ref_name].include?(topic.name)
+          @topic_references[ref_name] << topic_name unless @topic_references[ref_name].include?(topic_name)
         end
       end
     end

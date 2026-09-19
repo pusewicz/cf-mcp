@@ -1,0 +1,57 @@
+module CF
+  module MCP
+    # In-memory documentation index. A Singleton: use Index.instance.
+    class Index
+      include Singleton
+
+      # `include Singleton` defines this at runtime; RBS's Singleton module
+      # declares it only on itself, so it is repeated here.
+      def self.instance: () -> Index
+
+      attr_reader items: Hash[String, Models::DocItem]
+      attr_reader by_type: Hash[Symbol, Array[Models::DocItem]]
+      attr_reader by_category: Hash[String, Array[Models::DocItem]]
+      attr_reader topic_references: Hash[String, Array[String]]
+
+      def initialize: () -> void
+
+      def reset!: () -> void
+
+      def add: (Models::DocItem item) -> void
+
+      def find: (String name) -> Models::DocItem?
+
+      def brief_for: (String name) -> { name: String?, type: Symbol?, brief: String? }?
+
+      def search: (String? query, ?type: (String | Symbol)?, ?category: String?, ?limit: Integer) -> Array[Models::DocItem]
+
+      # The accessors below are narrowed to the concrete subclass: `add` files each
+      # item under its own `type`, and every subclass fixes that type.
+      def functions: () -> Array[Models::FunctionDoc]
+
+      def structs: () -> Array[Models::StructDoc]
+
+      def enums: () -> Array[Models::EnumDoc]
+
+      def topics: () -> Array[Models::TopicDoc]
+
+      def topics_ordered: () -> Array[Models::TopicDoc]
+
+      def topics_for: (String api_name) -> Array[Models::DocItem]
+
+      def categories: () -> Array[String]
+
+      def items_in_category: (String category) -> Array[Models::DocItem]
+
+      def size: () -> Integer
+
+      def stats: () -> Hash[Symbol, Integer]
+
+      private
+
+      def all_items: () -> Array[Models::DocItem]
+
+      def build_topic_reverse_index: (Models::TopicDoc topic) -> void
+    end
+  end
+end

@@ -36,7 +36,7 @@ module CF
           index = Index.instance
 
           pattern = Regexp.new(Regexp.escape(query), Regexp::IGNORECASE)
-          results = []
+          results = [] #: Array[{ struct: Models::StructDoc, members: Array[Models::StructDoc::Member] }]
 
           index.structs.each do |struct|
             next unless struct.members&.any?

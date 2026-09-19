@@ -1,0 +1,67 @@
+module CF
+  module MCP
+    module Models
+      class DocItem
+        GITHUB_REPO: String
+        GITHUB_RAW_BASE: String
+
+        attr_accessor name: String?
+        attr_accessor type: Symbol?
+        attr_accessor category: String?
+        attr_accessor brief: String?
+        attr_accessor remarks: String?
+        attr_accessor example: String?
+        attr_accessor example_brief: String?
+        attr_accessor related: Array[String]
+        attr_accessor source_file: String?
+        attr_accessor source_line: Integer?
+
+        def initialize: (
+          ?name: String?,
+          ?type: Symbol?,
+          ?category: String?,
+          ?brief: String?,
+          ?remarks: String?,
+          ?example: String?,
+          ?example_brief: String?,
+          ?related: Array[String]?,
+          ?source_file: String?,
+          ?source_line: Integer?
+        ) -> void
+
+        def matches?: (String? query) -> bool
+
+        # Higher scores rank better; multi-keyword queries sum per-keyword scores.
+        def relevance_score: (String? query) -> Integer
+
+        def source_urls: () -> { raw: String, blob: String, impl_raw: String }?
+
+        def to_h: () -> Hash[Symbol, untyped]
+
+        def to_summary: () -> String
+
+        def to_text: (?detailed: bool, ?index: Index?) -> String
+
+        def format_related_items: (Index? index) -> String
+
+        # The build_*_lines helpers are `protected` in Ruby. RBS has no protected
+        # visibility, so they are declared without a modifier.
+        def build_header_lines: () -> Array[String]
+
+        def build_description_lines: () -> Array[String]
+
+        def build_type_specific_lines: () -> Array[String]
+
+        def build_remarks_lines: () -> Array[String]
+
+        def build_example_lines: () -> Array[String]
+
+        def build_related_lines: (Index? index) -> Array[String]
+
+        private
+
+        def keyword_score: (String keyword) -> Integer
+      end
+    end
+  end
+end

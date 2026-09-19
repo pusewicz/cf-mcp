@@ -1,0 +1,44 @@
+module CF
+  module MCP
+    # Parses the markdown topic guides under docs/topics.
+    class TopicParser
+      # Matches markdown links to API pages: [text](../category/name.md)
+      API_LINK_PATTERN: Regexp
+
+      # Matches links between topics: [text](./topic_name.md)
+      TOPIC_LINK_PATTERN: Regexp
+
+      # Matches section headings.
+      SECTION_PATTERN: Regexp
+
+      # Maps a topic slug to the API category it documents.
+      CATEGORY_MAP: Hash[String, String]
+
+      # nil for index.md, which is not a topic.
+      def parse_file: (String path) -> Models::TopicDoc?
+
+      def parse_directory: (String path) -> Array[Models::TopicDoc]
+
+      # Maps topic slug to its position in the reading order.
+      def parse_reading_order: (String index_path) -> Hash[String, Integer]
+
+      private
+
+      def parse_topic: (String content, String slug, String source_file) -> Models::TopicDoc
+
+      def extract_title: (String content) -> String?
+
+      def extract_brief: (String content) -> String
+
+      def extract_sections: (String content) -> Array[Models::TopicDoc::Section]
+
+      # Function, struct and enum references. The last is always empty: the
+      # links carry no way to tell the three kinds apart at this stage.
+      def extract_api_references: (String content) -> [Array[String], Array[String], Array[String]]
+
+      def extract_topic_references: (String content) -> Array[String]
+
+      def derive_category: (String slug) -> String
+    end
+  end
+end

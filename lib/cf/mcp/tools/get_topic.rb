@@ -39,7 +39,8 @@ module CF
           if topic.nil? || topic.type != :topic
             # Try fuzzy match on topic names
             suggestions = index.topics.select { |t|
-              t.name.include?(name) || name.include?(t.name) || t.name.delete("_").include?(name.delete("_"))
+              topic_name = t.name #: String
+              topic_name.include?(name) || name.include?(topic_name) || topic_name.delete("_").include?(name.delete("_"))
             }
 
             if suggestions.empty?

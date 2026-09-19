@@ -1,0 +1,34 @@
+# Download sources
+sources:
+  - type: git
+    name: ruby/gem_rbs_collection
+    remote: https://github.com/ruby/gem_rbs_collection.git
+    revision: main
+    repo_dir: gems
+
+# A directory to install the downloaded RBSs
+path: .gem_rbs_collection
+
+gems:
+  # Standard library signatures the code uses. Default gems are not in
+  # Gemfile.lock, so the collection won't pick them up on its own.
+  - name: erb
+  - name: fileutils
+  - name: json
+  - name: net-http
+  - name: open3
+  - name: optparse
+  - name: pathname
+  - name: singleton
+  - name: tmpdir
+  - name: uri
+
+  # No published signatures; hand-written stubs live in sig-stubs/ instead.
+  - name: mcp
+    ignore: true
+  - name: puma
+    ignore: true
+  - name: rackup
+    ignore: true
+  - name: rubyzip
+    ignore: true

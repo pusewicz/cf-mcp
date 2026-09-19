@@ -281,6 +281,10 @@ class CF::MCP::ModelsTest < Minitest::Test
   end
 
   def test_every_doc_type_requires_a_name
+    # The call is deliberately ill-typed, so under `rake rbs:test` the runtime
+    # type checker rejects it before Ruby raises ArgumentError.
+    skip "ill-typed on purpose" if ENV.key?("RBS_TEST_TARGET")
+
     [
       CF::MCP::Models::DocItem,
       CF::MCP::Models::FunctionDoc,

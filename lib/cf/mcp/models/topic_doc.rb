@@ -10,6 +10,7 @@ module CF
         Section = Data.define(:title, :content)
 
         def initialize(
+          name:,
           content: nil,
           sections: [],
           function_references: [],
@@ -19,7 +20,7 @@ module CF
           reading_order: nil,
           **kwargs
         )
-          super(type: :topic, **kwargs)
+          super(name:, type: :topic, **kwargs)
           @content = content
           @sections = sections || []
           @function_references = function_references || []
@@ -50,10 +51,7 @@ module CF
         end
 
         def to_text(detailed: false, index: nil)
-          lines = []
-          lines << "# #{name}"
-          lines << ""
-          lines << "**Type:** topic"
+          lines = ["# #{name}", "", "**Type:** topic"]
           lines << "**Category:** #{category}" if category
           lines << "**Source:** #{source_file}" if source_file
           lines << ""

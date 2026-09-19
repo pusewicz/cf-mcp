@@ -1,0 +1,31 @@
+module CF
+  module MCP
+    class CLI
+      type options = {
+        command: Symbol?,
+        port: Integer?,
+        host: String,
+        root: String?,
+        download: bool
+      }
+
+      @args: Array[String]
+      @options: options
+
+      # Assigned as a side effect of #parse_args, which #initialize calls.
+      @option_parser: OptionParser
+
+      def initialize: (Array[String] args) -> void
+
+      def run: () -> void
+
+      private
+
+      def parse_args: () -> options
+
+      def run_server: (Symbol mode) -> void
+
+      def run_http_server: () -> void
+    end
+  end
+end

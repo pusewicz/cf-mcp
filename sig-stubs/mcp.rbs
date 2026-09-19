@@ -1,0 +1,103 @@
+# Hand-written stubs for the `mcp` gem (checked against 1.5.x).
+#
+# Covers only the APIs cf-mcp calls. These live outside sig/ because the mcp
+# gem ships no signatures and stubs must not be published with this gem.
+
+module MCP
+  class Configuration
+    LATEST_MODERN_PROTOCOL_VERSION: String
+    LATEST_HANDSHAKE_PROTOCOL_VERSION: String
+  end
+
+  # What the SDK passes to `Tool.call` as `server_context:`. It wraps the Hash set
+  # via `Server#server_context=` and forwards to it, so treat it as opaque.
+  class ServerContext
+  end
+
+  class Icon
+    def initialize: (?mime_type: String?, ?sizes: Array[String]?, ?src: String?, ?theme: String?) -> void
+  end
+
+  class Resource
+    def initialize: (uri: String, name: String, ?title: String?, ?description: String?, ?icons: Array[Icon], ?mime_type: String?, ?annotations: untyped, ?size: Integer?, ?meta: untyped) -> void
+  end
+
+  # Base class for every transport (stdio, streamable HTTP).
+  class Transport
+    def initialize: (Server server) -> void
+  end
+
+  # Tool classes are configured through a class-level DSL: each of these
+  # methods reads when called with no argument and writes when given one.
+  #
+  # `Tool.call` is intentionally not declared. Upstream it is
+  # `call(*args, server_context: nil)`, so declaring it here would make every
+  # subclass's concrete keyword signature an incompatible override. Each tool
+  # declares its own `self.call` in sig/.
+  class Tool
+    class Response
+      # Content items are hashes such as `{type: "text", text: "..."}`.
+      def initialize: (Array[Hash[Symbol, untyped]] content, ?error: bool, ?structured_content: untyped, ?meta: untyped) -> void
+    end
+
+    class InputSchema
+      def to_h: () -> Hash[Symbol, untyped]
+    end
+
+    def self.tool_name: () -> String?
+                      | (String value) -> void
+    def self.title: () -> String?
+                  | (String value) -> void
+    def self.description: () -> String?
+                        | (String value) -> void
+    def self.input_schema: () -> InputSchema
+                         | (Hash[Symbol, untyped] value) -> void
+    def self.annotations: () -> untyped
+                        | (Hash[Symbol, untyped] value) -> void
+  end
+
+  class Server
+    module Transports
+      class StdioTransport < ::MCP::Transport
+        def initialize: (Server server, ?max_line_bytes: Integer) -> void
+        def open: () -> void
+      end
+
+      class StreamableHTTPTransport < ::MCP::Transport
+        def initialize: (Server server, ?stateless: bool, ?enable_json_response: bool, ?allowed_origins: Array[String]?, ?allowed_hosts: Array[String]?, ?dns_rebinding_protection: bool) -> void
+
+        # The body is a Rack body: an Array of Strings, or a streaming object
+        # that responds to `each`. Which one depends on the request.
+        def handle_request: (Rack::Request request) -> [Integer, Hash[String, String], untyped]
+      end
+    end
+
+    attr_accessor server_context: Hash[Symbol, untyped]?
+    attr_accessor transport: Transport?
+
+    # After construction this is a Hash of tool name => tool class, even though
+    # `initialize` takes an Array of tool classes.
+    attr_reader tools: Hash[String, singleton(Tool)]
+
+    def initialize: (
+      ?description: String?,
+      ?icons: Array[Icon],
+      ?name: String,
+      ?title: String?,
+      ?version: String,
+      ?website_url: String?,
+      ?instructions: String?,
+      ?tools: Array[singleton(Tool)],
+      ?prompts: Array[untyped],
+      ?resources: Array[Resource],
+      ?resource_templates: Array[untyped],
+      ?server_context: Hash[Symbol, untyped]?,
+      ?configuration: untyped,
+      ?capabilities: untyped,
+      ?transport: Transport?
+    ) -> void
+
+    # The block receives the request params and returns the resource contents.
+    def resources_read_handler: () { (Hash[Symbol, untyped] params) -> Array[Hash[Symbol, untyped]] } -> void
+  end
+end

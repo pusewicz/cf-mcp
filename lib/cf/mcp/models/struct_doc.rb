@@ -9,10 +9,11 @@ module CF
         Member = Data.define(:declaration, :description)
 
         def initialize(
+          name:,
           members: [],
           **kwargs
         )
-          super(type: :struct, **kwargs)
+          super(name:, type: :struct, **kwargs)
           @members = members || []
         end
 
@@ -27,11 +28,7 @@ module CF
         def build_type_specific_lines
           return [] unless members && !members.empty?
 
-          lines = []
-          lines << "## Members"
-          lines << ""
-          lines << "| Member | Description |"
-          lines << "| --- | --- |"
+          lines = ["## Members", "", "| Member | Description |", "| --- | --- |"]
           members.each do |member|
             lines << "| `#{member.declaration}` | #{member.description} |"
           end

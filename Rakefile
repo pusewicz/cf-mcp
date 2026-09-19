@@ -9,7 +9,7 @@ require "standard/rake"
 
 desc "Generate Manifest.txt from git ls-files"
 task :manifest do
-  ignore_patterns = %w[bin/ Gemfile .gitignore test/ .github/ .standard.yml cf-mcp.gemspec .ruby-version CLAUDE.md AGENTS.md fly.toml Procfile Dockerfile .dockerignore .claude/ .mcp.json .serena/]
+  ignore_patterns = %w[bin/ Gemfile .gitignore test/ .github/ .standard.yml cf-mcp.gemspec .ruby-version CLAUDE.md AGENTS.md fly.toml Procfile Dockerfile .dockerignore .claude/ .mcp.json .serena/ sig/ sig-stubs/ Steepfile rbs_collection.yaml rbs_collection.lock.yaml]
 
   files = IO.popen(%w[git ls-files -z], chdir: __dir__, err: IO::NULL) do |ls|
     ls.readlines("\x0", chomp: true)
@@ -23,10 +23,34 @@ task :manifest do
   puts "Generated Manifest.txt with #{files.size} files"
 end
 
-desc "Validate RBS type signatures"
-task :rbs do
-  sh "rbs", "-I", "sig", "validate"
+namespace :rbs do
+  desc "Validate RBS type signatures"
+  task :validate do
+    sh "rbs", "--collection", "rbs_collection.yaml", "-I", "sig", "-I", "sig-stubs", "validate"
+  end
+
+  desc "Type check lib/ against the RBS signatures with Steep"
+  task :steep do
+    sh "steep", "check"
+  end
+
+  desc "Run the test suite under the RBS runtime type checker"
+  task :test do
+    env = {
+      "RBS_TEST_TARGET" => "CF::MCP::*",
+      "RBS_TEST_OPT" => "-I sig -I sig-stubs --collection rbs_collection.yaml",
+      "RBS_TEST_DOUBLE_SUITE" => "minitest",
+      "RBS_TEST_LOGLEVEL" => "warn",
+      # Append rather than replace: under `bundle exec`, RUBYOPT already carries
+      # -rbundler/setup, and dropping it would make the child resolve system gems.
+      "RUBYOPT" => "#{ENV["RUBYOPT"]} -rrbs/test/setup".strip
+    }
+    sh env, "bundle", "exec", "rake", "test"
+  end
 end
+
+desc "Validate signatures, type check with Steep, and run the tests under the runtime type checker"
+task rbs: %w[rbs:validate rbs:steep rbs:test]
 
 task default: %i[test standard rbs manifest]
 

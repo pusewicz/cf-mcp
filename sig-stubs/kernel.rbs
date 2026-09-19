@@ -1,0 +1,9 @@
+# Narrows a core signature for this project.
+
+module Kernel
+  # Core declares `String?` because `__dir__` is nil in eval'd code. Every caller
+  # in lib/ is a file loaded from disk, where it is always a String. The
+  # overload is listed first so it wins; the trailing `...` keeps the original.
+  def self?.__dir__: () -> String
+                   | ...
+end

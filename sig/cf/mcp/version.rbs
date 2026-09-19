@@ -1,0 +1,5 @@
+module CF
+  module MCP
+    VERSION: String
+  end
+end

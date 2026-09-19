@@ -41,4 +41,3 @@ lib/cf/mcp/tools/search_result_formatter.rb
 lib/cf/mcp/tools/search_tool.rb
 lib/cf/mcp/topic_parser.rb
 lib/cf/mcp/version.rb
-sig/cf/mcp.rbs

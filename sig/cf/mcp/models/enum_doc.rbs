@@ -1,0 +1,24 @@
+module CF
+  module MCP
+    module Models
+      class EnumDoc < DocItem
+        class Entry < ::Data
+          attr_reader name: String
+          attr_reader value: String
+          attr_reader description: String
+
+          def self.new: (String name, String value, String description) -> instance
+                      | (name: String, value: String, description: String) -> instance
+        end
+
+        attr_accessor entries: Array[Entry]
+
+        def initialize: (name: String, ?entries: Array[Entry]?, **untyped kwargs) -> void
+
+        def to_h: () -> Hash[Symbol, untyped]
+
+        def build_type_specific_lines: () -> Array[String]
+      end
+    end
+  end
+end

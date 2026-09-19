@@ -7,6 +7,8 @@ module CF
     class Index
       include Singleton
 
+      ByType = Data.define(:functions, :structs, :enums, :topics)
+
       attr_reader :items, :by_type, :by_category, :topic_references
 
       def initialize
@@ -15,27 +17,28 @@ module CF
 
       def reset!
         @items = {}
-        @by_type = {
-          function: [],
-          struct: [],
-          enum: [],
-          topic: []
-        }
+        @by_type = ByType.new(functions: [], structs: [], enums: [], topics: [])
         @by_category = {}
         @topic_references = {}
       end
 
       def add(item)
         @items[item.name] = item
-        @by_type[item.type] << item if @by_type.key?(item.type)
+
+        case item
+        when Models::FunctionDoc then @by_type.functions << item
+        when Models::StructDoc then @by_type.structs << item
+        when Models::EnumDoc then @by_type.enums << item
+        when Models::TopicDoc
+          @by_type.topics << item
+          # Build reverse reference index for topics
+          build_topic_reverse_index(item)
+        end
 
         if item.category
           @by_category[item.category] ||= []
           @by_category[item.category] << item
         end
-
-        # Build reverse reference index for topics
-        build_topic_reverse_index(item) if item.type == :topic
       end
 
       def find(name)
@@ -73,19 +76,19 @@ module CF
       end
 
       def functions
-        @by_type[:function]
+        @by_type.functions
       end
 
       def structs
-        @by_type[:struct]
+        @by_type.structs
       end
 
       def enums
-        @by_type[:enum]
+        @by_type.enums
       end
 
       def topics
-        @by_type[:topic]
+        @by_type.topics
       end
 
       def topics_ordered
@@ -111,10 +114,10 @@ module CF
       def stats
         {
           total: @items.size,
-          functions: @by_type[:function].size,
-          structs: @by_type[:struct].size,
-          enums: @by_type[:enum].size,
-          topics: @by_type[:topic].size,
+          functions: @by_type.functions.size,
+          structs: @by_type.structs.size,
+          enums: @by_type.enums.size,
+          topics: @by_type.topics.size,
           categories: @by_category.size
         }
       end

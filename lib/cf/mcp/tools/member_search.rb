@@ -11,6 +11,9 @@ module CF
 
         TITLE = "Member Search"
 
+        # A struct together with the members that matched the query.
+        Match = Data.define(:struct, :members)
+
         tool_name "member_search"
         title TITLE
         description "Search Cute Framework structs by member name or type"
@@ -36,20 +39,11 @@ module CF
           index = Index.instance
 
           pattern = Regexp.new(Regexp.escape(query), Regexp::IGNORECASE)
-          results = []
-
-          index.structs.each do |struct|
-            next unless struct.members&.any?
-
-            matching_members = struct.members.select { |member|
-              member.declaration&.match?(pattern)
-            }
-
-            next if matching_members.empty?
-
-            results << {struct: struct, members: matching_members}
-            break if results.size >= limit
-          end
+          # A limit below 1 still returns the first match.
+          results = index.structs.lazy.filter_map { |struct|
+            matching_members = struct.members.select { |member| member.declaration.match?(pattern) }
+            Match.new(struct, matching_members) unless matching_members.empty?
+          }.first([limit, 1].max)
 
           if results.empty?
             return text_response("No structs found with members matching '#{query}'")
@@ -58,9 +52,9 @@ module CF
           lines = ["# Structs with members matching '#{query}'", ""]
 
           results.each do |result|
-            struct = result[:struct]
+            struct = result.struct
             lines << "- **#{struct.name}** (#{struct.category}) — #{struct.brief}"
-            result[:members].each do |member|
+            result.members.each do |member|
               lines << "  - `#{member.declaration}` — #{member.description}"
             end
             lines << ""

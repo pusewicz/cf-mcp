@@ -27,7 +27,10 @@ rake standard
 # Auto-fix linting issues
 rake standard:fix
 
-# Run tests, lint, and generate manifest (default task)
+# Validate signatures, type check with Steep, run tests under the runtime type checker
+rake rbs
+
+# Run tests, lint, type check, and generate manifest (default task)
 rake
 
 # Start interactive console
@@ -104,6 +107,31 @@ lib/cf/mcp/
 ## Code Style
 
 Uses Standard Ruby for linting (configured in `.standard.yml`). Target Ruby version is 3.3+.
+
+## Type Checking
+
+Signatures are hand-written RBS in `sig/`, one file per `lib/` file. Every method, attribute and constant needs one; CI fails otherwise. `bin/setup` (or `bundle exec rbs collection install`) installs the RBS collection that Steep and the tests load.
+
+```bash
+rake rbs            # all three checks below
+rake rbs:validate   # rbs validate: are the signatures well-formed?
+rake rbs:steep      # steep check: does lib/ agree with them?
+rake rbs:test       # the test suite under RBS's runtime checker
+```
+
+Each check catches something the others can't:
+
+- **Steep** (`Steepfile`) checks `lib/` against `sig/` and fails on any `def` without a signature.
+- **`test/cf/mcp/signatures_test.rb`** checks by reflection that everything declared exists and everything defined in `lib/` is declared. It covers `attr_*` (Steep doesn't treat those as definitions) and stale declarations (which Steep can't report reliably).
+- **`rake rbs:test`** runs the suite with `RBS_TEST_TARGET='CF::MCP::*'`, so signatures are checked against real runtime values, not just against the code.
+
+`sig-stubs/` holds hand-written stubs for gems that ship no RBS (`mcp`, `rackup`, `rubyzip`); keep them to the APIs `lib/` actually calls. It also narrows three core signatures (`Kernel#__dir__`, `String#scan`, `MatchData#begin`) that RBS core types more loosely than this code needs; each file says why. Neither `sig/` nor `sig-stubs/` is packaged in the gem (see `rake manifest`).
+
+Things to know:
+
+- `String#scan` is narrowed to yield up to three String captures, on the assumption that every pattern passed to it has only mandatory groups. Nothing checks that assumption, so keep optional groups (`(a)?`) out of `scan` patterns, or read them another way.
+- Rack signatures come from the RBS collection and describe rack 2.2; the gem runs on rack 3.
+- Prefer code whose types Steep can infer over casts: build arrays with `filter_map`/`map` or from a non-empty literal, use `line[re, 1]` or `re.match(line)` for captures, and `|| raise(...)` for a nilable value that must exist. An unavoidable empty literal takes a type comment, e.g. `items = [] #: Array[Models::DocItem]`.
 
 ## Testing
 

@@ -1,0 +1,47 @@
+module CF
+  module MCP
+    module Models
+      class TopicDoc < DocItem
+        class Section < ::Data
+          attr_reader title: String
+          attr_reader content: String
+
+          def self.new: (String title, String content) -> instance
+                      | (title: String, content: String) -> instance
+        end
+
+        attr_accessor content: String?
+        attr_accessor sections: Array[Section]
+        attr_accessor function_references: Array[String]
+        attr_accessor struct_references: Array[String]
+        attr_accessor enum_references: Array[String]
+        attr_accessor topic_references: Array[String]
+        attr_accessor reading_order: Integer?
+
+        def initialize: (
+          name: String,
+          ?content: String?,
+          ?sections: Array[Section]?,
+          ?function_references: Array[String]?,
+          ?struct_references: Array[String]?,
+          ?enum_references: Array[String]?,
+          ?topic_references: Array[String]?,
+          ?reading_order: Integer?,
+          **untyped kwargs
+        ) -> void
+
+        def all_api_references: () -> Array[String]
+
+        def to_h: () -> Hash[Symbol, untyped]
+
+        def to_summary: () -> String
+
+        def to_text: (?detailed: bool, ?index: Index?) -> String
+
+        private
+
+        def format_api_references: (Array[String] refs, Index? index) -> String
+      end
+    end
+  end
+end

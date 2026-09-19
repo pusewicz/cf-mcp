@@ -1,0 +1,9 @@
+# Narrows a core signature for this project.
+
+class MatchData
+  # Group 0 is the whole match, which always participates, so its offset is never
+  # nil. Core declares `Integer?` because a numbered group may not participate.
+  # The overload is listed first so it wins; the trailing `...` keeps the original.
+  def begin: (0 n) -> Integer
+           | ...
+end

@@ -1,0 +1,36 @@
+module CF
+  module MCP
+    # Resolves the headers directory, parses it and fills the Index.
+    class IndexBuilder
+      DEFAULT_HEADERS_PATH: String
+
+      # Both are assigned by #resolve_headers_path rather than directly in
+      # #initialize, so the instance variables are declared explicitly.
+      @headers_path: String
+      @revision: String?
+
+      attr_reader headers_path: String
+
+      # Git commit of the headers checkout, when it could be determined.
+      attr_reader revision: String?
+
+      def initialize: (?root: String?, ?download: bool) -> void
+
+      # Yields `(:topics_indexed, topics_path, topic_count)` once, and only when
+      # a topics directory exists.
+      def build: () ?{ (Symbol event, String path, Integer count) -> void } -> Index
+
+      def valid?: () -> bool
+
+      private
+
+      def resolve_headers_path: (root: String?, download: bool) -> String
+
+      def detect_git_revision: (String path) -> String?
+
+      def find_topics_path: (String headers_path) -> String?
+
+      def refine_topic_references: (Models::TopicDoc topic, Index index) -> void
+    end
+  end
+end

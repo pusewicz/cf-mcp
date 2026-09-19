@@ -9,10 +9,11 @@ module CF
         Entry = Data.define(:name, :value, :description)
 
         def initialize(
+          name:,
           entries: [],
           **kwargs
         )
-          super(type: :enum, **kwargs)
+          super(name:, type: :enum, **kwargs)
           @entries = entries || []
         end
 
@@ -27,11 +28,7 @@ module CF
         def build_type_specific_lines
           return [] unless entries && !entries.empty?
 
-          lines = []
-          lines << "## Values"
-          lines << ""
-          lines << "| Name | Value | Description |"
-          lines << "| --- | --- | --- |"
+          lines = ["## Values", "", "| Name | Value | Description |", "| --- | --- | --- |"]
           entries.each do |entry|
             lines << "| `#{entry.name}` | #{entry.value} | #{entry.description} |"
           end

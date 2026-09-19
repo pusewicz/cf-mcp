@@ -33,7 +33,7 @@ module CF
           host: "0.0.0.0",
           root: nil,
           download: false
-        }
+        } #: options
 
         @option_parser = OptionParser.new do |opts|
           opts.banner = "Usage: cf-mcp <command> [options]"

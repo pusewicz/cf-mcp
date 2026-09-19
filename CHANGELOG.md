@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- RBS signatures for the whole library, checked in CI with Steep (strict, and every method must have a signature) and by running the test suite under RBS's runtime type checker; run them with `rake rbs`. They are development-only and not packaged in the gem.
+
+### Changed
+
+- `name:` is now a required keyword on `DocItem` and its subclasses (`FunctionDoc`, `StructDoc`, `EnumDoc`, `TopicDoc`); previously a nameless item could be built and indexed
+- `Index#by_type` now returns an `Index::ByType` (`functions`, `structs`, `enums`, `topics`) instead of a Hash keyed by type symbol, and `Index#add` files items by class rather than by their `type`
+- Small internal refactors so the code type checks; no behavior change for valid input
+
 ### Removed
 
 - Dropped the unused `listen` runtime dependency

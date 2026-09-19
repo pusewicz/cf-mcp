@@ -25,7 +25,8 @@ module CF
         request["Authorization"] = "Bearer #{@token}" if @token
         request["User-Agent"] = "cf-mcp/#{CF::MCP::VERSION}"
 
-        response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
+        hostname = uri.hostname || raise(ArgumentError, "No host in #{uri}")
+        response = Net::HTTP.start(hostname, uri.port, use_ssl: true) do |http|
           http.request(request)
         end
 

@@ -22,36 +22,28 @@ module CF
       end
 
       def parse_directory(path)
-        topics = []
         reading_order = parse_reading_order(File.join(path, "index.md"))
 
-        Dir.glob(File.join(path, "*.md")).each do |topic_file|
+        Dir.glob(File.join(path, "*.md")).filter_map do |topic_file|
           next if File.basename(topic_file) == "index.md"
 
           topic = parse_file(topic_file)
-          if topic
-            topic.reading_order = reading_order[topic.name]
-            topics << topic
-          end
-        end
+          next unless topic
 
-        topics
+          topic.reading_order = reading_order[topic.name]
+          topic
+        end
       end
 
       def parse_reading_order(index_path)
         return {} unless File.exist?(index_path)
 
         content = File.read(index_path)
-        order = {}
-        position = 0
 
-        # Match numbered list items with topic links
-        content.scan(/^\d+\.\s+\[([^\]]+)\]\(\.\/(\w+)\.md\)/) do |_title, slug|
-          order[slug] = position
-          position += 1
+        # Match numbered list items with topic links; a repeated slug keeps its last position
+        content.scan(/^\d+\.\s+\[([^\]]+)\]\(\.\/(\w+)\.md\)/).each_with_index.to_h do |(_title, slug), position|
+          [slug, position]
         end
-
-        order
       end
 
       private
@@ -85,81 +77,42 @@ module CF
       end
 
       def extract_brief(content)
-        lines = content.lines
-        in_paragraph = false
-        paragraph_lines = []
-
-        lines.each do |line|
-          next if line.start_with?("#")
-
-          if line.strip.empty?
-            break if in_paragraph
-            next
-          end
-
-          in_paragraph = true
-          paragraph_lines << line.strip
-        end
+        # The first paragraph that isn't a heading
+        paragraph_lines = content.lines
+          .reject { |line| line.start_with?("#") }
+          .drop_while { |line| line.strip.empty? }
+          .take_while { |line| !line.strip.empty? }
+          .map(&:strip)
 
         # Strip markdown links but keep the text
         paragraph_lines.join(" ").gsub(/\[([^\]]+)\]\([^)]+\)/, '\1')
       end
 
       def extract_sections(content)
-        sections = []
-        current_title = nil
-        current_content = []
+        # A section starts on a "## Title" heading and runs until the next one.
+        # Text before the first heading belongs to no section.
+        content.lines.slice_before { |line| SECTION_PATTERN.match?(line) }.filter_map do |section_lines|
+          heading = section_lines.fetch(0)
+          title = heading[SECTION_PATTERN, 1]
+          next unless title
 
-        content.lines.each do |line|
-          if line =~ SECTION_PATTERN
-            if current_title
-              sections << Models::TopicDoc::Section.new(
-                title: current_title,
-                content: current_content.join
-              )
-            end
-            current_title = ::Regexp.last_match(1).strip
-            current_content = []
-          elsif current_title
-            current_content << line
-          end
+          Models::TopicDoc::Section.new(title: title.strip, content: section_lines.drop(1).join)
         end
-
-        # Add last section
-        if current_title
-          sections << Models::TopicDoc::Section.new(
-            title: current_title,
-            content: current_content.join
-          )
-        end
-
-        sections
       end
 
       def extract_api_references(content)
-        func_refs = []
-        struct_refs = []
-        enum_refs = []
+        names = content.scan(API_LINK_PATTERN).map { |_text, _category, name| name }
 
-        content.scan(API_LINK_PATTERN) do |_text, _category, name|
-          if name.start_with?("cf_")
-            func_refs << name
-          elsif name.start_with?("CF_") || name.match?(/^[A-Z]/)
-            # Uppercase names are likely structs or enums
-            # Will be refined when cross-referenced with index
-            struct_refs << name
-          end
-        end
+        func_refs, other_refs = names.partition { |name| name.start_with?("cf_") }
+        # Uppercase names are likely structs or enums
+        # Will be refined when cross-referenced with index
+        struct_refs = other_refs.select { |name| name.start_with?("CF_") || name.match?(/^[A-Z]/) }
 
-        [func_refs, struct_refs, enum_refs]
+        [func_refs, struct_refs, []]
       end
 
       def extract_topic_references(content)
-        refs = []
-        content.scan(TOPIC_LINK_PATTERN) do |_text, slug|
-          refs << slug
-        end
-        refs
+        content.scan(TOPIC_LINK_PATTERN).map { |_text, slug| slug }
       end
 
       def derive_category(slug)

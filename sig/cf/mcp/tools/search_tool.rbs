@@ -1,0 +1,18 @@
+module CF
+  module MCP
+    module Tools
+      class SearchTool < ::MCP::Tool
+        extend ResponseHelpers
+        extend SearchResultFormatter
+
+        TITLE: String
+
+        # Keyed by the `type` argument; the nil key is the "any type" case.
+        DETAILS_TIPS: Hash[String?, String]
+        TYPE_LABELS: Hash[String?, String]
+
+        def self.call: (query: String, ?type: String?, ?category: String?, ?limit: Integer, ?server_context: server_context) -> ::MCP::Tool::Response
+      end
+    end
+  end
+end

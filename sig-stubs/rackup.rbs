@@ -1,0 +1,10 @@
+# Hand-written stub for the `rackup` gem (checked against 2.x); it ships no
+# signatures. Kept outside sig/ so it is not published with this gem.
+
+module Rackup
+  class Server
+    # `options` keys are Rack::Server option names, which are capitalised
+    # (`Host`, `Port`) for the ones handed to the handler.
+    def self.start: (?Hash[Symbol, untyped]? options) -> void
+  end
+end

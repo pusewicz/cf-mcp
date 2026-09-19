@@ -1,0 +1,12 @@
+module CF
+  module MCP
+    module Tools
+      # Extended (not included) by every tool, so these are class-level helpers.
+      module ResponseHelpers
+        def text_response: (String text) -> ::MCP::Tool::Response
+
+        def error_response: (String message) -> ::MCP::Tool::Response
+      end
+    end
+  end
+end

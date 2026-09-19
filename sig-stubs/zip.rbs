@@ -1,0 +1,17 @@
+# Hand-written stub for the `rubyzip` gem (checked against 3.x); it ships no
+# signatures. Kept outside sig/ so it is not published with this gem.
+
+module Zip
+  class Entry
+    def name: () -> String
+    def directory?: () -> bool
+    def extract: (?String? entry_path, destination_directory: String) -> void
+  end
+
+  class File
+    include Enumerable[Entry]
+
+    def self.open: [T] (String path) { (File zip_file) -> T } -> T
+    def each: () { (Entry entry) -> void } -> void
+  end
+end

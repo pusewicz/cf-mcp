@@ -1,0 +1,14 @@
+# Narrows a core signature for this project.
+
+class String
+  # With capture groups, `scan` yields (and returns) an Array of the captures.
+  # RBS core types that as `String | Array[String?]`, which can't be destructured
+  # into named block parameters. Every pattern passed to `scan` in lib/ has only
+  # mandatory groups, so each capture is a String. Up to three groups are
+  # covered; a pattern with fewer just leaves the trailing elements unread.
+  # These overloads are listed first so they win; the trailing `...` keeps the
+  # originals.
+  def scan: (Regexp pattern) { ([String, String, String] captures) -> void } -> self
+          | (Regexp pattern) -> Array[[String, String, String]]
+          | ...
+end

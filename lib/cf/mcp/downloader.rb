@@ -63,15 +63,19 @@ module CF
 
       def download_zip(destination, url = CUTE_FRAMEWORK_ZIP_URL)
         uri = URI.parse(url)
+        host = uri.host || raise(DownloadError, "No host in #{url}")
 
-        Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
+        Net::HTTP.start(host, uri.port, use_ssl: true) do |http|
           request = Net::HTTP::Get.new(uri)
+          # @type var response: Net::HTTPResponse
           response = http.request(request)
 
           # Handle redirects (GitHub redirects to codeload.github.com)
           if response.is_a?(Net::HTTPRedirection)
-            redirect_uri = URI.parse(response["location"])
-            Net::HTTP.start(redirect_uri.host, redirect_uri.port, use_ssl: true) do |redirect_http|
+            location = response["location"] || raise(DownloadError, "Redirect from #{url} has no Location header")
+            redirect_uri = URI.parse(location)
+            redirect_host = redirect_uri.host || raise(DownloadError, "No host in redirect to #{location}")
+            Net::HTTP.start(redirect_host, redirect_uri.port, use_ssl: true) do |redirect_http|
               redirect_request = Net::HTTP::Get.new(redirect_uri)
               response = redirect_http.request(redirect_request)
             end
@@ -92,12 +96,12 @@ module CF
         Zip::File.open(zip_path) do |zip_file|
           # The zip contains a top-level directory like "cute_framework-master/"
           # We want to extract "include/" and "docs/topics/" subdirectories
-          top_level_prefix = nil
+          top_level_prefix = nil #: String?
 
           zip_file.each do |entry|
             # Find the top-level directory prefix (e.g., "cute_framework-master/" or "cute_framework-abc1234/")
             if top_level_prefix.nil? && entry.name.match?(%r{^cute_framework-[^/]+/include/})
-              top_level_prefix = entry.name.match(%r{^(cute_framework-[^/]+/)})[1]
+              top_level_prefix = entry.name[%r{^(cute_framework-[^/]+/)}, 1]
               break
             end
           end

@@ -1,0 +1,67 @@
+module CF
+  module MCP
+    # In-memory documentation index. A Singleton: use Index.instance.
+    class Index
+      include Singleton
+
+      # `include Singleton` defines this at runtime; RBS's Singleton module
+      # declares it only on itself, so it is repeated here.
+      def self.instance: () -> Index
+
+      # Items grouped by kind. Each group holds its concrete class, so reading one
+      # needs no cast.
+      class ByType < ::Data
+        attr_reader functions: Array[Models::FunctionDoc]
+        attr_reader structs: Array[Models::StructDoc]
+        attr_reader enums: Array[Models::EnumDoc]
+        attr_reader topics: Array[Models::TopicDoc]
+
+        def self.new: (Array[Models::FunctionDoc] functions, Array[Models::StructDoc] structs, Array[Models::EnumDoc] enums, Array[Models::TopicDoc] topics) -> instance
+                    | (functions: Array[Models::FunctionDoc], structs: Array[Models::StructDoc], enums: Array[Models::EnumDoc], topics: Array[Models::TopicDoc]) -> instance
+      end
+
+      attr_reader items: Hash[String, Models::DocItem]
+      attr_reader by_type: ByType
+      attr_reader by_category: Hash[String, Array[Models::DocItem]]
+      attr_reader topic_references: Hash[String, Array[String]]
+
+      def initialize: () -> void
+
+      def reset!: () -> void
+
+      def add: (Models::DocItem item) -> void
+
+      def find: (String name) -> Models::DocItem?
+
+      def brief_for: (String name) -> { name: String, type: Symbol?, brief: String? }?
+
+      def search: (String? query, ?type: (String | Symbol)?, ?category: String?, ?limit: Integer) -> Array[Models::DocItem]
+
+      def functions: () -> Array[Models::FunctionDoc]
+
+      def structs: () -> Array[Models::StructDoc]
+
+      def enums: () -> Array[Models::EnumDoc]
+
+      def topics: () -> Array[Models::TopicDoc]
+
+      def topics_ordered: () -> Array[Models::TopicDoc]
+
+      def topics_for: (String api_name) -> Array[Models::DocItem]
+
+      def categories: () -> Array[String]
+
+      def items_in_category: (String category) -> Array[Models::DocItem]
+
+      def size: () -> Integer
+
+      def stats: () -> Hash[Symbol, Integer]
+
+      private
+
+      def all_items: () -> Array[Models::DocItem]
+
+      def build_topic_reverse_index: (Models::TopicDoc topic) -> void
+    end
+  end
+end

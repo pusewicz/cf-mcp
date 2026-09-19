@@ -26,7 +26,7 @@ end
 namespace :rbs do
   desc "Validate RBS type signatures"
   task :validate do
-    sh "rbs", "-I", "sig", "-I", "sig-stubs", "validate"
+    sh "rbs", "--collection", "rbs_collection.yaml", "-I", "sig", "-I", "sig-stubs", "validate"
   end
 
   desc "Type check lib/ against the RBS signatures with Steep"

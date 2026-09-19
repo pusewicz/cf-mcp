@@ -125,13 +125,13 @@ Each check catches something the others can't:
 - **`test/cf/mcp/signatures_test.rb`** checks by reflection that everything declared exists and everything defined in `lib/` is declared. It covers `attr_*` (Steep doesn't treat those as definitions) and stale declarations (which Steep can't report reliably).
 - **`rake rbs:test`** runs the suite with `RBS_TEST_TARGET='CF::MCP::*'`, so signatures are checked against real runtime values, not just against the code.
 
-`sig-stubs/` holds hand-written stubs for gems that ship no RBS (`mcp`, `rackup`, `rubyzip`); keep them to the APIs `lib/` actually calls. Neither `sig/` nor `sig-stubs/` is packaged in the gem (see `rake manifest`).
+`sig-stubs/` holds hand-written stubs for gems that ship no RBS (`mcp`, `rackup`, `rubyzip`); keep them to the APIs `lib/` actually calls. It also narrows three core signatures (`Kernel#__dir__`, `String#scan`, `MatchData#begin`) that RBS core types more loosely than this code needs; each file says why. Neither `sig/` nor `sig-stubs/` is packaged in the gem (see `rake manifest`).
 
 Things to know:
 
-- `parser.rb` and `topic_parser.rb` are checked with Steep's lenient template (see the `Steepfile`): RBS core types regex captures loosely, so strict mode would mean rewriting the parsing logic. They still need a signature for every method.
+- `String#scan` is narrowed to yield up to three String captures, on the assumption that every pattern passed to it has only mandatory groups. Nothing checks that assumption, so keep optional groups (`(a)?`) out of `scan` patterns, or read them another way.
 - Rack signatures come from the RBS collection and describe rack 2.2; the gem runs on rack 3.
-- Empty collection literals need a type comment, e.g. `lines = [] #: Array[String]`.
+- Prefer code whose types Steep can infer over casts: build arrays with `filter_map`/`map` or from a non-empty literal, use `line[re, 1]` or `re.match(line)` for captures, and `|| raise(...)` for a nilable value that must exist. An unavoidable empty literal takes a type comment, e.g. `items = [] #: Array[Models::DocItem]`.
 
 ## Testing
 

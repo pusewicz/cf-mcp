@@ -103,7 +103,7 @@ lib/cf/mcp/
 
 ## Code Style
 
-Uses Standard Ruby for linting (configured in `.standard.yml`). Target Ruby version is 3.2+.
+Uses Standard Ruby for linting (configured in `.standard.yml`). Target Ruby version is 3.3+.
 
 ## Testing
 

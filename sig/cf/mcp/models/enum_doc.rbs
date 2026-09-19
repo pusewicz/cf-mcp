@@ -13,7 +13,7 @@ module CF
 
         attr_accessor entries: Array[Entry]
 
-        def initialize: (?entries: Array[Entry]?, **untyped kwargs) -> void
+        def initialize: (name: String, ?entries: Array[Entry]?, **untyped kwargs) -> void
 
         def to_h: () -> Hash[Symbol, untyped]
 

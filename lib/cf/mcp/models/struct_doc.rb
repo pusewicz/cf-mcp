@@ -9,10 +9,11 @@ module CF
         Member = Data.define(:declaration, :description)
 
         def initialize(
+          name:,
           members: [],
           **kwargs
         )
-          super(type: :struct, **kwargs)
+          super(name:, type: :struct, **kwargs)
           @members = members || []
         end
 

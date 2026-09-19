@@ -14,7 +14,7 @@ module CF
         attr_accessor parameters: Array[Parameter]
         attr_accessor return_value: String?
 
-        def initialize: (?signature: String?, ?parameters: Array[Parameter]?, ?return_value: String?, **untyped kwargs) -> void
+        def initialize: (name: String, ?signature: String?, ?parameters: Array[Parameter]?, ?return_value: String?, **untyped kwargs) -> void
 
         def to_h: () -> Hash[Symbol, untyped]
 

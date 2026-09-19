@@ -21,7 +21,7 @@ module CF
 
       def find: (String name) -> Models::DocItem?
 
-      def brief_for: (String name) -> { name: String?, type: Symbol?, brief: String? }?
+      def brief_for: (String name) -> { name: String, type: Symbol?, brief: String? }?
 
       def search: (String? query, ?type: (String | Symbol)?, ?category: String?, ?limit: Integer) -> Array[Models::DocItem]
 

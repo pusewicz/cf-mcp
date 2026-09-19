@@ -46,12 +46,10 @@ module CF
           index.functions.each do |func|
             next unless func.signature
 
-            func_name = func.name #: String
-
             # Check return type (text before function name in signature)
             if direction != "input"
               # Extract return type: everything before the function name
-              if func.signature =~ /^(.+?)\s+#{Regexp.escape(func_name)}\s*\(/
+              if func.signature =~ /^(.+?)\s+#{Regexp.escape(func.name)}\s*\(/
                 return_type = ::Regexp.last_match(1).to_s.strip
                 if return_type.match?(pattern)
                   output_matches << func

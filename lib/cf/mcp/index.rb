@@ -26,9 +26,7 @@ module CF
       end
 
       def add(item)
-        # Items are looked up by name, so every indexed item is expected to have one.
-        name = item.name #: String
-        @items[name] = item
+        @items[item.name] = item
         @by_type[item.type] << item if @by_type.key?(item.type)
 
         if item.category
@@ -129,10 +127,9 @@ module CF
       end
 
       def build_topic_reverse_index(topic)
-        topic_name = topic.name #: String
         topic.all_api_references.each do |ref_name|
           @topic_references[ref_name] ||= []
-          @topic_references[ref_name] << topic_name unless @topic_references[ref_name].include?(topic_name)
+          @topic_references[ref_name] << topic.name unless @topic_references[ref_name].include?(topic.name)
         end
       end
     end

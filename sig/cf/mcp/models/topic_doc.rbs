@@ -19,6 +19,7 @@ module CF
         attr_accessor reading_order: Integer?
 
         def initialize: (
+          name: String,
           ?content: String?,
           ?sections: Array[Section]?,
           ?function_references: Array[String]?,

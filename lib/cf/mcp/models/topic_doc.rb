@@ -10,6 +10,7 @@ module CF
         Section = Data.define(:title, :content)
 
         def initialize(
+          name:,
           content: nil,
           sections: [],
           function_references: [],
@@ -19,7 +20,7 @@ module CF
           reading_order: nil,
           **kwargs
         )
-          super(type: :topic, **kwargs)
+          super(name:, type: :topic, **kwargs)
           @content = content
           @sections = sections || []
           @function_references = function_references || []

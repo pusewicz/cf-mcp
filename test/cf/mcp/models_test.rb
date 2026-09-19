@@ -279,4 +279,17 @@ class CF::MCP::ModelsTest < Minitest::Test
     # More matching keywords = higher score
     assert two_keywords > one_keyword
   end
+
+  def test_every_doc_type_requires_a_name
+    [
+      CF::MCP::Models::DocItem,
+      CF::MCP::Models::FunctionDoc,
+      CF::MCP::Models::StructDoc,
+      CF::MCP::Models::EnumDoc,
+      CF::MCP::Models::TopicDoc
+    ].each do |doc_class|
+      error = assert_raises(ArgumentError, doc_class.name) { doc_class.new }
+      assert_includes error.message, "name"
+    end
+  end
 end

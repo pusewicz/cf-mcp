@@ -11,7 +11,7 @@ module CF
           :example_brief, :related, :source_file, :source_line
 
         def initialize(
-          name: nil,
+          name:,
           type: nil,
           category: nil,
           brief: nil,
@@ -63,7 +63,7 @@ module CF
         def keyword_score(keyword)
           score = 0
           keyword_downcase = keyword.downcase
-          name_downcase = name&.downcase || ""
+          name_downcase = name.downcase
 
           # Exact name match (highest priority)
           if name_downcase == keyword_downcase
@@ -150,8 +150,7 @@ module CF
           lines << ""
           lines << "- **Type:** #{type}"
           lines << "- **Category:** #{category}" if category
-          if source_file
-            urls = source_urls #: { raw: String, blob: String, impl_raw: String }
+          if (urls = source_urls)
             lines << "- **Source:** [include/#{source_file}](#{urls[:blob]})"
             lines << "- **Raw:** #{urls[:raw]}"
             lines << "- **Implementation:** #{urls[:impl_raw]}"

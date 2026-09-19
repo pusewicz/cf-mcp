@@ -9,12 +9,13 @@ module CF
         Parameter = Data.define(:name, :description)
 
         def initialize(
+          name:,
           signature: nil,
           parameters: [],
           return_value: nil,
           **kwargs
         )
-          super(type: :function, **kwargs)
+          super(name:, type: :function, **kwargs)
           @signature = signature
           @parameters = parameters || []
           @return_value = return_value

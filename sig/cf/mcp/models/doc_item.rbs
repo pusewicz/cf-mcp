@@ -5,7 +5,7 @@ module CF
         GITHUB_REPO: String
         GITHUB_RAW_BASE: String
 
-        attr_accessor name: String?
+        attr_accessor name: String
         attr_accessor type: Symbol?
         attr_accessor category: String?
         attr_accessor brief: String?
@@ -17,7 +17,7 @@ module CF
         attr_accessor source_line: Integer?
 
         def initialize: (
-          ?name: String?,
+          name: String,
           ?type: Symbol?,
           ?category: String?,
           ?brief: String?,

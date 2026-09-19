@@ -62,7 +62,7 @@ module CF
         attr_reader revision_url: String?
         attr_reader stats: Hash[Symbol, Integer]
         attr_reader categories: Array[String]
-        attr_reader topics: Array[{ name: String?, brief: String? }]
+        attr_reader topics: Array[{ name: String, brief: String? }]
         attr_reader tools: Array[{ name: String?, description: String? }]
         attr_reader tool_schemas_json: String
 
@@ -74,7 +74,7 @@ module CF
           revision_url: String?,
           stats: Hash[Symbol, Integer],
           categories: Array[String],
-          topics: Array[{ name: String?, brief: String? }],
+          topics: Array[{ name: String, brief: String? }],
           tools: Array[{ name: String?, description: String? }],
           tool_schemas_json: String
         ) -> void

@@ -12,7 +12,7 @@ module CF
 
         attr_accessor members: Array[Member]
 
-        def initialize: (?members: Array[Member]?, **untyped kwargs) -> void
+        def initialize: (name: String, ?members: Array[Member]?, **untyped kwargs) -> void
 
         def to_h: () -> Hash[Symbol, untyped]
 

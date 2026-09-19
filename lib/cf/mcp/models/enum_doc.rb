@@ -9,10 +9,11 @@ module CF
         Entry = Data.define(:name, :value, :description)
 
         def initialize(
+          name:,
           entries: [],
           **kwargs
         )
-          super(type: :enum, **kwargs)
+          super(name:, type: :enum, **kwargs)
           @entries = entries || []
         end
 

@@ -162,10 +162,9 @@ module CF
 
       def build_topic_resources(index)
         index.topics.map do |topic|
-          topic_name = topic.name #: String
           ::MCP::Resource.new(
-            uri: "cf://topics/#{topic_name}",
-            name: topic_name.tr("_", " ").split.map(&:capitalize).join(" "),
+            uri: "cf://topics/#{topic.name}",
+            name: topic.name.tr("_", " ").split.map(&:capitalize).join(" "),
             description: topic.brief,
             mime_type: "text/markdown"
           )

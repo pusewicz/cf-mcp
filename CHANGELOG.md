@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Updated `mcp` from 0.25.0 to 1.5.1
+- Updated `puma` from 7.2.1 to 8.0.2 (the gemspec constraint is now `~> 8.0`) and `rubyzip` from 3.6.0 to 3.7.0
 - Removed the `2025-03-26` protocol pin; clients using the `initialize` handshake now negotiate up to 2025-11-25
 - The web UI now calls tools through the stateless 2026-07-28 protocol
 - The web UI shows both the modern and the legacy handshake protocol versions

@@ -28,7 +28,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "listen", "~> 3.10"
   spec.add_dependency "mcp", "~> 1.5"
-  spec.add_dependency "puma", "~> 7.1"
+  spec.add_dependency "puma", "~> 8.0"
   spec.add_dependency "rack", "~> 3.0"
   spec.add_dependency "rackup", "~> 2.0"
   spec.add_dependency "rubyzip", "~> 3.2"

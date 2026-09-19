@@ -63,7 +63,7 @@ module CF
 
       def download_zip(destination, url = CUTE_FRAMEWORK_ZIP_URL)
         uri = URI.parse(url)
-        host = uri.host #: String
+        host = uri.host || raise(DownloadError, "No host in #{url}")
 
         Net::HTTP.start(host, uri.port, use_ssl: true) do |http|
           request = Net::HTTP::Get.new(uri)
@@ -72,9 +72,9 @@ module CF
 
           # Handle redirects (GitHub redirects to codeload.github.com)
           if response.is_a?(Net::HTTPRedirection)
-            location = response["location"] #: String
+            location = response["location"] || raise(DownloadError, "Redirect from #{url} has no Location header")
             redirect_uri = URI.parse(location)
-            redirect_host = redirect_uri.host #: String
+            redirect_host = redirect_uri.host || raise(DownloadError, "No host in redirect to #{location}")
             Net::HTTP.start(redirect_host, redirect_uri.port, use_ssl: true) do |redirect_http|
               redirect_request = Net::HTTP::Get.new(redirect_uri)
               response = redirect_http.request(redirect_request)

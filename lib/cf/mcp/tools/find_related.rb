@@ -48,12 +48,11 @@ module CF
           }
 
           # Back references: items that reference this item
-          back_refs = [] #: Array[String]
-          index.items.each_value do |other_item|
+          back_refs = index.items.each_value.filter_map do |other_item|
             next if other_item.name == name
             next unless other_item.related&.include?(name)
 
-            back_refs << "- `#{other_item.name}` (#{other_item.type}) — #{other_item.brief}"
+            "- `#{other_item.name}` (#{other_item.type}) — #{other_item.brief}"
           end
 
           if forward_refs.empty? && back_refs.empty?

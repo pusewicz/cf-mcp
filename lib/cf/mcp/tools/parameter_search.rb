@@ -40,38 +40,27 @@ module CF
           index = Index.instance
 
           pattern = Regexp.new(Regexp.escape(type), Regexp::IGNORECASE)
-          input_matches = [] #: Array[Models::FunctionDoc]
-          output_matches = [] #: Array[Models::FunctionDoc]
+          functions = index.functions.select(&:signature)
 
-          index.functions.each do |func|
-            next unless func.signature
+          # Check return type (text before function name in signature)
+          output_matches = functions.select { |func|
+            next false if direction == "input"
 
-            # Check return type (text before function name in signature)
-            if direction != "input"
-              # Extract return type: everything before the function name
-              if func.signature =~ /^(.+?)\s+#{Regexp.escape(func.name)}\s*\(/
-                return_type = ::Regexp.last_match(1).to_s.strip
-                if return_type.match?(pattern)
-                  output_matches << func
-                end
-              end
-            end
+            # Extract return type: everything before the function name
+            next false unless func.signature =~ /^(.+?)\s+#{Regexp.escape(func.name)}\s*\(/
 
-            # Check input parameters
-            if direction != "output"
-              # Check the signature for parameter types
-              if func.signature =~ /\(([^)]*)\)/
-                params_str = ::Regexp.last_match(1).to_s
-                if params_str.match?(pattern)
-                  input_matches << func unless input_matches.include?(func)
-                end
-              end
-            end
-          end
+            ::Regexp.last_match(1).to_s.strip.match?(pattern)
+          }.uniq
 
-          # Remove duplicates between input and output
-          input_matches.uniq!
-          output_matches.uniq!
+          # Check input parameters
+          input_matches = functions.select { |func|
+            next false if direction == "output"
+
+            # Check the signature for parameter types
+            next false unless func.signature =~ /\(([^)]*)\)/
+
+            ::Regexp.last_match(1).to_s.match?(pattern)
+          }.uniq
 
           if input_matches.empty? && output_matches.empty?
             return text_response("No functions found using type '#{type}'")

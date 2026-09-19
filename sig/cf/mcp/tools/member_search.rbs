@@ -4,6 +4,15 @@ module CF
       class MemberSearch < ::MCP::Tool
         extend ResponseHelpers
 
+        # A struct together with the members that matched the query.
+        class Match < ::Data
+          attr_reader struct: Models::StructDoc
+          attr_reader members: Array[Models::StructDoc::Member]
+
+          def self.new: (Models::StructDoc struct, Array[Models::StructDoc::Member] members) -> instance
+                      | (struct: Models::StructDoc, members: Array[Models::StructDoc::Member]) -> instance
+        end
+
         TITLE: String
 
         def self.call: (query: String, ?limit: Integer, ?server_context: server_context) -> ::MCP::Tool::Response

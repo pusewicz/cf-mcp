@@ -136,6 +136,27 @@ class CF::MCP::ServerIntegrationTest < Minitest::Test
     assert_includes text, "cf_make_sprite"
   end
 
+  def test_stdio_initialize_echoes_supported_legacy_version
+    [::MCP::Configuration::LATEST_HANDSHAKE_PROTOCOL_VERSION, "2024-11-05"].each do |version|
+      request = initialize_request(1)
+      request[:params][:protocolVersion] = version
+
+      response = run_stdio_requests([request]).first
+
+      assert_equal version, response["result"]["protocolVersion"]
+    end
+  end
+
+  def test_stdio_server_discover_advertises_modern_version
+    response = run_stdio_requests([
+      {jsonrpc: "2.0", id: 1, method: "server/discover", params: {}}
+    ]).first
+
+    refute response.key?("error"), response["error"].inspect
+    assert_includes response["result"]["supportedVersions"], CF::MCP::Server::MODERN_PROTOCOL_VERSION
+    assert_equal "cf-mcp", response["result"]["_meta"]["io.modelcontextprotocol/serverInfo"]["name"]
+  end
+
   def test_stdio_get_details_tool
     responses = run_stdio_requests([
       initialize_request(1),
@@ -628,6 +649,70 @@ class CF::MCP::ServerHTTPTest < Minitest::Test
     assert_cors_headers(response)
   end
 
+  # Modern (stateless, no handshake) protocol path
+
+  def test_modern_tools_call_over_http
+    response = make_modern_request("tools/call", {name: "search", arguments: {query: "sprite"}}, name: "search")
+
+    assert_equal 200, response.status
+    assert_equal "application/json", response.headers["content-type"]
+    body = JSON.parse(response.body)
+    assert_equal "complete", body["result"]["resultType"]
+    assert_includes body["result"]["content"].first["text"], "cf_make_sprite"
+    refute response.headers["mcp-session-id"]
+  end
+
+  def test_modern_request_requires_mcp_method_header
+    response = make_modern_request("tools/call", {name: "search", arguments: {query: "sprite"}}, headers: {"HTTP_MCP_METHOD" => nil})
+
+    assert_equal 400, response.status
+    assert_includes JSON.parse(response.body)["error"]["message"], "Mcp-Method"
+  end
+
+  def test_modern_request_requires_client_capabilities_in_meta
+    response = make_modern_request("tools/call", {name: "search", arguments: {query: "sprite"}}, name: "search", meta: {
+      "io.modelcontextprotocol/protocolVersion" => CF::MCP::Server::MODERN_PROTOCOL_VERSION
+    })
+
+    assert_equal 400, response.status
+    assert_includes JSON.parse(response.body)["error"]["message"], "clientCapabilities"
+  end
+
+  def test_modern_server_discover_over_http
+    response = make_modern_request("server/discover", {})
+
+    assert_equal 200, response.status
+    assert_includes JSON.parse(response.body)["result"]["supportedVersions"], CF::MCP::Server::MODERN_PROTOCOL_VERSION
+  end
+
+  def test_legacy_initialize_negotiates_requested_version
+    version = ::MCP::Configuration::LATEST_HANDSHAKE_PROTOCOL_VERSION
+    response = make_mcp_request("/http", "initialize", {
+      protocolVersion: version,
+      capabilities: {},
+      clientInfo: {name: "test", version: "1.0"}
+    })
+
+    assert_equal 200, response.status
+    assert_equal version, JSON.parse(response.body)["result"]["protocolVersion"]
+  end
+
+  def test_landing_page_shows_protocol_versions
+    env = Rack::MockRequest.env_for("/", method: "GET")
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    assert_includes response.body, CF::MCP::Server::MODERN_PROTOCOL_VERSION
+    assert_includes response.body, CF::MCP::Server::LEGACY_PROTOCOL_VERSION
+  end
+
+  def test_landing_page_script_has_no_unresolved_placeholders
+    env = Rack::MockRequest.env_for("/", method: "GET")
+    response = Rack::MockResponse.new(*@app.call(env))
+
+    refute_match(/[A-Z_]+_PLACEHOLDER/, response.body)
+    assert_includes response.body, %(const PROTOCOL_VERSION = "#{CF::MCP::Server::MODERN_PROTOCOL_VERSION}")
+  end
+
   def test_http_transport_is_stateless
     response = make_mcp_request("/http", "initialize", {
       protocolVersion: "2024-11-05",
@@ -706,15 +791,38 @@ class CF::MCP::ServerHTTPTest < Minitest::Test
     original.each { |key, value| ENV[key] = value }
   end
 
+  # Builds a 2026-07-28 request: version/capabilities travel in params._meta, and the
+  # Mcp-Method / Mcp-Name headers mirror the body. Pass `headers:` (nil removes one) or
+  # `meta:` to override the defaults.
+  def make_modern_request(method, params, name: nil, meta: nil, headers: {}, id: 1)
+    version = CF::MCP::Server::MODERN_PROTOCOL_VERSION
+    meta ||= {
+      "io.modelcontextprotocol/protocolVersion" => version,
+      "io.modelcontextprotocol/clientCapabilities" => {},
+      "io.modelcontextprotocol/clientInfo" => {"name" => "test", "version" => "1.0"}
+    }
+    body = JSON.generate({jsonrpc: "2.0", id: id, method: method, params: params.merge(_meta: meta)})
+
+    env = Rack::MockRequest.env_for("/http", method: "POST", input: body)
+    env["CONTENT_TYPE"] = "application/json"
+    env["HTTP_ACCEPT"] = "application/json, text/event-stream"
+    env["HTTP_MCP_PROTOCOL_VERSION"] = version
+    env["HTTP_MCP_METHOD"] = method
+    env["HTTP_MCP_NAME"] = name if name
+    headers.each { |key, value| value.nil? ? env.delete(key) : env[key] = value }
+
+    Rack::MockResponse.new(*@app.call(env))
+  end
+
   def assert_cors_headers(response)
     assert_equal "*", response.headers["access-control-allow-origin"],
       "Expected access-control-allow-origin header"
     assert_equal "GET, POST, DELETE, OPTIONS", response.headers["access-control-allow-methods"],
       "Expected access-control-allow-methods header"
-    assert_includes response.headers["access-control-allow-headers"], "Content-Type",
-      "Expected Content-Type in access-control-allow-headers"
-    assert_includes response.headers["access-control-allow-headers"], "Mcp-Session-Id",
-      "Expected Mcp-Session-Id in access-control-allow-headers"
+    ["Content-Type", "Mcp-Session-Id", "MCP-Protocol-Version", "Mcp-Method", "Mcp-Name"].each do |header|
+      assert_includes response.headers["access-control-allow-headers"], header,
+        "Expected #{header} in access-control-allow-headers"
+    end
     assert_equal "Mcp-Session-Id", response.headers["access-control-expose-headers"],
       "Expected access-control-expose-headers header"
   end

@@ -12,7 +12,7 @@ module CF
       CORS_HEADERS = {
         "access-control-allow-origin" => "*",
         "access-control-allow-methods" => "GET, POST, DELETE, OPTIONS",
-        "access-control-allow-headers" => "Content-Type, Accept, Mcp-Session-Id",
+        "access-control-allow-headers" => "Content-Type, Accept, MCP-Protocol-Version, Mcp-Method, Mcp-Name, Mcp-Session-Id",
         "access-control-expose-headers" => "Mcp-Session-Id"
       }.freeze
 
@@ -37,7 +37,10 @@ module CF
         new(index, revision: builder.revision).rack_app
       end
 
-      PROTOCOL_VERSION = "2025-03-26"
+      # Modern clients carry their version on every request (no handshake); legacy
+      # clients negotiate through `initialize`. Both track the SDK rather than pinning.
+      MODERN_PROTOCOL_VERSION = ::MCP::Configuration::LATEST_MODERN_PROTOCOL_VERSION
+      LEGACY_PROTOCOL_VERSION = ::MCP::Configuration::LATEST_HANDSHAKE_PROTOCOL_VERSION
       WEBSITE_URL = ENV.fetch("FLY_APP_NAME", nil) ? "https://#{ENV["FLY_APP_NAME"]}.fly.dev" : "https://cf-mcp.fly.dev"
       PUBLIC_DIR = File.join(__dir__, "public")
       ALLOWED_HOSTS_ENV = "CF_MCP_ALLOWED_HOSTS"
@@ -53,10 +56,8 @@ module CF
         @revision = revision
         @allowed_hosts = allowed_hosts
 
-        configuration = ::MCP::Configuration.new(protocol_version: PROTOCOL_VERSION)
         @server = ::MCP::Server.new(
           name: "cf-mcp",
-          configuration:,
           version: CF::MCP::VERSION,
           icons: [
             ::MCP::Icon.new(src: "#{WEBSITE_URL}/favicon.svg", mime_type: "image/svg+xml", sizes: ["any"]),
@@ -201,7 +202,8 @@ module CF
         ->(index, tool_classes) {
           context = TemplateContext.new(
             version: CF::MCP::VERSION,
-            protocol_version: PROTOCOL_VERSION,
+            modern_protocol_version: MODERN_PROTOCOL_VERSION,
+            legacy_protocol_version: LEGACY_PROTOCOL_VERSION,
             revision: @revision,
             revision_url: @revision && format(CUTE_FRAMEWORK_COMMIT_URL_TEMPLATE, revision: @revision),
             stats: index.stats,
@@ -227,11 +229,12 @@ module CF
       class TemplateContext
         TEMPLATES_DIR = File.join(__dir__, "templates")
 
-        attr_reader :version, :protocol_version, :revision, :revision_url, :stats, :categories, :topics, :tools, :tool_schemas_json
+        attr_reader :version, :modern_protocol_version, :legacy_protocol_version, :revision, :revision_url, :stats, :categories, :topics, :tools, :tool_schemas_json
 
-        def initialize(version:, protocol_version:, revision:, revision_url:, stats:, categories:, topics:, tools:, tool_schemas_json:)
+        def initialize(version:, modern_protocol_version:, legacy_protocol_version:, revision:, revision_url:, stats:, categories:, topics:, tools:, tool_schemas_json:)
           @version = version
-          @protocol_version = protocol_version
+          @modern_protocol_version = modern_protocol_version
+          @legacy_protocol_version = legacy_protocol_version
           @revision = revision
           @revision_url = revision_url
           @stats = stats
@@ -264,7 +267,10 @@ module CF
 
         def js_content
           js = File.read(File.join(TEMPLATES_DIR, "script.js"))
-          js.sub("TOOL_SCHEMAS_PLACEHOLDER", @tool_schemas_json)
+          # Substitute the scalar placeholders first so injected content can't collide with them
+          js.sub("PROTOCOL_VERSION_PLACEHOLDER", @modern_protocol_version.to_json)
+            .sub("CLIENT_VERSION_PLACEHOLDER", @version.to_json)
+            .sub("TOOL_SCHEMAS_PLACEHOLDER", @tool_schemas_json)
             .sub("CATEGORIES_PLACEHOLDER", categories_json)
             .sub("TOPICS_PLACEHOLDER", topics_json)
             .sub("CHANGELOG_PLACEHOLDER", changelog_json)

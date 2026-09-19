@@ -128,9 +128,7 @@ module CF
         end
 
         def to_text(detailed: false, index: nil)
-          lines = [] #: Array[String]
-          lines.concat(build_header_lines)
-          lines.concat(build_description_lines)
+          lines = build_header_lines + build_description_lines
 
           if detailed
             lines.concat(build_type_specific_lines)
@@ -145,10 +143,7 @@ module CF
         protected
 
         def build_header_lines
-          lines = [] #: Array[String]
-          lines << "# #{name}"
-          lines << ""
-          lines << "- **Type:** #{type}"
+          lines = ["# #{name}", "", "- **Type:** #{type}"]
           lines << "- **Category:** #{category}" if category
           if (urls = source_urls)
             lines << "- **Source:** [include/#{source_file}](#{urls[:blob]})"
@@ -160,8 +155,7 @@ module CF
         end
 
         def build_description_lines
-          lines = [] #: Array[String]
-          lines << "## Description"
+          lines = ["## Description"]
           lines << brief if brief
           lines << ""
           lines

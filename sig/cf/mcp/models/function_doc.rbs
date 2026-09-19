@@ -25,6 +25,10 @@ module CF
         def build_signature_lines: () -> Array[String]
 
         def build_type_specific_lines: () -> Array[String]
+
+        def build_parameters_lines: () -> Array[String]
+
+        def build_return_value_lines: () -> Array[String]
       end
     end
   end

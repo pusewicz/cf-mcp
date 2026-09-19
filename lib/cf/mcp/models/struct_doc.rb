@@ -28,11 +28,7 @@ module CF
         def build_type_specific_lines
           return [] unless members && !members.empty?
 
-          lines = [] #: Array[String]
-          lines << "## Members"
-          lines << ""
-          lines << "| Member | Description |"
-          lines << "| --- | --- |"
+          lines = ["## Members", "", "| Member | Description |", "| --- | --- |"]
           members.each do |member|
             lines << "| `#{member.declaration}` | #{member.description} |"
           end

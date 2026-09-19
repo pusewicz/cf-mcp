@@ -36,10 +36,7 @@ module CF
         end
 
         def to_text(detailed: false, index: nil)
-          lines = [] #: Array[String]
-          lines.concat(build_header_lines)
-          lines.concat(build_signature_lines)
-          lines.concat(build_description_lines)
+          lines = build_header_lines + build_signature_lines + build_description_lines
 
           if detailed
             lines.concat(build_type_specific_lines)
@@ -59,26 +56,21 @@ module CF
         end
 
         def build_type_specific_lines
-          lines = [] #: Array[String]
+          build_parameters_lines + build_return_value_lines
+        end
 
-          if parameters && !parameters.empty?
-            lines << "## Parameters"
-            lines << ""
-            lines << "| Parameter | Description |"
-            lines << "| --- | --- |"
-            parameters.each do |param|
-              lines << "| `#{param.name}` | #{param.description} |"
-            end
-            lines << ""
-          end
+        def build_parameters_lines
+          return [] unless parameters && !parameters.empty?
 
-          if return_value && !return_value.empty?
-            lines << "## Return Value"
-            lines << return_value
-            lines << ""
-          end
+          ["## Parameters", "", "| Parameter | Description |", "| --- | --- |"] +
+            parameters.map { |param| "| `#{param.name}` | #{param.description} |" } +
+            [""]
+        end
 
-          lines
+        def build_return_value_lines
+          return [] unless return_value && !return_value.empty?
+
+          ["## Return Value", return_value, ""]
         end
       end
     end

@@ -51,10 +51,7 @@ module CF
         end
 
         def to_text(detailed: false, index: nil)
-          lines = [] #: Array[String]
-          lines << "# #{name}"
-          lines << ""
-          lines << "**Type:** topic"
+          lines = ["# #{name}", "", "**Type:** topic"]
           lines << "**Category:** #{category}" if category
           lines << "**Source:** #{source_file}" if source_file
           lines << ""

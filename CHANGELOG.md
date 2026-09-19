@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Bump Ruby to 4.0.7 in `.ruby-version`, the Dockerfile, and the CI matrix
-- Raised the minimum supported Ruby from 3.2 to 3.3 (`required_ruby_version` and the Standard Ruby target); 3.2 reached end of life on 2026-03-31
+- Raised the minimum supported Ruby from 3.2 to 3.3 (`required_ruby_version` and the Standard Ruby target); 3.2 reached end of life on 2026-03-31; CI now also runs against Ruby 3.3
 - Bumped GitHub Actions: `actions/checkout` to v7 and `actions/cache` to v6
 - Added least-privilege permissions, PR concurrency cancellation and a job timeout to the CI workflow, and Dependabot for GitHub Actions and Bundler
 

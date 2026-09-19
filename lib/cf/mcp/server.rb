@@ -41,6 +41,7 @@ module CF
       # clients negotiate through `initialize`. Both track the SDK rather than pinning.
       MODERN_PROTOCOL_VERSION = ::MCP::Configuration::LATEST_MODERN_PROTOCOL_VERSION
       LEGACY_PROTOCOL_VERSION = ::MCP::Configuration::LATEST_HANDSHAKE_PROTOCOL_VERSION
+      DESCRIPTION = "Search and browse Cute Framework API documentation: functions, structs, enums, and topic guides."
       WEBSITE_URL = ENV.fetch("FLY_APP_NAME", nil) ? "https://#{ENV["FLY_APP_NAME"]}.fly.dev" : "https://cf-mcp.fly.dev"
       PUBLIC_DIR = File.join(__dir__, "public")
       ALLOWED_HOSTS_ENV = "CF_MCP_ALLOWED_HOSTS"
@@ -58,7 +59,10 @@ module CF
 
         @server = ::MCP::Server.new(
           name: "cf-mcp",
+          title: "Cute Framework MCP",
+          description: DESCRIPTION,
           version: CF::MCP::VERSION,
+          website_url: WEBSITE_URL,
           icons: [
             ::MCP::Icon.new(src: "#{WEBSITE_URL}/favicon.svg", mime_type: "image/svg+xml", sizes: ["any"]),
             ::MCP::Icon.new(src: "#{WEBSITE_URL}/favicon-96x96.png", mime_type: "image/png", sizes: ["96x96"])

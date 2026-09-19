@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = "An MCP server that indexes Cute Framework header files and provides search functionality for structs, functions, enums, and other elements."
   spec.homepage = "https://github.com/pusewicz/cf-mcp"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.2.0"
+  spec.required_ruby_version = ">= 3.3.0"
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
   spec.metadata["homepage_uri"] = spec.homepage

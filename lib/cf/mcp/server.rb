@@ -40,10 +40,18 @@ module CF
       PROTOCOL_VERSION = "2025-03-26"
       WEBSITE_URL = ENV.fetch("FLY_APP_NAME", nil) ? "https://#{ENV["FLY_APP_NAME"]}.fly.dev" : "https://cf-mcp.fly.dev"
       PUBLIC_DIR = File.join(__dir__, "public")
+      ALLOWED_HOSTS_ENV = "CF_MCP_ALLOWED_HOSTS"
 
-      def initialize(index, revision: nil)
+      # Comma-separated list of extra Host header values the HTTP transport accepts
+      # (the MCP SDK only allows loopback hosts by default).
+      def self.allowed_hosts_from_env(env = ENV)
+        env.fetch(ALLOWED_HOSTS_ENV, "").split(",").map(&:strip).reject(&:empty?)
+      end
+
+      def initialize(index, revision: nil, allowed_hosts: self.class.allowed_hosts_from_env)
         @index = index
         @revision = revision
+        @allowed_hosts = allowed_hosts
 
         configuration = ::MCP::Configuration.new(protocol_version: PROTOCOL_VERSION)
         @server = ::MCP::Server.new(
@@ -82,7 +90,7 @@ module CF
       def rack_app
         require "rack"
 
-        http_transport = ::MCP::Server::Transports::StreamableHTTPTransport.new(@server, stateless: true)
+        http_transport = ::MCP::Server::Transports::StreamableHTTPTransport.new(@server, stateless: true, allowed_hosts: @allowed_hosts)
         @server.transport = http_transport
 
         landing_page = build_landing_page

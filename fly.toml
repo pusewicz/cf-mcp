@@ -11,6 +11,7 @@ primary_region = 'iad'
 [env]
   PORT = '8080'
   RACK_ENV = 'production'
+  CF_MCP_ALLOWED_HOSTS = 'cf-mcp.fly.dev'
 
 [http_service]
   internal_port = 8080

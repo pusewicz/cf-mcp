@@ -639,9 +639,38 @@ class CF::MCP::ServerHTTPTest < Minitest::Test
     refute response.headers["mcp-session-id"], "Stateless transport should not return session ID"
   end
 
+  # Host header validation (DNS rebinding protection)
+
+  def test_rejects_host_that_is_not_allowed
+    response = initialize_request(host: "cf-mcp.fly.dev")
+
+    assert_equal 403, response.status
+    assert_includes response.body, "Invalid Host header"
+  end
+
+  def test_allows_loopback_host_by_default
+    assert_equal 200, initialize_request(host: "localhost:9292").status
+  end
+
+  def test_allows_host_passed_to_constructor
+    app = CF::MCP::Server.new(@index, allowed_hosts: ["cf-mcp.fly.dev"]).rack_app
+
+    assert_equal 200, initialize_request(app: app, host: "cf-mcp.fly.dev").status
+  end
+
+  def test_allowed_hosts_read_from_environment
+    with_env("CF_MCP_ALLOWED_HOSTS" => " cf-mcp.fly.dev, example.com ,,") do
+      app = CF::MCP::Server.new(@index).rack_app
+
+      assert_equal 200, initialize_request(app: app, host: "cf-mcp.fly.dev").status
+      assert_equal 200, initialize_request(app: app, host: "example.com").status
+      assert_equal 403, initialize_request(app: app, host: "evil.example.org").status
+    end
+  end
+
   private
 
-  def make_mcp_request(path, method, params, id: 1)
+  def make_mcp_request(path, method, params, id: 1, app: @app, host: nil)
     body = JSON.generate({
       jsonrpc: "2.0",
       id: id,
@@ -656,8 +685,25 @@ class CF::MCP::ServerHTTPTest < Minitest::Test
     )
     env["CONTENT_TYPE"] = "application/json"
     env["HTTP_ACCEPT"] = "application/json, text/event-stream"
+    env["HTTP_HOST"] = host if host
 
-    Rack::MockResponse.new(*@app.call(env))
+    Rack::MockResponse.new(*app.call(env))
+  end
+
+  def initialize_request(**options)
+    make_mcp_request("/http", "initialize", {
+      protocolVersion: "2024-11-05",
+      capabilities: {},
+      clientInfo: {name: "test", version: "1.0"}
+    }, **options)
+  end
+
+  def with_env(vars)
+    original = vars.keys.to_h { |key| [key, ENV[key]] }
+    vars.each { |key, value| ENV[key] = value }
+    yield
+  ensure
+    original.each { |key, value| ENV[key] = value }
   end
 
   def assert_cors_headers(response)

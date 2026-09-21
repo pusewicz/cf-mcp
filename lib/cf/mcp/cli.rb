@@ -7,7 +7,7 @@ module CF
     class CLI
       # Tool names are listed here, not read from Tools.all: naming a tool
       # loads it, and that must wait until the index is filled.
-      TOOL_COMMANDS = %w[search].freeze
+      TOOL_COMMANDS = %w[search get_details].freeze
 
       def initialize(args)
         @args = args
@@ -25,7 +25,7 @@ module CF
       # Returns the process exit status.
       def run
         @option_parser.order!(@args)
-        command = @args.shift
+        command = @args.shift&.tr("-", "_")
         tool_command = TOOL_COMMANDS.find { |name| name == command }
         # A tool's own flags follow its name, so only the other commands take global options there.
         @option_parser.parse!(@args) unless tool_command

@@ -97,7 +97,7 @@ class CF::MCP::CLITest < Minitest::Test
   end
 
   def test_index_picks_up_new_headers_when_run_again
-    run_cli("index", "--root", @root)
+    index_headers
     File.write(File.join(@root, "include", "extra.h"), "/**\n * @function extra_function\n * @category test\n */\n")
 
     status, out, = run_cli("index")
@@ -113,7 +113,7 @@ class CF::MCP::CLITest < Minitest::Test
   end
 
   def test_search_reads_the_cached_index
-    run_cli("index", "--root", @root)
+    index_headers
 
     status, out, err = run_cli("search", "test_function")
 
@@ -131,7 +131,7 @@ class CF::MCP::CLITest < Minitest::Test
   end
 
   def test_tool_flags_follow_the_command
-    run_cli("index", "--root", @root)
+    index_headers
 
     status, out, = run_cli("search", "function", "--type", "function", "--limit", "1")
 
@@ -140,7 +140,7 @@ class CF::MCP::CLITest < Minitest::Test
   end
 
   def test_tool_help
-    run_cli("index", "--root", @root)
+    index_headers
 
     status, out, = run_cli("search", "--help")
 
@@ -149,7 +149,7 @@ class CF::MCP::CLITest < Minitest::Test
   end
 
   def test_tool_argument_errors_fail
-    run_cli("index", "--root", @root)
+    index_headers
 
     status, _, err = run_cli("search", "function", "--type", "bogus")
 
@@ -158,7 +158,7 @@ class CF::MCP::CLITest < Minitest::Test
   end
 
   def test_categories_are_available_to_a_fresh_process
-    run_cli("index", "--root", @root)
+    index_headers
     exe = File.expand_path("../../../exe/cf-mcp", __dir__)
     lib = File.expand_path("../../../lib", __dir__)
 
@@ -166,6 +166,25 @@ class CF::MCP::CLITest < Minitest::Test
 
     assert status.success?, err
     assert_includes out, "test_function"
+  end
+
+  def test_get_details_prints_the_documentation
+    index_headers
+
+    status, out, = run_cli("get_details", "test_function")
+
+    assert_equal 0, status
+    assert_includes out, "# test_function"
+    assert_includes out, "const char* input"
+  end
+
+  def test_command_names_accept_hyphens
+    index_headers
+
+    status, out, = run_cli("get-details", "TestStruct")
+
+    assert_equal 0, status
+    assert_includes out, "# TestStruct"
   end
 
   def test_http_accepts_options_after_the_command
@@ -183,6 +202,10 @@ class CF::MCP::CLITest < Minitest::Test
     status = nil
     out, err = capture_io { status = CF::MCP::CLI.new(args).run }
     [status, out, err]
+  end
+
+  def index_headers
+    run_cli("index", "--root", @root)
   end
 
   # Replaces Rackup::Server.start for the block; returns the options it was given.

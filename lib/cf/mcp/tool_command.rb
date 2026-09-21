@@ -16,7 +16,9 @@ module CF
         properties = schema.fetch(:properties).map do |name, spec|
           Property.new(name: name, type: spec[:type], description: spec[:description].to_s, values: spec[:enum])
         end
-        @arguments, @flags = properties.partition { |property| required.include?(property.name) }
+        @required, @flags = properties.partition { |property| required.include?(property.name) }
+        # A tool that requires nothing still takes its first property as an optional argument.
+        @arguments = @required.empty? ? properties.first(1) : @required
         @parser = build_parser
       end
 
@@ -33,7 +35,7 @@ module CF
 
       def build_parser
         OptionParser.new do |opts|
-          opts.banner = ["Usage: cf-mcp", @tool.tool_name, *@arguments.map { |argument| placeholder(argument) }, "[options]"].join(" ")
+          opts.banner = ["Usage: cf-mcp", @tool.tool_name, *@arguments.map { |argument| usage(argument) }, "[options]"].join(" ")
           opts.separator ""
           opts.separator @tool.description.to_s
           unless @arguments.empty?
@@ -63,15 +65,20 @@ module CF
         property.name.to_s.upcase
       end
 
+      # How an argument reads in the usage line: optional ones are bracketed.
+      def usage(argument)
+        @required.include?(argument) ? placeholder(argument) : "[#{placeholder(argument)}]"
+      end
+
       def bind(positionals)
-        if positionals.size < @arguments.size
-          raise OptionParser::MissingArgument, placeholder(@arguments.fetch(positionals.size))
+        if positionals.size < @required.size
+          raise OptionParser::MissingArgument, placeholder(@required.fetch(positionals.size))
         end
         if positionals.size > @arguments.size
           raise OptionParser::NeedlessArgument, positionals.drop(@arguments.size).join(" ")
         end
 
-        @arguments.map(&:name).zip(positionals).to_h
+        @arguments.first(positionals.size).map(&:name).zip(positionals).to_h
       end
 
       def call_tool(arguments)

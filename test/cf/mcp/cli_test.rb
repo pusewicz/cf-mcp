@@ -229,6 +229,26 @@ class CF::MCP::CLITest < Minitest::Test
     refute_includes out, "## Takes as input"
   end
 
+  def test_list_category_lists_the_categories
+    index_headers
+
+    status, out, = run_cli("list_category")
+
+    assert_equal 0, status
+    assert_includes out, "Available categories"
+    assert_includes out, "**test**"
+  end
+
+  def test_list_category_lists_the_items_in_a_category
+    index_headers
+
+    status, out, = run_cli("list_category", "test", "--type", "function")
+
+    assert_equal 0, status
+    assert_includes out, "**test_function**"
+    refute_includes out, "**TestStruct**"
+  end
+
   def test_http_accepts_options_after_the_command
     started = stub_rackup_start do
       run_cli("http", "--root", @root, "--port", "4567", "--host", "127.0.0.1")

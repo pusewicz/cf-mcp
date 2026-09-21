@@ -54,6 +54,32 @@ class CF::MCP::ToolCommandTest < Minitest::Test
     assert_includes error.message, "extra"
   end
 
+  def test_the_first_property_is_positional_when_none_is_required
+    _, out, = run_command("sprite", tool: CF::MCP::Tools::ListCategory)
+
+    assert_includes out, "Items in 'sprite'"
+  end
+
+  def test_optional_positional_arguments_may_be_omitted
+    _, out, = run_command(tool: CF::MCP::Tools::ListCategory)
+
+    assert_includes out, "Available categories"
+  end
+
+  def test_only_one_optional_positional_argument_is_taken
+    error = assert_raises(OptionParser::NeedlessArgument) do
+      run_command("sprite", "extra", tool: CF::MCP::Tools::ListCategory)
+    end
+
+    assert_includes error.message, "extra"
+  end
+
+  def test_help_marks_optional_positional_arguments
+    _, out, = run_command("--help", tool: CF::MCP::Tools::ListCategory)
+
+    assert_includes out, "Usage: cf-mcp list_category [CATEGORY] [options]"
+  end
+
   def test_help_is_built_from_the_tool_schema
     status, out, = run_command("--help")
 

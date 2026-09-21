@@ -16,6 +16,7 @@ module CF
       end
 
       @tool: singleton(::MCP::Tool)
+      @required: Array[Property]
       @arguments: Array[Property]
       @flags: Array[Property]
       @parser: OptionParser
@@ -33,6 +34,8 @@ module CF
       def define_flag: (OptionParser opts, Property flag) -> void
 
       def placeholder: (Property property) -> String
+
+      def usage: (Property argument) -> String
 
       def bind: (Array[String] positionals) -> Hash[Symbol, String]
 

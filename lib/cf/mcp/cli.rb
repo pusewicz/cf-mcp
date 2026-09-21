@@ -57,7 +57,7 @@ module CF
           opts.separator ""
           opts.separator "Options:"
 
-          opts.on("-r", "--root PATH", "Path to Cute Framework headers directory") do |path|
+          opts.on("-r", "--root PATH", "Path to a Cute Framework checkout, or its include directory") do |path|
             @options[:root] = path
           end
 
@@ -93,7 +93,8 @@ module CF
         @option_parser.banner = [
           USAGE, "",
           "Commands:", *command_lines(COMMANDS), "",
-          "Documentation commands (see `cf-mcp <command> --help`):", *command_lines(tool_descriptions)
+          "Documentation commands (hyphens work too, as in get-details; see `cf-mcp <command> --help`):",
+          *command_lines(tool_descriptions)
         ].join("\n")
         puts @option_parser
         0

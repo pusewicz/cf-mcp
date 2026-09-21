@@ -115,6 +115,18 @@ class CF::MCP::CLITest < Minitest::Test
     end
   end
 
+  def test_help_mentions_the_hyphenated_command_names
+    _, out, = run_cli("--help")
+
+    assert_includes out, "get-details"
+  end
+
+  def test_help_says_the_root_may_be_a_checkout_or_its_include_directory
+    _, out, = run_cli("--help")
+
+    assert_includes out, "Path to a Cute Framework checkout, or its include directory"
+  end
+
   def test_search_reads_the_cached_index
     index_headers
 

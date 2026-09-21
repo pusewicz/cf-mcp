@@ -25,7 +25,8 @@ class CF::MCP::IndexCacheTest < Minitest::Test
     _, err = capture_io { index = @cache.index(source) { |source| builder_for(source) } }
 
     assert index.find("test_function")
-    assert File.exist?(@cache.path)
+    assert File.exist?(@cache.path_for(source))
+    assert_equal @cache.path_for(source), @cache.path
     assert_includes err, "not found, rebuilding"
   end
 
@@ -74,8 +75,8 @@ class CF::MCP::IndexCacheTest < Minitest::Test
   end
 
   def test_rebuilds_instead_of_raising_on_a_corrupt_cache
-    FileUtils.mkdir_p(File.dirname(@cache.path))
-    File.binwrite(@cache.path, "not a marshal dump")
+    FileUtils.mkdir_p(File.dirname(@cache.path_for(source)))
+    File.binwrite(@cache.path_for(source), "not a marshal dump")
 
     index = nil
     capture_io { index = @cache.index(source) { |source| builder_for(source) } }
@@ -86,7 +87,7 @@ class CF::MCP::IndexCacheTest < Minitest::Test
   def test_rebuilds_when_the_cache_was_written_by_another_gem_version
     prime_cache
     stale = CF::MCP::IndexCache::Payload.new(**payload_on_disk.to_h, gem_version: "0.0.0")
-    File.binwrite(@cache.path, Marshal.dump(stale))
+    File.binwrite(@cache.path_for(source), Marshal.dump(stale))
 
     builds = builds_during { |build| capture_io { @cache.index(&build) } }
 
@@ -94,8 +95,7 @@ class CF::MCP::IndexCacheTest < Minitest::Test
   end
 
   def test_rebuilds_for_a_different_source
-    other = build_checkout("other_framework")
-    File.write(File.join(other, "include", "sample_header.h"), "/**\n * @function other_function\n * @category other\n */\n")
+    other = build_other_checkout
     prime_cache
 
     index = nil
@@ -103,6 +103,44 @@ class CF::MCP::IndexCacheTest < Minitest::Test
 
     assert index.find("other_function")
     refute index.find("test_function")
+  end
+
+  def test_keeps_a_cache_per_source
+    other = build_other_checkout
+    prime_cache
+    capture_io { @cache.index(source(other)) { |source| builder_for(source) } }
+    CF::MCP::Index.instance.reset!
+
+    _, err = capture_io { @cache.index(source) { flunk "rebuilt a source that was already cached" } }
+
+    assert CF::MCP::Index.instance.find("test_function")
+    refute CF::MCP::Index.instance.find("other_function")
+    assert_empty err
+  end
+
+  def test_uses_the_last_source_when_none_is_given
+    other = build_other_checkout
+    prime_cache
+    capture_io { @cache.index(source(other)) { |source| builder_for(source) } }
+    CF::MCP::Index.instance.reset!
+
+    index = @cache.index { flunk "rebuilt a fresh cache" }
+
+    assert index.find("other_function")
+    refute index.find("test_function")
+  end
+
+  def test_builds_from_the_default_source_when_none_was_ever_used
+    builds = []
+
+    capture_io do
+      @cache.index do |source|
+        builds << source
+        builder_for(self.source)
+      end
+    end
+
+    assert_equal [CF::MCP::IndexCache::DEFAULT_SOURCE], builds
   end
 
   def test_rebuilds_from_the_recorded_source_when_none_is_given
@@ -147,7 +185,7 @@ class CF::MCP::IndexCacheTest < Minitest::Test
 
     assert_match(/\A[0-9a-f]{7,40}\z/, revision)
 
-    reloaded = CF::MCP::IndexCache.new(dir: File.dirname(@cache.path))
+    reloaded = CF::MCP::IndexCache.new(dir: File.dirname(@cache.path_for(source)))
     reloaded.index { flunk "built despite a fresh cache" }
 
     assert_equal revision, reloaded.revision
@@ -159,7 +197,7 @@ class CF::MCP::IndexCacheTest < Minitest::Test
     error = assert_raises(CF::MCP::Error) { @cache.refresh(source(missing)) { |source| builder_for(source) } }
 
     assert_includes error.message, missing
-    refute File.exist?(@cache.path)
+    refute File.exist?(@cache.path_for(source(missing)))
   end
 
   def test_default_dir_honours_the_cache_dir_variable
@@ -200,6 +238,13 @@ class CF::MCP::IndexCacheTest < Minitest::Test
     sources
   end
 
+  # A checkout whose only documented item is other_function.
+  def build_other_checkout
+    other = build_checkout("other_framework")
+    File.write(File.join(other, "include", "sample_header.h"), "/**\n * @function other_function\n * @category other\n */\n")
+    other
+  end
+
   def build_checkout(name)
     root = File.join(@tmp, name)
     FileUtils.mkdir_p(File.join(root, "include"))
@@ -214,7 +259,7 @@ class CF::MCP::IndexCacheTest < Minitest::Test
   end
 
   def payload_on_disk
-    Marshal.load(File.binread(@cache.path))
+    Marshal.load(File.binread(@cache.path_for(source)))
   end
 
   def init_git_repo(dir)

@@ -165,9 +165,11 @@ module CF
         ToolCommand.new(tool).run(@args)
       end
 
-      # What the user asked to index; nil leaves the choice to the cache.
+      # What the user asked to index, by flag or CF_HEADERS_PATH; nil leaves the choice to the
+      # cache. The root is expanded so every spelling of it names the same index.
       def index_source
-        {root: @options[:root], download: @options[:download]} if @options[:root] || @options[:download]
+        root = @options[:root] || ENV["CF_HEADERS_PATH"]
+        {root: root && File.expand_path(root), download: @options[:download]} if root || @options[:download]
       end
 
       def missing_headers_message(builder)

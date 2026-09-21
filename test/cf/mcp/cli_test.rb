@@ -10,7 +10,7 @@ class CF::MCP::CLITest < Minitest::Test
   FIXTURE = File.expand_path("../../fixtures/sample_header.h", __dir__)
 
   def setup
-    @tmp = Dir.mktmpdir("cf-mcp-cli-test")
+    @tmp = File.realpath(Dir.mktmpdir("cf-mcp-cli-test"))
     @root = File.join(@tmp, "cute_framework")
     FileUtils.mkdir_p(File.join(@root, "include"))
     FileUtils.cp(FIXTURE, File.join(@root, "include"))
@@ -79,7 +79,7 @@ class CF::MCP::CLITest < Minitest::Test
 
     assert_equal 0, status
     assert_includes out, "Indexed 4 items (2 functions, 1 structs, 1 enums, 0 topics)"
-    assert File.exist?(File.join(ENV.fetch("CF_MCP_CACHE_DIR"), "index.bin"))
+    assert_equal 1, Dir.glob(File.join(ENV.fetch("CF_MCP_CACHE_DIR"), "index-*.bin")).size
   end
 
   def test_index_accepts_options_before_the_command
@@ -158,6 +158,61 @@ class CF::MCP::CLITest < Minitest::Test
 
     assert_equal 0, status
     assert_includes out, "test_function"
+  end
+
+  def test_each_root_keeps_its_own_index
+    other = build_other_checkout
+    index_headers
+    run_cli("index", "--root", other)
+
+    _, out, err = run_cli("--root", @root, "search", "test_function")
+
+    assert_includes out, "test_function"
+    assert_empty err
+
+    _, out, err = run_cli("--root", other, "search", "other_function")
+
+    assert_includes out, "**other_function**"
+    assert_empty err
+  end
+
+  def test_tool_commands_use_the_root_they_are_given
+    other = build_other_checkout
+    index_headers
+
+    _, out, = run_cli("--root", other, "search", "other_function")
+    assert_includes out, "**other_function**"
+
+    _, out, = run_cli("--root", other, "search", "test_function")
+    assert_includes out, "No results found"
+  end
+
+  def test_tool_commands_without_a_root_use_the_last_one_given
+    other = build_other_checkout
+    index_headers
+    run_cli("index", "--root", other)
+
+    _, out, = run_cli("search", "other_function")
+
+    assert_includes out, "**other_function**"
+  end
+
+  def test_a_relative_root_names_the_same_index_as_its_full_path
+    Dir.chdir(@tmp) { run_cli("index", "--root", "cute_framework") }
+
+    _, out, err = run_cli("--root", @root, "search", "test_function")
+
+    assert_includes out, "test_function"
+    assert_empty err
+  end
+
+  def test_the_headers_path_variable_selects_the_index
+    other = build_other_checkout
+    index_headers
+
+    _, out, = with_env("CF_HEADERS_PATH" => File.join(other, "include")) { run_cli("search", "other_function") }
+
+    assert_includes out, "**other_function**"
   end
 
   def test_tool_commands_need_a_value_for_the_root
@@ -312,6 +367,22 @@ class CF::MCP::CLITest < Minitest::Test
 
   def index_headers
     run_cli("index", "--root", @root)
+  end
+
+  # A checkout whose only documented item is other_function.
+  def build_other_checkout
+    other = File.join(@tmp, "other_framework")
+    FileUtils.mkdir_p(File.join(other, "include"))
+    File.write(File.join(other, "include", "other.h"), "/**\n * @function other_function\n * @category other\n */\n")
+    other
+  end
+
+  def with_env(vars)
+    saved = vars.keys.to_h { |key| [key, ENV[key]] }
+    vars.each { |key, value| ENV[key] = value }
+    yield
+  ensure
+    saved.each { |key, value| ENV[key] = value }
   end
 
   def add_topic(name, content)

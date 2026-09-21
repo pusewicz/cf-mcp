@@ -218,6 +218,17 @@ class CF::MCP::CLITest < Minitest::Test
     assert_includes out, "`int value`"
   end
 
+  def test_parameter_search_finds_functions_by_type
+    index_headers
+
+    status, out, = run_cli("parameter_search", "TestStruct", "--direction", "output")
+
+    assert_equal 0, status
+    assert_includes out, "## Returns (1)"
+    assert_includes out, "**test_function**"
+    refute_includes out, "## Takes as input"
+  end
+
   def test_http_accepts_options_after_the_command
     started = stub_rackup_start do
       run_cli("http", "--root", @root, "--port", "4567", "--host", "127.0.0.1")

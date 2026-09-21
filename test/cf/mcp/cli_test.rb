@@ -106,10 +106,13 @@ class CF::MCP::CLITest < Minitest::Test
     assert_includes out, "Indexed 5 items"
   end
 
-  def test_help_lists_the_tool_commands
+  def test_help_lists_every_tool_with_its_description
     _, out, = run_cli("--help")
 
-    assert_includes out, "search"
+    CF::MCP::Tools.all.each do |tool|
+      assert_includes out, tool.tool_name
+      assert_includes out, tool.description
+    end
   end
 
   def test_search_reads_the_cached_index
@@ -220,6 +223,15 @@ class CF::MCP::CLITest < Minitest::Test
 
     assert_equal 1, status
     assert_includes err, "missing argument: --root"
+  end
+
+  def test_tool_help_needs_no_index
+    status, out, err = run_cli("search", "--help")
+
+    assert_equal 0, status
+    assert_includes out, "Usage: cf-mcp search QUERY [options]"
+    assert_empty err
+    assert_empty Dir.glob(File.join(ENV.fetch("CF_MCP_CACHE_DIR"), "*"))
   end
 
   def test_tool_help
@@ -342,10 +354,6 @@ class CF::MCP::CLITest < Minitest::Test
 
     assert_equal 0, status
     assert_operator out.index("**drawing**"), :<, out.index("**audio**")
-  end
-
-  def test_every_tool_has_a_command
-    assert_equal CF::MCP::Tools.all.map(&:tool_name).sort, CF::MCP::CLI::TOOL_COMMANDS.sort
   end
 
   def test_http_accepts_options_after_the_command

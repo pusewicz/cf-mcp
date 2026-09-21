@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `CLI#run` returns the exit status instead of exiting, and an unknown command or option now fails with a message (previously an unknown command printed the usage and exited 0)
+- `search` and `list_category` list the index's categories when their schema is asked for instead of when the class loads, so tools can be loaded before the index is filled; the `category` property has no `enum` while the index is empty
 - `name:` is now a required keyword on `DocItem` and its subclasses (`FunctionDoc`, `StructDoc`, `EnumDoc`, `TopicDoc`); previously a nameless item could be built and indexed
 - `Index#by_type` now returns an `Index::ByType` (`functions`, `structs`, `enums`, `topics`) instead of a Hash keyed by type symbol, and `Index#add` files items by class rather than by their `type`
 - Small internal refactors so the code type checks; no behavior change for valid input

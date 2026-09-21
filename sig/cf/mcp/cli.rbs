@@ -1,8 +1,10 @@
 module CF
   module MCP
     class CLI
-      # Commands that run a documentation tool.
-      TOOL_COMMANDS: Array[String]
+      USAGE: String
+
+      # The commands that are not documentation tools, by name.
+      COMMANDS: Hash[String, String]
 
       type options = {
         port: Integer?,
@@ -30,6 +32,10 @@ module CF
 
       def print_usage: () -> Integer
 
+      def command_lines: (Hash[String, String] descriptions) -> Array[String]
+
+      def tool_descriptions: () -> Hash[String, String]
+
       def fail_with: (String message) -> Integer
 
       def run_stdio: () -> Integer
@@ -42,9 +48,16 @@ module CF
       # leaving the rest for the tool.
       def take_source_options: () -> void
 
-      def run_tool: (String name) -> Integer
+      # The tool named by the command, if it names one. Asking loads the tools,
+      # which the other commands have no need of.
+      def find_tool: (String? command) -> singleton(::MCP::Tool)?
 
-      # What the user asked to index; nil leaves the choice to the cache.
+      # Help describes the tool from its schema alone, so it goes without the index.
+      def run_tool: (singleton(::MCP::Tool) tool) -> Integer
+
+      # What the user asked to index, by flag or CF_HEADERS_PATH; nil leaves the
+      # choice to the cache. The root is expanded so every spelling of it names
+      # the same index.
       def index_source: () -> IndexCache::source?
 
       def missing_headers_message: (IndexBuilder builder) -> String

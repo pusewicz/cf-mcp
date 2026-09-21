@@ -5,9 +5,13 @@ require "optparse"
 module CF
   module MCP
     class CLI
-      # Tool names are listed here, not read from Tools.all: naming a tool
-      # loads it, and that must wait until the index is filled.
-      TOOL_COMMANDS = %w[search get_details find_related get_topic member_search parameter_search list_category list_topics].freeze
+      USAGE = "Usage: cf-mcp [options] <command> [options]"
+
+      COMMANDS = {
+        "stdio" => "Run in STDIO mode (for CLI integration)",
+        "http" => "Run as HTTP server with web interface",
+        "index" => "Index the documentation into a cache for fast lookups"
+      }.freeze
 
       def initialize(args)
         @args = args
@@ -26,13 +30,13 @@ module CF
       def run
         @option_parser.order!(@args)
         command = @args.shift&.tr("-", "_")
-        tool_command = TOOL_COMMANDS.find { |name| name == command }
-        # A tool's flags are only known once its index is loaded, which needs the source options first.
-        tool_command ? take_source_options : @option_parser.parse!(@args)
+        tool = find_tool(command)
+        # A tool's flags are checked against the index, so the options that choose it come out first.
+        tool ? take_source_options : @option_parser.parse!(@args)
 
         return print_version if @options[:version]
         return print_usage if @options[:help] || [nil, "help"].include?(command)
-        return run_tool(tool_command) if tool_command
+        return run_tool(tool) if tool
         return fail_with("Unexpected arguments: #{@args.join(" ")}") unless @args.empty?
 
         case command
@@ -49,15 +53,7 @@ module CF
 
       def build_option_parser
         OptionParser.new do |opts|
-          opts.banner = "Usage: cf-mcp [options] <command> [options]"
-          opts.separator ""
-          opts.separator "Commands:"
-          opts.separator "  stdio    Run in STDIO mode (for CLI integration)"
-          opts.separator "  http     Run as HTTP server with web interface"
-          opts.separator "  index    Index the documentation into a cache for fast lookups"
-          opts.separator ""
-          opts.separator "Documentation commands (see `cf-mcp <command> --help`):"
-          opts.separator "  #{TOOL_COMMANDS.join(", ")}"
+          opts.banner = USAGE
           opts.separator ""
           opts.separator "Options:"
 
@@ -92,9 +88,23 @@ module CF
         0
       end
 
+      # The commands go in the banner because the tools are only loaded when asked for.
       def print_usage
+        @option_parser.banner = [
+          USAGE, "",
+          "Commands:", *command_lines(COMMANDS), "",
+          "Documentation commands (see `cf-mcp <command> --help`):", *command_lines(tool_descriptions)
+        ].join("\n")
         puts @option_parser
         0
+      end
+
+      def command_lines(descriptions)
+        descriptions.map { |name, description| "  #{name.ljust(18)}#{description}" }
+      end
+
+      def tool_descriptions
+        Tools.all.to_h { |tool| [tool.tool_name.to_s, tool.description.to_s] }
       end
 
       def fail_with(message)
@@ -159,9 +169,17 @@ module CF
         @args.replace(rest)
       end
 
-      def run_tool(name)
-        IndexCache.new.index(index_source) { |source| IndexBuilder.new(**source) }
-        tool = Tools.all.find { |candidate| candidate.tool_name == name } || raise(Error, "No tool named '#{name}'")
+      # The tool named by the command, if it names one. Asking loads the tools, which the
+      # other commands have no need of.
+      def find_tool(command)
+        return if command.nil? || COMMANDS.key?(command)
+
+        Tools.all.find { |tool| tool.tool_name == command }
+      end
+
+      # Help describes the tool from its schema alone, so it goes without the index.
+      def run_tool(tool)
+        IndexCache.new.index(index_source) { |source| IndexBuilder.new(**source) } unless @args.intersect?(%w[-h --help])
         ToolCommand.new(tool).run(@args)
       end
 

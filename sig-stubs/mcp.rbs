@@ -38,6 +38,9 @@ module MCP
     class Response
       # Content items are hashes such as `{type: "text", text: "..."}`.
       def initialize: (Array[Hash[Symbol, untyped]] content, ?error: bool, ?structured_content: untyped, ?meta: untyped) -> void
+
+      attr_reader content: Array[Hash[Symbol, untyped]]
+      def error?: () -> bool
     end
 
     class InputSchema

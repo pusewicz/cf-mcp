@@ -67,16 +67,7 @@ module CF
             ::MCP::Icon.new(src: "#{WEBSITE_URL}/favicon.svg", mime_type: "image/svg+xml", sizes: ["any"]),
             ::MCP::Icon.new(src: "#{WEBSITE_URL}/favicon-96x96.png", mime_type: "image/png", sizes: ["96x96"])
           ],
-          tools: [
-            Tools::SearchTool,
-            Tools::ListCategory,
-            Tools::GetDetails,
-            Tools::FindRelated,
-            Tools::ParameterSearch,
-            Tools::MemberSearch,
-            Tools::ListTopics,
-            Tools::GetTopic
-          ],
+          tools: Tools.all,
           resources: build_topic_resources(index)
         )
         @server.server_context = {index: index}

@@ -1,6 +1,9 @@
 module CF
   module MCP
     class CLI
+      # Commands that run a documentation tool.
+      TOOL_COMMANDS: Array[String]
+
       type options = {
         port: Integer?,
         host: String,
@@ -34,6 +37,8 @@ module CF
       def run_http: () -> Integer
 
       def run_index: () -> Integer
+
+      def run_tool: (String name) -> Integer
 
       # What the user asked to index; nil leaves the choice to the cache.
       def index_source: () -> IndexCache::source?

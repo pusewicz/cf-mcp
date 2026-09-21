@@ -3,6 +3,7 @@
 require "test_helper"
 require "tmpdir"
 require "fileutils"
+require "open3"
 require "rackup"
 
 class CF::MCP::CLITest < Minitest::Test
@@ -103,6 +104,68 @@ class CF::MCP::CLITest < Minitest::Test
 
     assert_equal 0, status
     assert_includes out, "Indexed 5 items"
+  end
+
+  def test_help_lists_the_tool_commands
+    _, out, = run_cli("--help")
+
+    assert_includes out, "search"
+  end
+
+  def test_search_reads_the_cached_index
+    run_cli("index", "--root", @root)
+
+    status, out, err = run_cli("search", "test_function")
+
+    assert_equal 0, status
+    assert_includes out, "test_function"
+    assert_empty err
+  end
+
+  def test_search_builds_the_index_when_there_is_no_cache
+    status, out, err = run_cli("--root", @root, "search", "test_function")
+
+    assert_equal 0, status
+    assert_includes out, "test_function"
+    assert_includes err, "rebuilding"
+  end
+
+  def test_tool_flags_follow_the_command
+    run_cli("index", "--root", @root)
+
+    status, out, = run_cli("search", "function", "--type", "function", "--limit", "1")
+
+    assert_equal 0, status
+    assert_includes out, "limit reached"
+  end
+
+  def test_tool_help
+    run_cli("index", "--root", @root)
+
+    status, out, = run_cli("search", "--help")
+
+    assert_equal 0, status
+    assert_includes out, "Usage: cf-mcp search QUERY [options]"
+  end
+
+  def test_tool_argument_errors_fail
+    run_cli("index", "--root", @root)
+
+    status, _, err = run_cli("search", "function", "--type", "bogus")
+
+    assert_equal 1, status
+    assert_includes err, "invalid argument: --type bogus"
+  end
+
+  def test_categories_are_available_to_a_fresh_process
+    run_cli("index", "--root", @root)
+    exe = File.expand_path("../../../exe/cf-mcp", __dir__)
+    lib = File.expand_path("../../../lib", __dir__)
+
+    out, err, status = Open3.capture3(RbConfig.ruby, "-I", lib, exe, "search", "test_function", "--category", "test")
+
+    assert status.success?, err
+    assert_includes out, "test_function"
   end
 
   def test_http_accepts_options_after_the_command

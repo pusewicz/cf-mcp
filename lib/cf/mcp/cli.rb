@@ -5,6 +5,10 @@ require "optparse"
 module CF
   module MCP
     class CLI
+      # Tool names are listed here, not read from Tools.all: naming a tool
+      # loads it, and that must wait until the index is filled.
+      TOOL_COMMANDS = %w[search].freeze
+
       def initialize(args)
         @args = args
         @options = {
@@ -22,10 +26,13 @@ module CF
       def run
         @option_parser.order!(@args)
         command = @args.shift
-        @option_parser.parse!(@args)
+        tool_command = TOOL_COMMANDS.find { |name| name == command }
+        # A tool's own flags follow its name, so only the other commands take global options there.
+        @option_parser.parse!(@args) unless tool_command
 
         return print_version if @options[:version]
         return print_usage if @options[:help] || [nil, "help"].include?(command)
+        return run_tool(tool_command) if tool_command
         return fail_with("Unexpected arguments: #{@args.join(" ")}") unless @args.empty?
 
         case command
@@ -48,6 +55,9 @@ module CF
           opts.separator "  stdio    Run in STDIO mode (for CLI integration)"
           opts.separator "  http     Run as HTTP server with web interface"
           opts.separator "  index    Index the documentation into a cache for fast lookups"
+          opts.separator ""
+          opts.separator "Documentation commands (see `cf-mcp <command> --help`):"
+          opts.separator "  #{TOOL_COMMANDS.join(", ")}"
           opts.separator ""
           opts.separator "Options:"
 
@@ -133,6 +143,12 @@ module CF
         puts "Cute Framework revision: #{cache.revision}" if cache.revision
         puts "Cached at #{cache.path}"
         0
+      end
+
+      def run_tool(name)
+        IndexCache.new.index(index_source) { |source| IndexBuilder.new(**source) }
+        tool = Tools.all.find { |candidate| candidate.tool_name == name } || raise(Error, "No tool named '#{name}'")
+        ToolCommand.new(tool).run(@args)
       end
 
       # What the user asked to index; nil leaves the choice to the cache.

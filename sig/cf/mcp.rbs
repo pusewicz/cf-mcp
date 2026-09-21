@@ -14,6 +14,10 @@ module CF
       # The SDK passes a ::MCP::ServerContext; callers such as the tests pass a
       # plain Hash. No tool reads it.
       type server_context = Hash[Symbol, untyped] | ::MCP::ServerContext
+
+      # Naming a tool loads it, and SearchTool and ListCategory read the index's
+      # categories when loaded, so the index must be filled before calling this.
+      def self.all: () -> Array[singleton(::MCP::Tool)]
     end
   end
 end

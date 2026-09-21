@@ -27,8 +27,8 @@ module CF
         @option_parser.order!(@args)
         command = @args.shift&.tr("-", "_")
         tool_command = TOOL_COMMANDS.find { |name| name == command }
-        # A tool's own flags follow its name, so only the other commands take global options there.
-        @option_parser.parse!(@args) unless tool_command
+        # A tool's flags are only known once its index is loaded, which needs the source options first.
+        tool_command ? take_source_options : @option_parser.parse!(@args)
 
         return print_version if @options[:version]
         return print_usage if @options[:help] || [nil, "help"].include?(command)
@@ -143,6 +143,20 @@ module CF
         puts "Cute Framework revision: #{cache.revision}" if cache.revision
         puts "Cached at #{cache.path}"
         0
+      end
+
+      # Takes --root and --download out of the arguments wherever they stand, leaving the rest for the tool.
+      def take_source_options
+        rest = [] #: Array[String]
+        while (arg = @args.shift)
+          case arg
+          when "-r", "--root" then @options[:root] = @args.shift || raise(OptionParser::MissingArgument, arg)
+          when /\A--root=(.*)\z/ then @options[:root] = $1
+          when "-d", "--download" then @options[:download] = true
+          else rest << arg
+          end
+        end
+        @args.replace(rest)
       end
 
       def run_tool(name)

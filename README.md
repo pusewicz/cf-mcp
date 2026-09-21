@@ -48,7 +48,7 @@ cf-mcp list_category sprite
 
 The commands are `search`, `get_details`, `find_related`, `parameter_search`, `member_search`, `list_category`, `list_topics` and `get_topic`. Run `cf-mcp <command> --help` for a command's arguments.
 
-The index is cached in `~/.cache/cf-mcp` (or `$XDG_CACHE_HOME/cf-mcp`, or `$CF_MCP_CACHE_DIR`) and rebuilt automatically when a header changes. Put `--root` and `--download` before the command.
+The index is cached in `~/.cache/cf-mcp` (or `$XDG_CACHE_HOME/cf-mcp`, or `$CF_MCP_CACHE_DIR`) and rebuilt automatically when a header changes. Give a command `--root` or `--download` to switch to another checkout.
 
 ## Inspecting with MCP Inspector
 

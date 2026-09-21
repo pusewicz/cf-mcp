@@ -38,6 +38,10 @@ module CF
 
       def run_index: () -> Integer
 
+      # Takes --root and --download out of the arguments wherever they stand,
+      # leaving the rest for the tool.
+      def take_source_options: () -> void
+
       def run_tool: (String name) -> Integer
 
       # What the user asked to index; nil leaves the choice to the cache.

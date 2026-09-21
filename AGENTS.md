@@ -69,7 +69,7 @@ cf-mcp search sprite --type function --limit 5
 cf-mcp get_details CF_Sprite
 ```
 
-Tool commands read the cache and rebuild it when the headers change. `--root` and `--download` go before the command. A tool's name is listed in `CLI::TOOL_COMMANDS` because naming a tool class loads it, and `SearchTool`/`ListCategory` bake the index's categories into their schema at load time: the index must be filled first.
+Tool commands read the cache and rebuild it when the headers change. A tool's name is listed in `CLI::TOOL_COMMANDS` because naming a tool class loads it, and `SearchTool`/`ListCategory` bake the index's categories into their schema at load time: the index must be filled first. That is also why `CLI#take_source_options` pulls `--root`/`--download` out of a tool command's arguments before the tool's own flags (which come from its schema) are parsed.
 
 ## Architecture
 

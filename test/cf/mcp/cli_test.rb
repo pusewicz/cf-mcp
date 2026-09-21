@@ -139,6 +139,34 @@ class CF::MCP::CLITest < Minitest::Test
     assert_includes out, "limit reached"
   end
 
+  def test_tool_commands_accept_the_root_after_their_arguments
+    status, out, = run_cli("search", "test_function", "--root", @root)
+
+    assert_equal 0, status
+    assert_includes out, "test_function"
+  end
+
+  def test_tool_commands_accept_the_root_between_their_flags
+    status, out, = run_cli("search", "--type", "function", "--root=#{@root}", "test_function")
+
+    assert_equal 0, status
+    assert_includes out, "test_function"
+  end
+
+  def test_tool_commands_accept_download_after_their_arguments
+    status, out, = stub_downloader { run_cli("search", "test_function", "--download") }
+
+    assert_equal 0, status
+    assert_includes out, "test_function"
+  end
+
+  def test_tool_commands_need_a_value_for_the_root
+    status, _, err = run_cli("search", "test_function", "--root")
+
+    assert_equal 1, status
+    assert_includes err, "missing argument: --root"
+  end
+
   def test_tool_help
     index_headers
 
@@ -289,6 +317,18 @@ class CF::MCP::CLITest < Minitest::Test
   def add_topic(name, content)
     FileUtils.mkdir_p(File.join(@root, "docs", "topics"))
     File.write(File.join(@root, "docs", "topics", "#{name}.md"), content)
+  end
+
+  # Makes the downloader "fetch" the fixture checkout instead of using the network.
+  def stub_downloader
+    downloader = Object.new
+    headers = File.join(@root, "include")
+    downloader.define_singleton_method(:download_and_extract) { headers }
+    downloader.define_singleton_method(:sha) { "abc1234" }
+    CF::MCP::Downloader.define_singleton_method(:new) { downloader }
+    yield
+  ensure
+    CF::MCP::Downloader.singleton_class.send(:remove_method, :new)
   end
 
   # Replaces Rackup::Server.start for the block; returns the options it was given.

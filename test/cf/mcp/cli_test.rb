@@ -261,6 +261,10 @@ class CF::MCP::CLITest < Minitest::Test
     assert_operator out.index("**drawing**"), :<, out.index("**audio**")
   end
 
+  def test_every_tool_has_a_command
+    assert_equal CF::MCP::Tools.all.map(&:tool_name).sort, CF::MCP::CLI::TOOL_COMMANDS.sort
+  end
+
   def test_http_accepts_options_after_the_command
     started = stub_rackup_start do
       run_cli("http", "--root", @root, "--port", "4567", "--host", "127.0.0.1")

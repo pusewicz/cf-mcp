@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-09-21
+
 ### Added
 
 - Every tool is now a command (`cf-mcp search sprite --type function`, `cf-mcp get_details CF_Sprite`, and so on) with arguments and `--help` generated from the tool's input schema
-- `cf-mcp index` caches the parsed index in `~/.cache/cf-mcp` (`CF_MCP_CACHE_DIR` and `XDG_CACHE_HOME` are honoured), one cache per `--root` so projects on different Cute Framework versions do not evict each other; tool commands read it and rebuild it when a header or topic changes
+- `cf-mcp index` caches the parsed index in `~/.cache/cf-mcp` (`CF_MCP_CACHE_DIR` and `XDG_CACHE_HOME` are honoured), one cache per `--root` so projects on different Cute Framework versions do not evict each other; tool commands read it and rebuild it when a header or topic changes. A cache directory that belongs to another user or that everyone can write to is refused, since cache files are read back with `Marshal`
 - RBS signatures for the whole library, checked in CI with Steep (strict, and every method must have a signature) and by running the test suite under RBS's runtime type checker; run them with `rake rbs`. They are development-only and not packaged in the gem.
 
 ### Changed
@@ -352,7 +354,8 @@ This version was prepared but never released. Changes rolled into 0.17.2.
   - `cf_list_category` - List items by category
   - `cf_get_details` - Get full documentation by name
 
-[Unreleased]: https://github.com/pusewicz/cf-mcp/compare/v0.20.0...HEAD
+[Unreleased]: https://github.com/pusewicz/cf-mcp/compare/v0.21.0...HEAD
+[0.21.0]: https://github.com/pusewicz/cf-mcp/compare/v0.20.0...v0.21.0
 [0.20.0]: https://github.com/pusewicz/cf-mcp/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/pusewicz/cf-mcp/compare/v0.18.0...v0.19.0
 [0.17.2]: https://github.com/pusewicz/cf-mcp/compare/v0.17.0...v0.17.2

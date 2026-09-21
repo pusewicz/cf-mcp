@@ -61,7 +61,7 @@ cf-mcp http --port 9292 --root /path/to/cute_framework
 # Download headers from GitHub automatically
 cf-mcp stdio --download
 
-# Cache the parsed docs (~/.cache/cf-mcp/index.bin); re-run to pick up changes
+# Cache the parsed docs (~/.cache/cf-mcp, one file per root); re-run to pick up changes
 cf-mcp index --root ~/Work/GitHub/pusewicz/cute_framework
 
 # Every MCP tool is also a command (flags after the command belong to the tool)

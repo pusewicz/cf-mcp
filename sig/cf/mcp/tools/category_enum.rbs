@@ -1,0 +1,23 @@
+module CF
+  module MCP
+    module Tools
+      # What CategoryEnum wraps: the tool class it extends.
+      interface _InputSchemaHost
+        def input_schema_value: () -> ::MCP::Tool::InputSchema
+      end
+
+      # For a tool whose `category` property takes the index's categories, read
+      # when the schema is asked for rather than when the class loads.
+      module CategoryEnum : _InputSchemaHost
+        # The schemas built so far, by the categories they list.
+        @category_schemas: Hash[Array[String], ::MCP::Tool::InputSchema]
+
+        def input_schema_value: () -> ::MCP::Tool::InputSchema
+
+        private
+
+        def with_categories: (Hash[Symbol, untyped] schema, Array[String] categories) -> ::MCP::Tool::InputSchema
+      end
+    end
+  end
+end

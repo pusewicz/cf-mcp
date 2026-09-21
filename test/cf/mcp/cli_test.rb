@@ -249,6 +249,18 @@ class CF::MCP::CLITest < Minitest::Test
     refute_includes out, "**TestStruct**"
   end
 
+  def test_list_topics_lists_the_guides_in_reading_order
+    add_topic("audio", "# Audio\n\nSound.\n")
+    add_topic("drawing", "# Drawing\n\nShapes.\n")
+    add_topic("index", "1. [Drawing](./drawing.md)\n2. [Audio](./audio.md)\n")
+    index_headers
+
+    status, out, = run_cli("list_topics", "--ordered")
+
+    assert_equal 0, status
+    assert_operator out.index("**drawing**"), :<, out.index("**audio**")
+  end
+
   def test_http_accepts_options_after_the_command
     started = stub_rackup_start do
       run_cli("http", "--root", @root, "--port", "4567", "--host", "127.0.0.1")

@@ -74,6 +74,29 @@ class CF::MCP::ToolCommandTest < Minitest::Test
     assert_includes error.message, "extra"
   end
 
+  def test_boolean_flags_take_no_value
+    add_topic
+
+    _, out, = run_command("--ordered", tool: CF::MCP::Tools::ListTopics)
+
+    assert_includes out, "recommended reading order"
+  end
+
+  def test_boolean_flags_can_be_negated
+    add_topic
+
+    _, out, = run_command("--no-ordered", tool: CF::MCP::Tools::ListTopics)
+
+    assert_includes out, "**audio**"
+    refute_includes out, "recommended reading order"
+  end
+
+  def test_help_shows_boolean_flags_as_switches
+    _, out, = run_command("--help", tool: CF::MCP::Tools::ListTopics)
+
+    assert_includes out, "--[no-]ordered"
+  end
+
   def test_help_marks_optional_positional_arguments
     _, out, = run_command("--help", tool: CF::MCP::Tools::ListCategory)
 
@@ -110,6 +133,10 @@ class CF::MCP::ToolCommandTest < Minitest::Test
   end
 
   private
+
+  def add_topic
+    @index.add(CF::MCP::Models::TopicDoc.new(name: "audio", category: "audio", brief: "Sound.", reading_order: 0))
+  end
 
   def run_command(*args, tool: CF::MCP::Tools::SearchTool)
     status = nil

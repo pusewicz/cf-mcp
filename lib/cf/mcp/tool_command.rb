@@ -56,6 +56,8 @@ module CF
           opts.on(switch, values, "#{flag.description} [#{values.join("|")}]")
         elsif flag.type == "integer"
           opts.on(switch, Integer, flag.description)
+        elsif flag.type == "boolean"
+          opts.on("--[no-]#{flag.name}", flag.description)
         else
           opts.on(switch, flag.description)
         end

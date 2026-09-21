@@ -47,6 +47,10 @@ module CF
 
       private
 
+      # Cache files are read back with Marshal, which can run code, so they are
+      # only trusted in a directory no other user could have put a file in.
+      def check_dir!: () -> void
+
       def fresh?: (Payload payload) -> bool
 
       def rebuild: (source source) { (source source) -> IndexBuilder } -> Index

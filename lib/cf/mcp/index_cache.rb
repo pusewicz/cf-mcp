@@ -39,6 +39,7 @@ module CF
       # `source` names what to build from; nil means the last one used.
       # The block receives the source to build from and returns an IndexBuilder.
       def index(source = nil, &builder_for)
+        check_dir!
         source ||= current_source
         payload = load_payload(path_for(source))
         return hydrate(source, payload) if payload && fresh?(payload)
@@ -49,10 +50,22 @@ module CF
 
       # Rebuilds and stores the index, whether or not the cache is fresh.
       def refresh(source = nil, &builder_for)
+        check_dir!
         rebuild(source || current_source, &builder_for)
       end
 
       private
+
+      # Cache files are read back with Marshal, which can run code, so they are only
+      # trusted in a directory no other user could have put a file in.
+      def check_dir!
+        return unless File.directory?(@dir)
+
+        stat = File.stat(@dir)
+        return if stat.uid == Process.euid && !stat.world_writable?
+
+        raise Error, "Refusing to load the index from #{@dir}: it belongs to another user or is writable by everyone. Set CF_MCP_CACHE_DIR to a directory of your own."
+      end
 
       # A checkout that has gone away (a cleaned download directory, say) keeps
       # its cache: only `refresh` should fetch it again.
@@ -114,7 +127,7 @@ module CF
 
       # Written beside the file and renamed into place, so a reader never sees half of it.
       def write_atomically(path, data)
-        FileUtils.mkdir_p(File.dirname(path))
+        FileUtils.mkdir_p(File.dirname(path), mode: 0o700)
         Tempfile.create(["cf-mcp", ".tmp"], File.dirname(path), binmode: true) do |file|
           file.write(data)
           file.close

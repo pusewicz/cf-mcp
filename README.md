@@ -48,7 +48,7 @@ cf-mcp list_category sprite
 
 The commands are `search`, `get_details`, `find_related`, `parameter_search`, `member_search`, `list_category`, `list_topics` and `get_topic`. Run `cf-mcp <command> --help` for a command's arguments.
 
-The index is cached in `~/.cache/cf-mcp` (or `$XDG_CACHE_HOME/cf-mcp`, or `$CF_MCP_CACHE_DIR`) and rebuilt automatically when a header changes. Each `--root` keeps its own cache, so projects on different Cute Framework versions can take turns without reindexing: pass `--root` (or set `CF_HEADERS_PATH`) to say which one a command should use. Without either, a command uses the last one it was given.
+The index is cached in `~/.cache/cf-mcp` (or `$XDG_CACHE_HOME/cf-mcp`, or `$CF_MCP_CACHE_DIR`) and rebuilt automatically when a header changes. Each `--root` keeps its own cache, so projects on different Cute Framework versions can take turns without reindexing: pass `--root` (or set `CF_HEADERS_PATH`) to say which one a command should use. Without either, a command uses the last one it was given. Cache files are read back with `Marshal`, so a cache directory that belongs to another user or that everyone can write to is refused.
 
 ## Inspecting with MCP Inspector
 

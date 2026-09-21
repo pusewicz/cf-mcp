@@ -230,6 +230,17 @@ class CF::MCP::CLITest < Minitest::Test
     assert_includes out, "**other_function**"
   end
 
+  def test_an_open_cache_directory_is_refused
+    index_headers
+    File.chmod(0o777, ENV.fetch("CF_MCP_CACHE_DIR"))
+
+    status, out, err = run_cli("search", "test_function")
+
+    assert_equal 1, status
+    assert_empty out
+    assert_includes err, "Refusing to load the index"
+  end
+
   def test_tool_commands_need_a_value_for_the_root
     status, _, err = run_cli("search", "test_function", "--root")
 

@@ -211,6 +211,44 @@ class CF::MCP::IndexCacheTest < Minitest::Test
     refute File.exist?(@cache.path_for(source(missing)))
   end
 
+  # The cache is read back with Marshal, which can run code, so it must not be
+  # somewhere another user could have planted a file.
+  def test_creates_the_cache_directory_private_to_the_user
+    prime_cache
+
+    assert_equal 0o700, File.stat(File.dirname(@cache.path)).mode & 0o777
+  end
+
+  def test_refuses_a_cache_directory_that_everyone_can_write_to
+    prime_cache
+    File.chmod(0o777, File.dirname(@cache.path))
+
+    error = assert_raises(CF::MCP::Error) { @cache.index { flunk "loaded from an open directory" } }
+
+    assert_includes error.message, File.dirname(@cache.path)
+    assert_raises(CF::MCP::Error) { @cache.refresh { |source| builder_for(source) } }
+  end
+
+  def test_refuses_a_cache_directory_owned_by_someone_else
+    prime_cache
+
+    with_euid(Process.euid + 1) do
+      error = assert_raises(CF::MCP::Error) { @cache.index { flunk "loaded from another user's directory" } }
+
+      assert_includes error.message, File.dirname(@cache.path)
+    end
+  end
+
+  def test_accepts_a_directory_only_its_group_can_write_to
+    prime_cache
+    File.chmod(0o775, File.dirname(@cache.path))
+    CF::MCP::Index.instance.reset!
+
+    index = @cache.index { flunk "rebuilt a fresh cache" }
+
+    assert index.find("test_function")
+  end
+
   def test_default_dir_honours_the_cache_dir_variable
     with_env("CF_MCP_CACHE_DIR" => "/tmp/somewhere") do
       assert_equal "/tmp/somewhere", CF::MCP::IndexCache.default_dir
@@ -279,6 +317,17 @@ class CF::MCP::IndexCacheTest < Minitest::Test
     Open3.capture3("git", "-C", dir, "config", "user.name", "Test")
     Open3.capture3("git", "-C", dir, "add", ".")
     Open3.capture3("git", "-C", dir, "commit", "-q", "-m", "initial commit")
+  end
+
+  # Makes the process look like it runs as another user, without needing one.
+  def with_euid(uid)
+    original = Process.method(:euid)
+    Process.singleton_class.remove_method(:euid)
+    Process.define_singleton_method(:euid) { uid }
+    yield
+  ensure
+    Process.singleton_class.remove_method(:euid)
+    Process.define_singleton_method(:euid, original)
   end
 
   def with_env(vars)

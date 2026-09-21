@@ -1,0 +1,137 @@
+# frozen_string_literal: true
+
+require "test_helper"
+require "tmpdir"
+require "fileutils"
+require "rackup"
+
+class CF::MCP::CLITest < Minitest::Test
+  FIXTURE = File.expand_path("../../fixtures/sample_header.h", __dir__)
+
+  def setup
+    @tmp = Dir.mktmpdir("cf-mcp-cli-test")
+    @root = File.join(@tmp, "cute_framework")
+    FileUtils.mkdir_p(File.join(@root, "include"))
+    FileUtils.cp(FIXTURE, File.join(@root, "include"))
+    @saved_cache_dir = ENV["CF_MCP_CACHE_DIR"]
+    ENV["CF_MCP_CACHE_DIR"] = File.join(@tmp, "cache")
+  end
+
+  def teardown
+    ENV["CF_MCP_CACHE_DIR"] = @saved_cache_dir
+    FileUtils.rm_rf(@tmp)
+    CF::MCP::Index.instance.reset!
+    CF::MCP::Index.instance.add(CF::MCP::Models::FunctionDoc.new(name: "test_func", category: "test", brief: "Test"))
+  end
+
+  def test_help_lists_the_commands
+    status, out, = run_cli("--help")
+
+    assert_equal 0, status
+    %w[stdio http index].each { |command| assert_includes out, command }
+  end
+
+  def test_help_command_prints_usage
+    status, out, = run_cli("help")
+
+    assert_equal 0, status
+    assert_includes out, "Usage: cf-mcp"
+  end
+
+  def test_no_arguments_prints_usage
+    status, out, = run_cli
+
+    assert_equal 0, status
+    assert_includes out, "Usage: cf-mcp"
+  end
+
+  def test_version
+    status, out, = run_cli("--version")
+
+    assert_equal 0, status
+    assert_equal "cf-mcp #{CF::MCP::VERSION}\n", out
+  end
+
+  def test_unknown_command_fails
+    status, _, err = run_cli("bogus")
+
+    assert_equal 1, status
+    assert_includes err, "Unknown command 'bogus'"
+  end
+
+  def test_unknown_option_fails
+    status, _, err = run_cli("--bogus")
+
+    assert_equal 1, status
+    assert_includes err, "invalid option: --bogus"
+  end
+
+  def test_unexpected_arguments_fail
+    status, _, err = run_cli("index", "extra", "--root", @root)
+
+    assert_equal 1, status
+    assert_includes err, "Unexpected arguments: extra"
+  end
+
+  def test_index_builds_the_cache
+    status, out, = run_cli("index", "--root", @root)
+
+    assert_equal 0, status
+    assert_includes out, "Indexed 4 items (2 functions, 1 structs, 1 enums, 0 topics)"
+    assert File.exist?(File.join(ENV.fetch("CF_MCP_CACHE_DIR"), "index.bin"))
+  end
+
+  def test_index_accepts_options_before_the_command
+    status, out, = run_cli("--root", @root, "index")
+
+    assert_equal 0, status
+    assert_includes out, "Indexed 4 items"
+  end
+
+  def test_index_fails_for_a_missing_headers_directory
+    status, _, err = run_cli("index", "--root", File.join(@tmp, "missing"))
+
+    assert_equal 1, status
+    assert_includes err, "Headers directory not found"
+  end
+
+  def test_index_picks_up_new_headers_when_run_again
+    run_cli("index", "--root", @root)
+    File.write(File.join(@root, "include", "extra.h"), "/**\n * @function extra_function\n * @category test\n */\n")
+
+    status, out, = run_cli("index")
+
+    assert_equal 0, status
+    assert_includes out, "Indexed 5 items"
+  end
+
+  def test_http_accepts_options_after_the_command
+    started = stub_rackup_start do
+      run_cli("http", "--root", @root, "--port", "4567", "--host", "127.0.0.1")
+    end
+
+    assert_equal 4567, started.fetch(:Port)
+    assert_equal "127.0.0.1", started.fetch(:Host)
+  end
+
+  private
+
+  def run_cli(*args)
+    status = nil
+    out, err = capture_io { status = CF::MCP::CLI.new(args).run }
+    [status, out, err]
+  end
+
+  # Replaces Rackup::Server.start for the block; returns the options it was given.
+  def stub_rackup_start
+    original = Rackup::Server.method(:start)
+    started = {}
+    Rackup::Server.singleton_class.remove_method(:start)
+    Rackup::Server.define_singleton_method(:start) { |**options| started.merge!(options) }
+    yield
+    started
+  ensure
+    Rackup::Server.singleton_class.remove_method(:start)
+    Rackup::Server.define_singleton_method(:start, original)
+  end
+end

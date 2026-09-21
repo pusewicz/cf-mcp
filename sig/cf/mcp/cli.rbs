@@ -2,30 +2,43 @@ module CF
   module MCP
     class CLI
       type options = {
-        command: Symbol?,
         port: Integer?,
         host: String,
         root: String?,
-        download: bool
+        download: bool,
+        help: bool,
+        version: bool
       }
 
       @args: Array[String]
       @options: options
-
-      # Assigned as a side effect of #parse_args, which #initialize calls.
       @option_parser: OptionParser
 
       def initialize: (Array[String] args) -> void
 
-      def run: () -> void
+      # Returns the process exit status.
+      def run: () -> Integer
 
       private
 
-      def parse_args: () -> options
+      def build_option_parser: () -> OptionParser
 
-      def run_server: (Symbol mode) -> void
+      def print_version: () -> Integer
 
-      def run_http_server: () -> void
+      def print_usage: () -> Integer
+
+      def fail_with: (String message) -> Integer
+
+      def run_stdio: () -> Integer
+
+      def run_http: () -> Integer
+
+      def run_index: () -> Integer
+
+      # What the user asked to index; nil leaves the choice to the cache.
+      def index_source: () -> IndexCache::source?
+
+      def missing_headers_message: (IndexBuilder builder) -> String
     end
   end
 end

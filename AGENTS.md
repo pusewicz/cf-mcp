@@ -60,16 +60,27 @@ cf-mcp http --port 9292 --root /path/to/cute_framework
 
 # Download headers from GitHub automatically
 cf-mcp stdio --download
+
+# Cache the parsed docs (~/.cache/cf-mcp/index.bin); re-run to pick up changes
+cf-mcp index --root ~/Work/GitHub/pusewicz/cute_framework
+
+# Every MCP tool is also a command (flags after the command belong to the tool)
+cf-mcp search sprite --type function --limit 5
+cf-mcp get_details CF_Sprite
 ```
+
+Tool commands read the cache and rebuild it when the headers change. `--root` and `--download` go before the command. A tool's name is listed in `CLI::TOOL_COMMANDS` because naming a tool class loads it, and `SearchTool`/`ListCategory` bake the index's categories into their schema at load time: the index must be filled first.
 
 ## Architecture
 
 ```
 lib/cf/mcp/
-├── cli.rb              # CLI with stdio/http modes
+├── cli.rb              # CLI: stdio/http/index and one command per tool
+├── tool_command.rb     # Runs an MCP tool as a command, generated from its input schema
 ├── server.rb           # MCP server setup, Server and HTTPServer classes
 ├── parser.rb           # Header file parser (extracts @function, @struct, @enum docs)
 ├── index.rb            # In-memory search index with relevance scoring
+├── index_cache.rb      # On-disk cache of the parsed index, rebuilt when headers change
 ├── downloader.rb       # GitHub header downloader with ZIP extraction
 ├── models/
 │   ├── doc_item.rb     # Base model with search/relevance scoring

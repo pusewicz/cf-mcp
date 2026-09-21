@@ -125,7 +125,13 @@ module CF
       def fingerprint(headers_path, topics_path)
         files = Dir.glob(File.join(headers_path, "**/*.h"))
         files += Dir.glob(File.join(topics_path, "*.md")) if topics_path
-        stats = files.sort.map { |file| [file, File.mtime(file).to_f, File.size(file)].join(":") }
+        stats = files.sort.filter_map do |file|
+          stat = File.stat(file)
+          [file, stat.mtime.to_f, stat.size].join(":")
+        rescue Errno::ENOENT
+          # Gone since it was listed: a header being replaced, as during an update.
+          nil
+        end
         Digest::SHA256.hexdigest(stats.join("\n"))
       end
     end

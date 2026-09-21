@@ -162,6 +162,17 @@ class CF::MCP::IndexCacheTest < Minitest::Test
     assert index.find("test_function")
   end
 
+  # Stands in for a header deleted between listing the directory and reading it.
+  def test_a_header_that_vanishes_while_checking_does_not_fail_the_lookup
+    prime_cache
+    File.symlink(File.join(@tmp, "missing.h"), File.join(@root, "include", "vanished.h"))
+    CF::MCP::Index.instance.reset!
+
+    index = @cache.index { flunk "rebuilt over a header that is not there" }
+
+    assert index.find("test_function")
+  end
+
   def test_refresh_rebuilds_even_when_the_cache_is_fresh
     prime_cache
 

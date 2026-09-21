@@ -7,7 +7,7 @@ module CF
     class CLI
       # Tool names are listed here, not read from Tools.all: naming a tool
       # loads it, and that must wait until the index is filled.
-      TOOL_COMMANDS = %w[search get_details find_related].freeze
+      TOOL_COMMANDS = %w[search get_details find_related get_topic].freeze
 
       def initialize(args)
         @args = args

@@ -197,6 +197,17 @@ class CF::MCP::CLITest < Minitest::Test
     assert_includes out, "`test_function`"
   end
 
+  def test_get_topic_prints_the_guide
+    add_topic("audio", "# Audio\n\nPlay sounds with the mixer.\n")
+    index_headers
+
+    status, out, = run_cli("get_topic", "audio")
+
+    assert_equal 0, status
+    assert_includes out, "# audio"
+    assert_includes out, "Play sounds with the mixer."
+  end
+
   def test_http_accepts_options_after_the_command
     started = stub_rackup_start do
       run_cli("http", "--root", @root, "--port", "4567", "--host", "127.0.0.1")
@@ -216,6 +227,11 @@ class CF::MCP::CLITest < Minitest::Test
 
   def index_headers
     run_cli("index", "--root", @root)
+  end
+
+  def add_topic(name, content)
+    FileUtils.mkdir_p(File.join(@root, "docs", "topics"))
+    File.write(File.join(@root, "docs", "topics", "#{name}.md"), content)
   end
 
   # Replaces Rackup::Server.start for the block; returns the options it was given.

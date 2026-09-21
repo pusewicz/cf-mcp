@@ -1,0 +1,73 @@
+module CF
+  module MCP
+    # Keeps the parsed index on disk so a command need not reparse every header.
+    class IndexCache
+      FORMAT: Integer
+      DEFAULT_SOURCE: source
+
+      # What the index was built from: the arguments IndexBuilder was given.
+      type source = {root: String?, download: bool}
+
+      class Payload < ::Data
+        attr_reader format: Integer
+        attr_reader gem_version: String
+        attr_reader headers_path: String
+        attr_reader topics_path: String?
+        attr_reader fingerprint: String
+        attr_reader revision: String?
+        attr_reader items: Array[Models::DocItem]
+
+        def self.new: (format: Integer, gem_version: String, headers_path: String, topics_path: String?, fingerprint: String, revision: String?, items: Array[Models::DocItem]) -> instance
+                    | (Integer format, String gem_version, String headers_path, String? topics_path, String fingerprint, String? revision, Array[Models::DocItem] items) -> instance
+      end
+
+      @dir: String
+
+      # `CF_MCP_CACHE_DIR`, else `$XDG_CACHE_HOME/cf-mcp`, else `~/.cache/cf-mcp`.
+      def self.default_dir: () -> String
+
+      # The cache file used by the last #index or #refresh, and the checkout it
+      # came from.
+      attr_reader path: String?
+      attr_reader revision: String?
+
+      def initialize: (?dir: String) -> void
+
+      def path_for: (source source) -> String
+
+      # Loads the cached index if it is fresh, otherwise builds and stores it,
+      # warning on stderr. `source` nil means the last one used. The block
+      # receives the source to build from and returns the builder to use; it
+      # is not called on a cache hit.
+      def index: (?source? source) { (source source) -> IndexBuilder } -> Index
+
+      # Rebuilds and stores the index whether or not the cache is fresh, from
+      # `source` or else the last one used.
+      def refresh: (?source? source) { (source source) -> IndexBuilder } -> Index
+
+      private
+
+      # Cache files are read back with Marshal, which can run code, so they are
+      # only trusted in a directory no other user could have put a file in.
+      def check_dir!: () -> void
+
+      def fresh?: (Payload payload) -> bool
+
+      def rebuild: (source source) { (source source) -> IndexBuilder } -> Index
+
+      def hydrate: (source source, Payload payload) -> Index
+
+      def use: (source source, String? revision) -> void
+
+      def current_path: () -> String
+
+      def current_source: () -> source
+
+      def load_payload: (String path) -> Payload?
+
+      def write_atomically: (String path, String data) -> void
+
+      def fingerprint: (String headers_path, String? topics_path) -> String
+    end
+  end
+end

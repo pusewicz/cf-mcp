@@ -3,4 +3,4 @@
 
 require "cf/mcp"
 
-CF::MCP::CLI.new(ARGV).run
+exit CF::MCP::CLI.new(ARGV).run

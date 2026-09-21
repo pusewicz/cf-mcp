@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "mcp"
+require_relative "category_enum"
 require_relative "response_helpers"
 require_relative "search_result_formatter"
 
@@ -8,6 +9,7 @@ module CF
   module MCP
     module Tools
       class SearchTool < ::MCP::Tool
+        extend CategoryEnum
         extend ResponseHelpers
         extend SearchResultFormatter
 
@@ -22,7 +24,7 @@ module CF
           properties: {
             query: {type: "string", description: "Search query (searches in name, description, and remarks)"},
             type: {type: "string", enum: ["function", "struct", "enum", "topic"], description: "Optional: filter by item type"},
-            category: {type: "string", enum: Index.instance.categories, description: "Optional: filter by category"},
+            category: {type: "string", description: "Optional: filter by category"},
             limit: {type: "integer", description: "Maximum number of results to return (default: 20)"}
           },
           required: ["query"]

@@ -1,31 +1,66 @@
 module CF
   module MCP
     class CLI
+      USAGE: String
+
+      # The commands that are not documentation tools, by name.
+      COMMANDS: Hash[String, String]
+
       type options = {
-        command: Symbol?,
         port: Integer?,
         host: String,
         root: String?,
-        download: bool
+        download: bool,
+        help: bool,
+        version: bool
       }
 
       @args: Array[String]
       @options: options
-
-      # Assigned as a side effect of #parse_args, which #initialize calls.
       @option_parser: OptionParser
 
       def initialize: (Array[String] args) -> void
 
-      def run: () -> void
+      # Returns the process exit status.
+      def run: () -> Integer
 
       private
 
-      def parse_args: () -> options
+      def build_option_parser: () -> OptionParser
 
-      def run_server: (Symbol mode) -> void
+      def print_version: () -> Integer
 
-      def run_http_server: () -> void
+      def print_usage: () -> Integer
+
+      def command_lines: (Hash[String, String] descriptions) -> Array[String]
+
+      def tool_descriptions: () -> Hash[String, String]
+
+      def fail_with: (String message) -> Integer
+
+      def run_stdio: () -> Integer
+
+      def run_http: () -> Integer
+
+      def run_index: () -> Integer
+
+      # Takes --root and --download out of the arguments wherever they stand,
+      # leaving the rest for the tool.
+      def take_source_options: () -> void
+
+      # The tool named by the command, if it names one. Asking loads the tools,
+      # which the other commands have no need of.
+      def find_tool: (String? command) -> singleton(::MCP::Tool)?
+
+      # Help describes the tool from its schema alone, so it goes without the index.
+      def run_tool: (singleton(::MCP::Tool) tool) -> Integer
+
+      # What the user asked to index, by flag or CF_HEADERS_PATH; nil leaves the
+      # choice to the cache. The root is expanded so every spelling of it names
+      # the same index.
+      def index_source: () -> IndexCache::source?
+
+      def missing_headers_message: (IndexBuilder builder) -> String
     end
   end
 end

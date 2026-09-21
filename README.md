@@ -35,6 +35,21 @@ cf-mcp stdio --root /path/to/cute_framework_project  # STDIO mode
 cf-mcp http --root /path/to/cute_framework_project   # HTTP mode with web UI
 ```
 
+## Command line
+
+Every tool is also a command, so no MCP client is needed. Index the docs once, then look things up:
+
+```bash
+cf-mcp index --root /path/to/cute_framework   # re-run after updating Cute Framework
+cf-mcp search sprite --type function --limit 5
+cf-mcp get_details CF_Sprite
+cf-mcp list_category sprite
+```
+
+The commands are `search`, `get_details`, `find_related`, `parameter_search`, `member_search`, `list_category`, `list_topics` and `get_topic`. Run `cf-mcp <command> --help` for a command's arguments.
+
+The index is cached in `~/.cache/cf-mcp` (or `$XDG_CACHE_HOME/cf-mcp`, or `$CF_MCP_CACHE_DIR`) and rebuilt automatically when a header changes. Each `--root` keeps its own cache, so projects on different Cute Framework versions can take turns without reindexing: pass `--root` (or set `CF_HEADERS_PATH`) to say which one a command should use. Without either, a command uses the last one it was given. Cache files are read back with `Marshal`, so a cache directory that belongs to another user or that everyone can write to is refused.
+
 ## Inspecting with MCP Inspector
 
 You can use the [MCP Inspector](https://github.com/modelcontextprotocol/inspector) to debug and test the server.

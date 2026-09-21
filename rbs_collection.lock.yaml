@@ -37,6 +37,10 @@ gems:
   version: '0'
   source:
     type: stdlib
+- name: digest
+  version: '0'
+  source:
+    type: stdlib
 - name: erb
   version: '0'
   source:

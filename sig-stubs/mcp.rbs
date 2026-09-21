@@ -38,9 +38,13 @@ module MCP
     class Response
       # Content items are hashes such as `{type: "text", text: "..."}`.
       def initialize: (Array[Hash[Symbol, untyped]] content, ?error: bool, ?structured_content: untyped, ?meta: untyped) -> void
+
+      attr_reader content: Array[Hash[Symbol, untyped]]
+      def error?: () -> bool
     end
 
     class InputSchema
+      def initialize: (?Hash[Symbol, untyped] schema) -> void
       def to_h: () -> Hash[Symbol, untyped]
     end
 
@@ -52,6 +56,8 @@ module MCP
                         | (String value) -> void
     def self.input_schema: () -> InputSchema
                          | (Hash[Symbol, untyped] value) -> void
+    # What `input_schema` reads, and what the SDK serves in `tools/list`.
+    def self.input_schema_value: () -> InputSchema
     def self.annotations: () -> untyped
                         | (Hash[Symbol, untyped] value) -> void
   end

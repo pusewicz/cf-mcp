@@ -23,14 +23,13 @@ module CF
         end
 
         # Parse topics if available
-        topics_path = find_topics_path(headers_path)
-        if topics_path && File.directory?(topics_path)
+        if (path = topics_path)
           topic_parser = TopicParser.new
-          topic_parser.parse_directory(topics_path).each do |topic|
+          topic_parser.parse_directory(path).each do |topic|
             refine_topic_references(topic, index)
             index.add(topic)
           end
-          yield(:topics_indexed, topics_path, index.stats[:topics]) if block_given?
+          yield(:topics_indexed, path, index.stats[:topics]) if block_given?
         end
 
         index
@@ -38,6 +37,11 @@ module CF
 
       def valid?
         File.directory?(headers_path)
+      end
+
+      # The topic guides directory, when the checkout has one.
+      def topics_path
+        @topics_path ||= find_topics_path(headers_path)
       end
 
       private

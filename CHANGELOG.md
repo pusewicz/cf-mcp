@@ -9,10 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Every tool is now a command (`cf-mcp search sprite --type function`, `cf-mcp get_details CF_Sprite`, and so on) with arguments and `--help` generated from the tool's input schema
+- `cf-mcp index` caches the parsed index in `~/.cache/cf-mcp` (`CF_MCP_CACHE_DIR` and `XDG_CACHE_HOME` are honoured), one cache per `--root` so projects on different Cute Framework versions do not evict each other; tool commands read it and rebuild it when a header or topic changes
 - RBS signatures for the whole library, checked in CI with Steep (strict, and every method must have a signature) and by running the test suite under RBS's runtime type checker; run them with `rake rbs`. They are development-only and not packaged in the gem.
 
 ### Changed
 
+- `CLI#run` returns the exit status instead of exiting, and an unknown command or option now fails with a message (previously an unknown command printed the usage and exited 0)
+- `search` and `list_category` list the index's categories when their schema is asked for instead of when the class loads, so tools can be loaded before the index is filled; the `category` property has no `enum` while the index is empty
 - `name:` is now a required keyword on `DocItem` and its subclasses (`FunctionDoc`, `StructDoc`, `EnumDoc`, `TopicDoc`); previously a nameless item could be built and indexed
 - `Index#by_type` now returns an `Index::ByType` (`functions`, `structs`, `enums`, `topics`) instead of a Hash keyed by type symbol, and `Index#add` files items by class rather than by their `type`
 - Small internal refactors so the code type checks; no behavior change for valid input

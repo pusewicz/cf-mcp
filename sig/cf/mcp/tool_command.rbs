@@ -1,0 +1,49 @@
+module CF
+  module MCP
+    # Runs an MCP tool as a command, mapping its input schema onto the command
+    # line: required properties are positional arguments, the rest are flags.
+    class ToolCommand
+      # One property of the tool's input schema.
+      class Property < ::Data
+        attr_reader name: Symbol
+        attr_reader type: String?
+        attr_reader description: String
+        # The accepted values, when the schema restricts them.
+        attr_reader values: Array[String]?
+
+        def self.new: (name: Symbol, type: String?, description: String, values: Array[String]?) -> instance
+                    | (Symbol name, String? type, String description, Array[String]? values) -> instance
+      end
+
+      @tool: singleton(::MCP::Tool)
+      @required: Array[Property]
+      @arguments: Array[Property]
+      @flags: Array[Property]
+      @parser: OptionParser
+
+      def initialize: (singleton(::MCP::Tool) tool) -> void
+
+      # Returns the process exit status. Raises OptionParser::ParseError for
+      # unusable arguments.
+      def run: (Array[String] args) -> Integer
+
+      private
+
+      def build_parser: () -> OptionParser
+
+      def define_flag: (OptionParser opts, Property flag) -> void
+
+      def placeholder: (Property property) -> String
+
+      def usage: (Property argument) -> String
+
+      def bind: (Array[String] positionals) -> Hash[Symbol, String]
+
+      def call_tool: (Hash[Symbol, untyped] arguments) -> ::MCP::Tool::Response
+
+      def respond: (::MCP::Tool::Response response) -> Integer
+
+      def print_help: () -> Integer
+    end
+  end
+end

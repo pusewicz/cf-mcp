@@ -59,6 +59,23 @@ class CF::MCP::IndexBuilderTest < Minitest::Test
     end
   end
 
+  def test_topics_path_is_docs_topics_next_to_the_include_directory
+    Dir.mktmpdir do |dir|
+      topics_dir = File.join(dir, "docs", "topics")
+      FileUtils.mkdir_p([File.join(dir, "include"), topics_dir])
+
+      assert_equal topics_dir, CF::MCP::IndexBuilder.new(root: dir).topics_path
+    end
+  end
+
+  def test_topics_path_is_nil_without_a_topics_directory
+    Dir.mktmpdir do |dir|
+      FileUtils.mkdir_p(File.join(dir, "include"))
+
+      assert_nil CF::MCP::IndexBuilder.new(root: dir).topics_path
+    end
+  end
+
   def test_revision_uses_downloader_sha_when_downloading
     fake_downloader = Object.new
     fake_downloader.define_singleton_method(:download_and_extract) { "/tmp/cf-mcp-fake/include" }

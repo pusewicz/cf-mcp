@@ -10,7 +10,9 @@ module CF
     autoload :Parser, "cf/mcp/parser"
     autoload :Index, "cf/mcp/index"
     autoload :IndexBuilder, "cf/mcp/index_builder"
+    autoload :IndexCache, "cf/mcp/index_cache"
     autoload :TopicParser, "cf/mcp/topic_parser"
+    autoload :ToolCommand, "cf/mcp/tool_command"
     autoload :Server, "cf/mcp/server"
     autoload :Downloader, "cf/mcp/downloader"
     autoload :GitHubClient, "cf/mcp/github_client"
@@ -37,6 +39,13 @@ module CF
       autoload :MemberSearch, "cf/mcp/tools/member_search"
       autoload :ListTopics, "cf/mcp/tools/list_topics"
       autoload :GetTopic, "cf/mcp/tools/get_topic"
+
+      # A method, not a constant: naming a tool loads it, and SearchTool and
+      # ListCategory read the index's categories when loaded, so callers must
+      # fill the index before asking.
+      def self.all
+        [SearchTool, ListCategory, GetDetails, FindRelated, ParameterSearch, MemberSearch, ListTopics, GetTopic]
+      end
     end
   end
 end

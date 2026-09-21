@@ -208,6 +208,16 @@ class CF::MCP::CLITest < Minitest::Test
     assert_includes out, "Play sounds with the mixer."
   end
 
+  def test_member_search_finds_structs_by_member
+    index_headers
+
+    status, out, = run_cli("member_search", "int value", "--limit", "5")
+
+    assert_equal 0, status
+    assert_includes out, "**TestStruct**"
+    assert_includes out, "`int value`"
+  end
+
   def test_http_accepts_options_after_the_command
     started = stub_rackup_start do
       run_cli("http", "--root", @root, "--port", "4567", "--host", "127.0.0.1")

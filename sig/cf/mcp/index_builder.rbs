@@ -8,6 +8,7 @@ module CF
       # #initialize, so the instance variables are declared explicitly.
       @headers_path: String
       @revision: String?
+      @topics_path: String?
 
       attr_reader headers_path: String
 
@@ -21,6 +22,9 @@ module CF
       def build: () ?{ (Symbol event, String path, Integer count) -> void } -> Index
 
       def valid?: () -> bool
+
+      # The topic guides directory, when the checkout has one.
+      def topics_path: () -> String?
 
       private
 

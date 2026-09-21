@@ -12,6 +12,7 @@ path: .gem_rbs_collection
 gems:
   # Standard library signatures the code uses. Default gems are not in
   # Gemfile.lock, so the collection won't pick them up on its own.
+  - name: digest
   - name: erb
   - name: fileutils
   - name: json
@@ -20,6 +21,7 @@ gems:
   - name: optparse
   - name: pathname
   - name: singleton
+  - name: tempfile
   - name: tmpdir
   - name: uri
 

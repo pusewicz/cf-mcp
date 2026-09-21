@@ -10,6 +10,7 @@ module CF
     autoload :Parser, "cf/mcp/parser"
     autoload :Index, "cf/mcp/index"
     autoload :IndexBuilder, "cf/mcp/index_builder"
+    autoload :IndexCache, "cf/mcp/index_cache"
     autoload :TopicParser, "cf/mcp/topic_parser"
     autoload :Server, "cf/mcp/server"
     autoload :Downloader, "cf/mcp/downloader"

@@ -12,6 +12,7 @@ lib/cf/mcp/downloader.rb
 lib/cf/mcp/github_client.rb
 lib/cf/mcp/index.rb
 lib/cf/mcp/index_builder.rb
+lib/cf/mcp/index_cache.rb
 lib/cf/mcp/models/doc_item.rb
 lib/cf/mcp/models/enum_doc.rb
 lib/cf/mcp/models/function_doc.rb

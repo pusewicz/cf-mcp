@@ -1,0 +1,63 @@
+module CF
+  module MCP
+    # Keeps the parsed index on disk so a command need not reparse every header.
+    class IndexCache
+      FORMAT: Integer
+      DEFAULT_SOURCE: source
+
+      # What the index was built from: the arguments IndexBuilder was given.
+      type source = {root: String?, download: bool}
+
+      class Payload < ::Data
+        attr_reader format: Integer
+        attr_reader gem_version: String
+        attr_reader source: source
+        attr_reader headers_path: String
+        attr_reader topics_path: String?
+        attr_reader fingerprint: String
+        attr_reader revision: String?
+        attr_reader items: Array[Models::DocItem]
+
+        def self.new: (format: Integer, gem_version: String, source: source, headers_path: String, topics_path: String?, fingerprint: String, revision: String?, items: Array[Models::DocItem]) -> instance
+                    | (Integer format, String gem_version, source source, String headers_path, String? topics_path, String fingerprint, String? revision, Array[Models::DocItem] items) -> instance
+      end
+
+      # `CF_MCP_CACHE_DIR`, else `$XDG_CACHE_HOME/cf-mcp`, else `~/.cache/cf-mcp`.
+      def self.default_dir: () -> String
+
+      attr_reader path: String
+
+      # Git commit of the checkout the cached index came from, once #index or
+      # #refresh has run.
+      attr_reader revision: String?
+
+      def initialize: (?dir: String) -> void
+
+      # Loads the cached index if it is fresh, otherwise builds and stores it,
+      # warning on stderr. `source` nil accepts whatever was cached. The block
+      # receives the source to build from and returns the builder to use; it
+      # is not called on a cache hit.
+      def index: (?source? source) { (source source) -> IndexBuilder } -> Index
+
+      # Rebuilds and stores the index whether or not the cache is fresh, from
+      # `source` or else the cached one.
+      def refresh: (?source? source) { (source source) -> IndexBuilder } -> Index
+
+      private
+
+      def usable?: (Payload payload, source? source) -> bool
+
+      def fresh?: (Payload payload) -> bool
+
+      def rebuild: (source source) { (source source) -> IndexBuilder } -> Index
+
+      def hydrate: (Payload payload) -> Index
+
+      def load_payload: () -> Payload?
+
+      def store: (Payload payload) -> void
+
+      def fingerprint: (String headers_path, String? topics_path) -> String
+    end
+  end
+end

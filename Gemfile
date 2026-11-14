@@ -7,7 +7,7 @@ gemspec
 
 gem "irb"
 gem "rake", "~> 13.0"
-gem "minitest", "~> 6.0"
+gem "minitest", "~> 6.1"
 gem "standard", "~> 1.53"
 gem "rbs", "~> 4.0"
 gem "steep", "~> 2.1"
